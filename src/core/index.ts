@@ -4,6 +4,9 @@ import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
 import { globTool } from "./tool/glob";
 import { readTool } from "./tool/read";
+import { lsTool } from "./tool/ls";
+
+// TODO: Verify dependencies
 
 export async function validate() {
   const { text, steps } = await generateText({
@@ -11,10 +14,12 @@ export async function validate() {
     tools: {
       grepTool,
       globTool,
+      lsTool,
       readTool,
     },
     stopWhen: stepCountIs(10),
     system: SYSTEM_PROMPT,
-    prompt: "",
+    temperature: 0.1,
+    prompt: "", // remember to add project root
   });
 }
