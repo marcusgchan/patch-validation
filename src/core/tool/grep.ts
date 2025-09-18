@@ -1,19 +1,21 @@
 import { tool } from "ai";
 import z from "zod";
+import path from "path";
 
 export const grepTool = tool({
   name: "Project search",
-  description: "Searches for contents in a file from starting directory.",
+  description:
+    "Searches for contents in a file from starting directory using ripgrep.",
   inputSchema: z.object({
     pattern: z
       .string()
       .min(1)
-      .describe("The regex pattern to search for in file contents"),
+      .describe("The regex pattern to search for in file contents."),
     path: z
       .string()
       .optional()
       .describe(
-        "The directory to search in. Defaults to the current working directory.",
+        "The directory to search in. Defaults to the project directory if not provided. If provided, path should be relative to the project root.",
       ),
     include: z
       .string()
@@ -23,14 +25,20 @@ export const grepTool = tool({
       ),
   }),
   execute: async (params) => {
-    function buildGrepCommands(commands: string[]) {
-      params.include && commands.push(...["--include", params.include]);
-      commands.push(params.pattern);
-      params.path && commands.push(params.path);
-      return commands;
+    if (!checkRgInstalled()) {
+      throw new Error("rg not installed");
     }
 
-    const grepCommand = buildGrepCommands(["grep", "-rn"]);
+    const grepCommand = ["rg", "--no-line-number", "--no-headings"];
+    params.include && grepCommand.push(...["--glob", params.include]);
+    grepCommand.push(params.pattern);
+    // TODO: make it work for running in sub directories
+    const absolutePath =
+      params.path === undefined
+        ? process.cwd()
+        : path.join(process.cwd(), params.path);
+    grepCommand.push(absolutePath);
+
     const proc = Bun.spawnSync(grepCommand);
 
     if (proc.exitCode === 1) {
@@ -44,7 +52,10 @@ export const grepTool = tool({
     }
 
     if (proc.exitCode !== 0) {
-      throw new Error("There was an error with calling grep");
+      const errorOutput = proc.stderr?.toString() || "Unknown error";
+      throw new Error(
+        `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`,
+      );
     }
 
     const grepOutput = proc.stdout.toString().trim();
@@ -58,12 +69,22 @@ export const grepTool = tool({
     }
 
     return {
-      title: params.pattern,
+      title: absolutePath,
       metadata: {
-        ...params,
+        pattern: params.pattern,
+        path: params.path,
+        include: params.include,
+        absolutePath,
         truncated,
       },
-      output: `Truncated first ${maxResults} results from grep. Consider using a more specific pattern.\n${matches.join("\n")}`,
+      output: `Showing first ${maxResults} results from grep. Consider using a more specific pattern.\n${matches.join(
+        "\n",
+      )}`,
     };
   },
 });
+
+function checkRgInstalled() {
+  const proc = Bun.spawnSync(["rg", "--version"]);
+  return proc.success;
+}
