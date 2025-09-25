@@ -1,0 +1,8 @@
+- Tool that searches for content within files in a codebase using ripgrep
+- Use this tool when you need to find specific text, patterns, or code within files
+- CRITICAL: Always use recursive search patterns that search through all subdirectories
+- Use regex patterns for complex searches, simple strings for exact matches
+- Use the include parameter to filter by file types (e.g. "*.js", "*.{ts,tsx}", "*.py")
+- If no matches found, try a more generic pattern or different file types
+- The search is case-sensitive by default - use (?i) prefix for case-insensitive searches
+- Do not ask user any questions

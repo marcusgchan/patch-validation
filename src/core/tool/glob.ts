@@ -20,12 +20,10 @@ export const globTool = tool({
       ),
   }),
   execute: async (params) => {
-    console.log("calling glob tool with params:", params);
     if (!checkRgInstalled()) {
       throw new Error("rg not installed");
     }
 
-    console.log("creating path");
     // TODO: make it work for running in sub directories
     const absolutePath =
       params.path === undefined
@@ -38,11 +36,9 @@ export const globTool = tool({
       params.pattern,
       absolutePath,
     ];
-    console.log({ grepCommand });
     const proc = Bun.spawnSync(grepCommand);
 
     if (proc.exitCode === 1) {
-      console.log("No files found");
       return {
         title: params.pattern,
         metadata: {
@@ -61,7 +57,7 @@ export const globTool = tool({
         `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`
       );
     }
-    console.log("building str");
+
     const maxLength = 100;
     const matchedFilepaths = proc.stdout.toString().trim().split("\n");
     let truncated = false;
@@ -70,13 +66,12 @@ export const globTool = tool({
       truncated = true;
       matchedFilepaths.splice(maxLength);
     }
-    console.log({ matchedFilepaths });
+
     return {
       title: params.pattern,
       metadata: {
         pattern: params.pattern,
         path: params.path,
-        absolutePath,
         truncated,
       },
       output: truncated

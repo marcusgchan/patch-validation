@@ -1,4 +1,4 @@
-import { generateText, hasToolCall, stepCountIs } from "ai";
+import { generateText, hasToolCall, stepCountIs, streamText } from "ai";
 import { grepTool } from "./tool/grep";
 import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
@@ -10,18 +10,18 @@ import z from "zod";
 
 // TODO: Verify dependencies
 
-export async function promptLLM(prompt: string) {
+export function promptLLM(prompt: string) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error("OOPENAI_API_KEY not set");
   }
 
-  const { text, steps } = await generateText({
+  const result = streamText({
     model: openai("gpt-4.1"),
     tools: {
-      // grepTool,
-      globTool,
+      grepTool,
+      // globTool,
       // lsTool,
-      readTool,
+      // readTool,
       // finalAnswer: {
       //   description: "Provide the final answer to the user",
       //   inputSchema: z.object({
@@ -39,7 +39,7 @@ export async function promptLLM(prompt: string) {
     prompt: buildPrompt(prompt),
   });
 
-  return text;
+  return result;
 }
 
 function buildPrompt(prompt: string) {
