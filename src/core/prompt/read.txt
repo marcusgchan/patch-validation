@@ -1,4 +1,5 @@
 - Tool that reads file contents from the codebase
+- Call grep, glob, or ls tools before this tool to get full file paths
 - Use this tool when you need to examine the contents of a specific file
 - CRITICAL: Always use absolute filepaths - never use relative paths
 - Get absolute paths from other tools (like glob tool results) or construct them from project root

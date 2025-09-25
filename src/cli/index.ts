@@ -1,5 +1,4 @@
 import { promptLLM } from "../core";
-import { getProjectFolderName, getProjectPath } from "../core/util/path";
 
 export async function initCli() {
   const prompt = process.argv[2];

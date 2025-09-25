@@ -15,13 +15,19 @@ export function promptLLM(prompt: string) {
     throw new Error("OOPENAI_API_KEY not set");
   }
 
+  // Replace placeholders in system prompt with actual project metadata
+  const systemPrompt = SYSTEM_PROMPT.replace(
+    "{{FOLDER_NAME}}",
+    getProjectFolderName()
+  ).replace("{{FOLDER_PATH}}", getProjectPath());
+
   const result = streamText({
     model: openai("gpt-4.1"),
     tools: {
       grepTool,
-      // globTool,
-      // lsTool,
-      // readTool,
+      globTool,
+      lsTool,
+      readTool,
       // finalAnswer: {
       //   description: "Provide the final answer to the user",
       //   inputSchema: z.object({
@@ -32,22 +38,12 @@ export function promptLLM(prompt: string) {
     },
     maxRetries: 0,
     stopWhen: [
-      stepCountIs(3),
+      stepCountIs(5),
       //  hasToolCall("finalAnswer")
     ],
-    system: SYSTEM_PROMPT,
-    prompt: buildPrompt(prompt),
+    system: systemPrompt,
+    prompt: prompt,
   });
 
   return result;
-}
-
-function buildPrompt(prompt: string) {
-  return `
-  Project Metadata:
-  folder_name:${getProjectFolderName()}
-  folder_path:${getProjectPath()}
-  Prompt:
-  ${prompt}
-  `;
 }

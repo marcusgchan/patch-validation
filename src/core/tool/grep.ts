@@ -17,12 +17,12 @@ export const grepTool = tool({
       .describe(
         `The directoryThe directory to search in. IMPORTANT: Omit this field to use the default project directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a relative valid directory path if provided. to search in. Defaults to the project directory if not provided. If provided, path should be relative to the project root.`
       ),
-    include: z
-      .string()
-      .optional()
-      .describe(
-        'File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'
-      ),
+    // include: z
+    //   .string()
+    //   .optional()
+    //   .describe(
+    //     'File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'
+    //   ),
   }),
   execute: async (params) => {
     if (!checkRgInstalled()) {
@@ -30,7 +30,7 @@ export const grepTool = tool({
     }
 
     const grepCommand = ["rg", "--no-line-number", "--no-heading"];
-    params.include && grepCommand.push(...["--glob", params.include]);
+    // params.include && grepCommand.push(...["--glob", params.include]);
     grepCommand.push(params.pattern);
     // TODO: make it work for running in sub directories
     const absolutePath =
@@ -48,7 +48,7 @@ export const grepTool = tool({
         metadata: {
           pattern: params.pattern,
           path: params.path,
-          include: params.include,
+          // include: params.include,
           absolutePath,
         },
         output:
@@ -77,7 +77,7 @@ export const grepTool = tool({
       metadata: {
         pattern: params.pattern,
         path: params.path,
-        include: params.include,
+        // include: params.include,
         truncated,
       },
       output: truncated

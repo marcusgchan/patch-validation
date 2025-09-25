@@ -1,0 +1,8 @@
+- Tool that lists the contents of a directory
+- Use this tool when you need to explore directory structure or see what files/folders exist
+- CRITICAL: Always provide a relative path from the project root
+- Use "." for the current directory or specify a subdirectory path like "src" or "src/core"
+- The tool shows all files and directories including hidden ones (starts with .)
+- If no path provided, defaults to the current working directory
+- Results are truncated to 100 entries if directory has many items
+- Do not ask user any questions

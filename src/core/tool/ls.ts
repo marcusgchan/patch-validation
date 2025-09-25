@@ -1,15 +1,16 @@
 import { tool } from "ai";
 import z from "zod";
 import path from "path";
+import DESCRIPTION from "../prompt/ls.txt";
 
 export const lsTool = tool({
   name: "List Directory",
-  description: "List the contents of a directory.",
+  description: DESCRIPTION,
   inputSchema: z.object({
     path: z
       .string()
       .describe(
-        `The path to run the ls command in. Needs to be a relative path to the project root.`,
+        `The path to run the ls command in. Needs to be a relative path to the project root.`
       ),
   }),
   execute: async (params) => {
