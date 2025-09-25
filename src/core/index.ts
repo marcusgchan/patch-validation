@@ -1,25 +1,53 @@
-import { generateText, stepCountIs } from "ai";
+import { generateText, hasToolCall, stepCountIs } from "ai";
 import { grepTool } from "./tool/grep";
 import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
 import { globTool } from "./tool/glob";
 import { readTool } from "./tool/read";
 import { lsTool } from "./tool/ls";
+import { getProjectFolderName, getProjectPath } from "./util/path";
+import z from "zod";
 
 // TODO: Verify dependencies
 
-export async function validate() {
+export async function promptLLM(prompt: string) {
+  if (process.env.OPENAI_API_KEY === undefined) {
+    throw new Error("OOPENAI_API_KEY not set");
+  }
+
   const { text, steps } = await generateText({
-    model: openai("gpt-5-nano"),
+    model: openai("gpt-4.1"),
     tools: {
-      grepTool,
+      // grepTool,
       globTool,
-      lsTool,
+      // lsTool,
       readTool,
+      // finalAnswer: {
+      //   description: "Provide the final answer to the user",
+      //   inputSchema: z.object({
+      //     answer: z.string(),
+      //   }),
+      //   execute: async ({ answer }) => answer,
+      // },
     },
-    stopWhen: stepCountIs(10),
+    maxRetries: 0,
+    stopWhen: [
+      stepCountIs(3),
+      //  hasToolCall("finalAnswer")
+    ],
     system: SYSTEM_PROMPT,
-    temperature: 0.1,
-    prompt: "", // remember to add project root
+    prompt: buildPrompt(prompt),
   });
+
+  return text;
+}
+
+function buildPrompt(prompt: string) {
+  return `
+  Project Metadata:
+  folder_name:${getProjectFolderName()}
+  folder_path:${getProjectPath()}
+  Prompt:
+  ${prompt}
+  `;
 }

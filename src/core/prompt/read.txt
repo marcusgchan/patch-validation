@@ -1,0 +1,10 @@
+- Tool that reads file contents from the codebase
+- Use this tool when you need to examine the contents of a specific file
+- CRITICAL: Always use absolute filepaths - never use relative paths
+- Get absolute paths from other tools (like glob tool results) or construct them from project root
+- Specify the starting line number (1-indexed) to begin reading from
+- Optionally specify how many lines to read (defaults to 300 lines)
+- Returns file contents with line numbers for easy reference
+- If file doesn't exist, verify the absolute path is correct
+- If you need to read more of the file, use the next start line number provided in metadata
+- Do not ask user any questions

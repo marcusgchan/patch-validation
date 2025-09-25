@@ -1,0 +1,7 @@
+- Tool that searches for files in a codebase by name patterns
+- Use this tool when you need to find files by their names or paths
+- CRITICAL: Always use recursive glob patterns that start with **/ to search through all subdirectories
+- NEVER use non-recursive patterns - they only search the root directory
+- If looking for files in a specific folder, use "**/folderName/*" or "**/folderName/**/*"
+- If no files found, try a more generic pattern or check if the path structure is different
+- Do not ask user any questions
