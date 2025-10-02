@@ -16,7 +16,7 @@ export async function initCli() {
   for await (const chunk of result.fullStream) {
     switch (chunk.type) {
       case "text-delta": {
-        // process.stdout.write(chunk.text);
+        process.stdout.write(chunk.text);
         break;
       }
       case "tool-call": {
@@ -54,7 +54,7 @@ export async function initCli() {
               console.log(
                 data.metadata.readEntireFile
                   ? "Reading entire file"
-                  : "Reading portion of file"
+                  : "Reading portion of file",
               );
             }
 

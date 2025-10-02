@@ -56,7 +56,7 @@ export const grepTool = tool({
       };
     }
 
-    const grepCommand = ["rg", "--no-line-number", "--no-heading"];
+    const grepCommand = ["rg", "--no-heading", "--line-number"];
     // params.include && grepCommand.push(...["--glob", params.include]);
     grepCommand.push(params.pattern);
     // TODO: make it work for running in sub directories
@@ -65,8 +65,7 @@ export const grepTool = tool({
         ? process.cwd()
         : path.join(process.cwd(), params.path);
     grepCommand.push(absolutePath);
-
-    console.log({ grepCommand });
+    console.log(grepCommand);
     const proc = Bun.spawnSync(grepCommand);
 
     if (proc.exitCode === 1) {

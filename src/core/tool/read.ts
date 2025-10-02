@@ -2,6 +2,7 @@ import { tool } from "ai";
 import z from "zod";
 import path from "path";
 import DESCRIPTION from "../prompt/read.txt";
+import { getProjectPath } from "../util/path";
 
 const LINE_COUNT = 20;
 
@@ -47,15 +48,9 @@ export const readTool = tool({
       ),
   }),
   execute: async (params): Promise<ReadToolExecuteReturn> => {
-    if (!path.isAbsolute(params.filepath)) {
-      return {
-        type: "FAILURE",
-        title: params.filepath,
-        output: `Path must be absolute. You provided: "${params.filepath}". Use absolute paths from other tools (like glob tool results) or construct from project root.`,
-      };
-    }
-
-    const absolutePath = params.filepath;
+    const absolutePath = path.isAbsolute(params.filepath)
+      ? params.filepath
+      : path.join(getProjectPath(), params.filepath);
     const file = Bun.file(absolutePath);
 
     if (!file.exists()) {
@@ -68,10 +63,11 @@ export const readTool = tool({
 
     const lines = (await file.text()).trim().split("\n");
 
+    const count = params.count || LINE_COUNT;
     const fileSlice = lines
       .slice(
         params.inclusiveStartLineNumber - 1,
-        params.inclusiveStartLineNumber - 1 + LINE_COUNT
+        params.inclusiveStartLineNumber - 1 + count
       )
       .map((line, i) => `${params.inclusiveStartLineNumber + i}:`.concat(line));
 
@@ -79,11 +75,10 @@ export const readTool = tool({
       type: "SUCCESS",
       title: absolutePath,
       metadata: {
-        ...(lines.length > LINE_COUNT && {
-          nextInclusiveStartLineNumber:
-            params.inclusiveStartLineNumber + LINE_COUNT + 1,
+        ...(fileSlice.length < lines.length && {
+          nextInclusiveStartLineNumber: params.inclusiveStartLineNumber + count,
         }),
-        readEntireFile: lines.length <= LINE_COUNT,
+        readEntireFile: lines.length <= count,
         filepath: params.filepath,
         absolutePath,
       },

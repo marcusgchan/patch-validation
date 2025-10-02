@@ -1,6 +1,7 @@
 - Tool that searches for content within files in a codebase using ripgrep
 - Use this tool when you need to find specific text, patterns, or code within files
-- CRITICAL: Always use recursive search patterns that search through all subdirectories and focus on searching for names of things (variables, functions, classes, etc.) rather than language-specific syntax
+- CRITICAL: Always use recursive search patterns that search through all subdirectories
+- CRITICAL: Focus on searching for names of things (variables, functions, classes, etc.) rather than language-specific syntax
 - If no matches found, try a more generic pattern or different file types
 - The search is case-sensitive by default - use (?i) prefix for case-insensitive searches
 - Do not ask user any questions
