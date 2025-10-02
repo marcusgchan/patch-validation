@@ -3,20 +3,22 @@ export * from "./ls";
 export * from "./grep";
 export * from "./glob";
 
-import { readTool } from "./read";
-import { lsTool } from "./ls";
-import { grepTool } from "./grep";
-import { globTool } from "./glob";
+import { createReadTool } from "./read";
+import { createLsTool } from "./ls";
+import { createGrepTool } from "./grep";
+import { createGlobTool } from "./glob";
 import type { TypedToolCall, TypedToolResult } from "ai";
 
-const toolSet = {
-  readTool,
-  lsTool,
-  grepTool,
-  globTool,
-};
+export function createToolSet(targetDir: string) {
+  const toolSet = {
+    readTool: createReadTool(targetDir),
+    lsTool: createLsTool(targetDir),
+    grepTool: createGrepTool(targetDir),
+    globTool: createGlobTool(targetDir),
+  };
 
-export type ToolCall = TypedToolCall<typeof toolSet>;
-export type ToolResult = TypedToolResult<typeof toolSet>;
+  return toolSet;
+}
 
-export { toolSet };
+export type ToolCall = TypedToolCall<ReturnType<typeof createToolSet>>;
+export type ToolResult = TypedToolResult<ReturnType<typeof createToolSet>>;

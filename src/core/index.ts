@@ -2,11 +2,11 @@ import { stepCountIs, streamText } from "ai";
 import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
 import { getProjectFolderName, getProjectPath } from "./util/path";
-import { toolSet } from "./tool";
+import { createToolSet } from "./tool";
 
 // TODO: Verify dependencies
 
-export function promptLLM(prompt: string) {
+export function promptLLM(prompt: string, targetDir: string) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error("OOPENAI_API_KEY not set");
   }
@@ -14,12 +14,12 @@ export function promptLLM(prompt: string) {
   // Replace placeholders in system prompt with actual project metadata
   const systemPrompt = SYSTEM_PROMPT.replace(
     "{{FOLDER_NAME}}",
-    getProjectFolderName()
-  ).replace("{{FOLDER_PATH}}", getProjectPath());
+    getProjectFolderName(targetDir)
+  ).replace("{{FOLDER_PATH}}", getProjectPath(targetDir));
 
   const result = streamText({
     model: openai("gpt-4.1"),
-    tools: toolSet,
+    tools: createToolSet(targetDir),
     // prepareStep: async (p) => {
     //   p.steps[0]?.
     //   return {toolChoice: {toolName}}

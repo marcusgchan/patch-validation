@@ -7,12 +7,28 @@ import type {
 } from "../core/tool";
 
 export async function initCli() {
-  const prompt = process.argv[2];
-  if (prompt === undefined) {
-    throw new Error("No prompt provided");
+  const args = process.argv.slice(2);
+  let targetDir: string | undefined;
+  let prompt: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--dir" || args[i] === "-d") {
+      targetDir = args[i + 1];
+      i++;
+    } else if (!prompt) {
+      prompt = args[i];
+    }
   }
 
-  const result = promptLLM(prompt);
+  if (prompt === undefined) {
+    throw new Error(
+      "No prompt provided. Usage: validate-cli [--dir <target-directory>] <prompt>",
+    );
+  }
+
+  const finalTargetDir = targetDir || process.cwd();
+
+  const result = promptLLM(prompt, finalTargetDir);
   for await (const chunk of result.fullStream) {
     switch (chunk.type) {
       case "text-delta": {

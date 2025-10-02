@@ -1,0 +1,18 @@
+{
+  "name": "ts-orders",
+  "version": "1.0.0",
+  "description": "A TypeScript orders management system for testing validation tools",
+  "main": "main.ts",
+  "scripts": {
+    "start": "bun run main.ts",
+    "build": "bun build main.ts --outdir ./dist",
+    "dev": "bun --watch main.ts"
+  },
+  "keywords": ["typescript", "orders", "validation", "testing"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
