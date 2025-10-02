@@ -3,7 +3,7 @@ import z from "zod";
 import path from "path";
 import DESCRIPTION from "../prompt/read.txt";
 
-const LINE_COUNT = 300;
+const LINE_COUNT = 20;
 
 export type ReadToolExecuteReturn =
   | ReadToolSuccessExecuteReturn
@@ -14,6 +14,7 @@ export interface ReadToolSuccessExecuteReturn {
   title: string;
   metadata: {
     readEntireFile: boolean;
+    nextInclusiveStartLineNumber?: number;
     filepath: string;
     absolutePath: string;
   };
@@ -33,7 +34,7 @@ export const readTool = tool({
     filepath: z
       .string()
       .describe(
-        "The absolute filepath to read. Use absolute paths from other tools or construct from project root.",
+        "The absolute filepath to read. Use absolute paths from other tools or construct from project root."
       ),
     inclusiveStartLineNumber: z.coerce
       .number()
@@ -42,7 +43,7 @@ export const readTool = tool({
       .number()
       .optional()
       .describe(
-        `The number of lines to read including the inclusive start line number. If not provided, the default is ${LINE_COUNT}`,
+        `The number of lines to read including the inclusive start line number. If not provided, the default is ${LINE_COUNT}`
       ),
   }),
   execute: async (params): Promise<ReadToolExecuteReturn> => {
@@ -70,7 +71,7 @@ export const readTool = tool({
     const fileSlice = lines
       .slice(
         params.inclusiveStartLineNumber - 1,
-        params.inclusiveStartLineNumber - 1 + LINE_COUNT,
+        params.inclusiveStartLineNumber - 1 + LINE_COUNT
       )
       .map((line, i) => `${params.inclusiveStartLineNumber + i}:`.concat(line));
 
@@ -78,15 +79,10 @@ export const readTool = tool({
       type: "SUCCESS",
       title: absolutePath,
       metadata: {
-        // ...(lines.length <= LINE_COUNT
-        //   ? {
-        //       entireFileRead: true,
-        //     }
-        //   : {
-        //       entireFileRead: false,
-        //       nextInclusiveStartLineNumer:
-        //         params.inclusiveStartLineNumber + LINE_COUNT,
-        //     }),
+        ...(lines.length > LINE_COUNT && {
+          nextInclusiveStartLineNumber:
+            params.inclusiveStartLineNumber + LINE_COUNT + 1,
+        }),
         readEntireFile: lines.length <= LINE_COUNT,
         filepath: params.filepath,
         absolutePath,
