@@ -3,8 +3,16 @@ import z from "zod";
 import path from "path";
 import DESCRIPTION from "../prompt/ls.txt";
 
+export interface LsToolExecuteReturn {
+  title: string;
+  metadata: {
+    count: number;
+    truncated: boolean;
+  };
+  output: string;
+}
+
 export const lsTool = tool({
-  name: "List Directory",
   description: DESCRIPTION,
   inputSchema: z.object({
     path: z
@@ -13,7 +21,7 @@ export const lsTool = tool({
         `The path to run the ls command in. Needs to be a relative path to the project root.`
       ),
   }),
-  execute: async (params) => {
+  execute: async (params): Promise<LsToolExecuteReturn> => {
     // TODO: make it work for running in sub directories
     const absolutePath =
       params.path === undefined
@@ -34,7 +42,7 @@ export const lsTool = tool({
     return {
       title: absolutePath,
       metadata: {
-        count: maxResults,
+        count: entries.length,
         truncated,
       },
       output: entries.join("\n"),

@@ -3,8 +3,30 @@ import z from "zod";
 import path from "path";
 import DESCRIPTION from "../prompt/glob.txt";
 
+export type GlobToolExecuteReturn =
+  | GlobToolSuccessExecuteReturn
+  | GlobToolFailureExecuteReturn;
+
+export interface GlobToolSuccessExecuteReturn {
+  type: "SUCCESS";
+  title: string;
+  metadata: {
+    pattern: string;
+    path?: string;
+    absolutePath: string;
+    count: number;
+    truncated: boolean;
+  };
+  output: string;
+}
+
+export interface GlobToolFailureExecuteReturn {
+  type: "FAILURE";
+  title: string;
+  output: string;
+}
+
 export const globTool = tool({
-  name: "projectSearch",
   description: DESCRIPTION,
   inputSchema: z.object({
     pattern: z
@@ -19,9 +41,14 @@ export const globTool = tool({
         `The directory to search in. IMPORTANT: Omit this field to use the default project directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a relative valid directory path if provided.`
       ),
   }),
-  execute: async (params) => {
+  execute: async (params): Promise<GlobToolExecuteReturn> => {
     if (!checkRgInstalled()) {
-      throw new Error("rg not installed");
+      return {
+        type: "FAILURE",
+        title: params.pattern,
+        output:
+          "rg (ripgrep) is not installed. Please install ripgrep to use the project search tool.",
+      };
     }
 
     // TODO: make it work for running in sub directories
@@ -40,11 +67,14 @@ export const globTool = tool({
 
     if (proc.exitCode === 1) {
       return {
+        type: "SUCCESS",
         title: params.pattern,
         metadata: {
           pattern: params.pattern,
           path: params.path,
           absolutePath,
+          count: 0,
+          truncated: false,
         },
         output:
           "No files found. Call Project Search tool again with a more generic glob.",
@@ -53,9 +83,11 @@ export const globTool = tool({
 
     if (proc.exitCode !== 0) {
       const errorOutput = proc.stderr?.toString() || "Unknown error";
-      throw new Error(
-        `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`
-      );
+      return {
+        type: "FAILURE",
+        title: params.pattern,
+        output: `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`,
+      };
     }
 
     const maxLength = 100;
@@ -68,10 +100,13 @@ export const globTool = tool({
     }
 
     return {
+      type: "SUCCESS",
       title: params.pattern,
       metadata: {
         pattern: params.pattern,
         path: params.path,
+        absolutePath,
+        count: matchedFilepaths.length,
         truncated,
       },
       output: truncated

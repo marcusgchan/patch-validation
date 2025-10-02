@@ -1,12 +1,8 @@
 import { generateText, hasToolCall, stepCountIs, streamText } from "ai";
-import { grepTool } from "./tool/grep";
 import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
-import { globTool } from "./tool/glob";
-import { readTool } from "./tool/read";
-import { lsTool } from "./tool/ls";
 import { getProjectFolderName, getProjectPath } from "./util/path";
-import z from "zod";
+import { toolSet } from "./tool";
 
 // TODO: Verify dependencies
 
@@ -23,19 +19,7 @@ export function promptLLM(prompt: string) {
 
   const result = streamText({
     model: openai("gpt-4.1"),
-    tools: {
-      grepTool,
-      globTool,
-      lsTool,
-      readTool,
-      // finalAnswer: {
-      //   description: "Provide the final answer to the user",
-      //   inputSchema: z.object({
-      //     answer: z.string(),
-      //   }),
-      //   execute: async ({ answer }) => answer,
-      // },
-    },
+    tools: toolSet,
     maxRetries: 0,
     stopWhen: [
       stepCountIs(5),
@@ -43,6 +27,7 @@ export function promptLLM(prompt: string) {
     ],
     system: systemPrompt,
     prompt: prompt,
+    temperature: 0,
   });
 
   return result;

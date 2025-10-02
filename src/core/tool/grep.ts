@@ -3,8 +3,30 @@ import z from "zod";
 import path from "path";
 import DESCRIPTION from "../prompt/grep.txt";
 
+export type GrepToolExecuteReturn =
+  | GrepToolSuccessExecuteReturn
+  | GrepToolFailureExecuteReturn;
+
+export interface GrepToolSuccessExecuteReturn {
+  type: "SUCCESS";
+  title: string;
+  metadata: {
+    pattern: string;
+    path?: string;
+    absolutePath: string;
+    count: number;
+    truncated: boolean;
+  };
+  output: string;
+}
+
+export interface GrepToolFailureExecuteReturn {
+  type: "FAILURE";
+  title: string;
+  output: string;
+}
+
 export const grepTool = tool({
-  name: "Project search",
   description: DESCRIPTION,
   inputSchema: z.object({
     pattern: z
@@ -24,9 +46,14 @@ export const grepTool = tool({
     //     'File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'
     //   ),
   }),
-  execute: async (params) => {
+  execute: async (params): Promise<GrepToolExecuteReturn> => {
     if (!checkRgInstalled()) {
-      throw new Error("rg not installed");
+      return {
+        type: "FAILURE",
+        title: params.pattern,
+        output:
+          "rg (ripgrep) is not installed. Please install ripgrep to use the project search tool.",
+      };
     }
 
     const grepCommand = ["rg", "--no-line-number", "--no-heading"];
@@ -44,23 +71,27 @@ export const grepTool = tool({
 
     if (proc.exitCode === 1) {
       return {
+        type: "SUCCESS",
         title: params.pattern,
         metadata: {
           pattern: params.pattern,
           path: params.path,
-          // include: params.include,
           absolutePath,
+          count: 0,
+          truncated: false,
         },
         output:
-          "No files found. Call Project Search tool again with a more generic pattern.",
+          "No files found. Call grepTool again with a more generic pattern.",
       };
     }
 
     if (proc.exitCode !== 0) {
       const errorOutput = proc.stderr?.toString() || "Unknown error";
-      throw new Error(
-        `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`
-      );
+      return {
+        type: "FAILURE",
+        title: params.pattern,
+        output: `Grep command failed with exit code ${proc.exitCode}: ${errorOutput}`,
+      };
     }
 
     const maxLength = 100;
@@ -73,11 +104,13 @@ export const grepTool = tool({
     }
 
     return {
+      type: "SUCCESS",
       title: params.pattern,
       metadata: {
         pattern: params.pattern,
         path: params.path,
-        // include: params.include,
+        absolutePath,
+        count: matches.length,
         truncated,
       },
       output: truncated
