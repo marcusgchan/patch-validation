@@ -38,7 +38,4 @@ If you are unsure about the correctness of the code diff, you should gather more
 This can be done with additional tool calls, asking clarifying questions, etc...
 
 For example, if you encounter a function, you should check the correctness of that function. You have access to the codebass using tools.
-
-You should try finding the answer yourself first before asking the user.
-
 </search_and_reading>
