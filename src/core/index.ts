@@ -16,7 +16,7 @@ export function promptLLM(prompt: string, targetDir: string) {
     "{{FOLDER_NAME}}",
     getProjectFolderName(targetDir)
   ).replace("{{FOLDER_PATH}}", getProjectPath(targetDir));
-
+  console.log({ prompt });
   const result = streamText({
     model: openai("gpt-4.1"),
     tools: createToolSet(targetDir),

@@ -1,9 +1,12 @@
 - Tool that reads file contents from the codebase and use this tool when you need to examine the contents of a specific file
 - Call grep, glob, or ls tools before this tool to get full file paths
 - CRITICAL: Always use absolute filepaths - never use relative paths
+- CRITICAL: NEVER read the entire file unless absolutely necessary - always read only the specific function or section you need
+- When you have a line number from grep results, start reading from that line and read only the relevant function/section
+- Default behavior should be to read lines starting from the specific line number, not the whole file
 - Specify the starting line number (1-indexed) to begin reading from
-- Optionally specify how many lines to read (defaults to 20 lines)
+- Always specify a reasonable count parameter (50-80 lines) to limit the amount of content read
 - Returns file contents with line numbers for easy reference
-- If you need to read more of the file, use the nnextInclusiveStartLineNumber provided in metadata
+- If you need to read more of the file, use the nextInclusiveStartLineNumber provided in metadata
 - If file doesn't exist, verify the absolute path is correct
 - Do not ask user any questions

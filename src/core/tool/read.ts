@@ -4,7 +4,7 @@ import path from "path";
 import DESCRIPTION from "../prompt/read.txt";
 import { getProjectPath } from "../util/path";
 
-const LINE_COUNT = 100;
+const LINE_COUNT = 60;
 
 export type ReadToolExecuteReturn =
   | ReadToolSuccessExecuteReturn

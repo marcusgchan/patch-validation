@@ -63,6 +63,8 @@ export function createGrepTool(targetDir: string) {
       const absolutePath =
         params.path === undefined
           ? targetDir
+          : path.isAbsolute(params.path)
+          ? params.path
           : path.join(targetDir, params.path);
       grepCommand.push(absolutePath);
       console.log(grepCommand);
