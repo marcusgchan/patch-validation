@@ -1,0 +1,7 @@
+- Tool that provides the final validation result for code correctness
+- Use this tool when you have completed your analysis and are ready to provide the final answer
+- CRITICAL: This tool MUST be called to complete the validation process
+- CRITICAL: Only call this tool once you have thoroughly analyzed the code and are confident in your assessment
+- The result should be true if the code is correct, false if incorrect or incomplete
+- Provide a short explanation on your validation decision
+- Do not ask user any questions

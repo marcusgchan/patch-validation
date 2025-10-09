@@ -2,19 +2,22 @@ export * from "./read";
 export * from "./ls";
 export * from "./grep";
 export * from "./glob";
+export * from "./finalAnswer";
 
 import { createReadTool } from "./read";
 import { createLsTool } from "./ls";
 import { createGrepTool } from "./grep";
 import { createGlobTool } from "./glob";
+import { createFinalAnswerTool } from "./finalAnswer";
 import type { TypedToolCall, TypedToolResult } from "ai";
 
 export function createToolSet(targetDir: string) {
   const toolSet = {
     readTool: createReadTool(targetDir),
-    lsTool: createLsTool(targetDir),
+    // lsTool: createLsTool(targetDir),
     grepTool: createGrepTool(targetDir),
     globTool: createGlobTool(targetDir),
+    finalAnswer: createFinalAnswerTool(),
   };
 
   return toolSet;

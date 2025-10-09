@@ -1,4 +1,4 @@
-import { stepCountIs, streamText } from "ai";
+import { stepCountIs, streamText, hasToolCall } from "ai";
 import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
 import { openai } from "@ai-sdk/openai";
 import { getProjectFolderName, getProjectPath } from "./util/path";
@@ -16,19 +16,17 @@ export function promptLLM(prompt: string, targetDir: string) {
     "{{FOLDER_NAME}}",
     getProjectFolderName(targetDir)
   ).replace("{{FOLDER_PATH}}", getProjectPath(targetDir));
+
   console.log({ prompt });
+
   const result = streamText({
     model: openai("gpt-4.1"),
     tools: createToolSet(targetDir),
-    // prepareStep: async (p) => {
-    //   p.steps[0]?.
-    //   return {toolChoice: {toolName}}
-    // },
     maxRetries: 0,
-    stopWhen: [
-      stepCountIs(20),
-      //  hasToolCall("finalAnswer")
-    ],
+    onStepFinish: async () => {
+      await Bun.sleep(5000);
+    },
+    stopWhen: [stepCountIs(20), hasToolCall("finalAnswer")],
     system: systemPrompt,
     prompt: prompt,
     temperature: 0,

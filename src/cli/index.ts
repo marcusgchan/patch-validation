@@ -5,6 +5,7 @@ import type {
   GrepToolExecuteReturn,
   LsToolExecuteReturn,
   ReadToolExecuteReturn,
+  FinalAnswerToolExecuteReturn,
 } from "../core/tool";
 
 export async function initCli() {
@@ -31,6 +32,8 @@ export async function initCli() {
 
   const finalTargetDir = targetDir || process.cwd();
   const result = promptLLM(prompt, finalTargetDir);
+  let exitCode = 0;
+
   for await (const chunk of result.fullStream) {
     switch (chunk.type) {
       case "text-delta": {
@@ -93,6 +96,19 @@ export async function initCli() {
             console.log(data.output);
             break;
           }
+
+          case "finalAnswer": {
+            const data = chunk.output as FinalAnswerToolExecuteReturn;
+
+            exitCode = data.metadata.result ? 0 : 1;
+
+            if (!data.metadata.result) {
+              const resultOutput = "REASON:\n" + data.metadata.reason;
+              console.error(resultOutput);
+            } else {
+              console.log("SUCCESS");
+            }
+          }
         }
         break;
       }
@@ -102,4 +118,6 @@ export async function initCli() {
       }
     }
   }
+
+  process.exit(exitCode);
 }
