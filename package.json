@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "bun run index.ts",
-    "build": "bun build ./src/cli/index.ts --compile --outfile evaluation/cli"
+    "build": "bun build ./index.ts --compile --outfile evaluation/cli"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.35",
