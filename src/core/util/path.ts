@@ -1,8 +1,13 @@
 import path from "path";
+import { homedir } from "os";
 
 export function getProjectPath(targetDir?: string) {
   if (targetDir) {
-    return path.resolve(targetDir);
+    // Expand ~ to home directory
+    const expandedPath = targetDir.startsWith("~")
+      ? path.join(homedir(), targetDir.slice(1))
+      : targetDir;
+    return path.resolve(expandedPath);
   }
   return process.cwd();
 }

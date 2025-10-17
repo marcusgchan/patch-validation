@@ -6,7 +6,11 @@ import { createToolSet } from "./tool";
 
 // TODO: Verify dependencies
 
-export function promptLLM(prompt: string, targetDir: string) {
+export function promptLLM(
+  prompt: string,
+  targetDir: string,
+  bugDescription: string
+) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error("OOPENAI_API_KEY not set");
   }
@@ -17,18 +21,16 @@ export function promptLLM(prompt: string, targetDir: string) {
     getProjectFolderName(targetDir)
   ).replace("{{FOLDER_PATH}}", getProjectPath(targetDir));
 
-  console.log({ prompt });
-
   const result = streamText({
     model: openai("gpt-4.1"),
     tools: createToolSet(targetDir),
     maxRetries: 0,
     onStepFinish: async () => {
-      await Bun.sleep(5000);
+      await Bun.sleep(45000);
     },
-    stopWhen: [stepCountIs(20), hasToolCall("finalAnswer")],
+    stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: systemPrompt,
-    prompt: prompt,
+    prompt: `Bug Description:\n${bugDescription}\n\nTest Case:\n${prompt}`,
     temperature: 0,
   });
 

@@ -16,22 +16,45 @@ export async function initCli() {
         type: "string",
         short: "d",
       },
+      bugDescription: {
+        type: "string",
+        short: "b",
+      },
     },
     strict: true,
     allowPositionals: true,
   });
 
+  console.log("foo");
   const targetDir = values.dir;
+  let bugDescription = values.bugDescription;
   const prompt = positionals[2];
 
   if (prompt === undefined) {
     throw new Error(
-      "No prompt provided. Usage: validate-cli [--dir <target-directory>] <prompt>"
+      "No prompt provided. Usage: validate-cli [--dir <target-directory>] --bugDescription <description> <prompt>"
     );
   }
 
+  if (bugDescription === undefined) {
+    throw new Error(
+      "No bug description provided. Usage: validate-cli [--dir <target-directory>] --bugDescription <description> <prompt>"
+    );
+  }
+
+  // Check if bugDescription is a file path and read its contents
+  try {
+    const file = Bun.file(bugDescription);
+    if (await file.exists()) {
+      bugDescription = await file.text();
+    }
+  } catch (error) {
+    // If it's not a valid file path, treat it as plain text
+    // This allows both file paths and direct text descriptions
+  }
+
   const finalTargetDir = targetDir || process.cwd();
-  const result = promptLLM(prompt, finalTargetDir);
+  const result = promptLLM(prompt, finalTargetDir, bugDescription);
   let exitCode = 0;
 
   for await (const chunk of result.fullStream) {

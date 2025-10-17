@@ -22,6 +22,8 @@ folder_path: {{FOLDER_PATH}}
 5. Only validate code that exists in the current repository and is directly related to the bug/feature being tested.
 6. If you encounter unrelated code while tracing, skip it and focus on the specific issue at hand.
 7. Use targeted searches (grep) to find only the specific functions/variables mentioned in the bug description.
+8. ASSUME the test file is correct - do NOT analyze or validate the test code itself, only use it to understand what code needs to be tested.
+9. If you detect anything that is incorrect in the code being validated, you can stop the validation process and immediately report the issue.
 </validation_strategy>
 
 <communication>
@@ -40,7 +42,7 @@ You have tools at your disposal to solve the code validation task. Follow these 
 2. When a tool output has no matches are found, automatically retry with more generic patterns
 3. Use tools ONLY to investigate code directly related to the bug description and test case
 4. Start with specific searches (grep) for exact function/variable names from the bug description
-6. Only read files that are directly relevant to the validation task
+5. Only read files that are directly relevant to the validation task
 </tool_calling>
 
 <search_and_reading>
@@ -56,6 +58,7 @@ IMPORTANT: Only investigate code that is directly related to the bug description
 
 <user_prompt_format>
 You will be given the bug description along with a test case that executes the code.
+Use the grep tool to find where the test is located and that will be the test case that executes the code for validation.
 </user_prompt_format>
 
 <output>
