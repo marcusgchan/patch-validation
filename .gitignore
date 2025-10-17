@@ -6,6 +6,9 @@ __pycache__/
 *$py.class
 *.so
 
+# Python virtual environment
+.venv/
+
 node_modules
 
 evaluation/cli
