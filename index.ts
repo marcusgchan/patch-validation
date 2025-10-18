@@ -1,5 +1,8 @@
-#!/usr/bin/env bun
-
 import { initCli } from "./src/cli/index";
 
-await initCli();
+try {
+  await initCli();
+} catch (error) {
+  console.error(`Error: ${error}`);
+  process.exit(3);
+}

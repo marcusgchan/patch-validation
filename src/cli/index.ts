@@ -25,7 +25,6 @@ export async function initCli() {
     allowPositionals: true,
   });
 
-  console.log("foo");
   const targetDir = values.dir;
   let bugDescription = values.bugDescription;
   const prompt = positionals[2];
