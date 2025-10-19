@@ -153,9 +153,9 @@ export async function initCli() {
 
             const reason = "REASON:\n" + data.metadata.reason;
             if (!data.metadata.result) {
-              console.log(`CORRECT\n${reason}`);
-            } else {
               console.log(`INCORRECT\n${reason}`);
+            } else {
+              console.log(`CORRECT\n${reason}`);
             }
           }
         }

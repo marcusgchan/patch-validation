@@ -23,6 +23,7 @@ def evaluate():
     BUG_DESCRIPTIONS_PATH = Path(
         "/Users/marcus/repos/pyllmvalidate-benchmark/descriptions"
     )
+    DIFFS_PATH = Path("/Users/marcus/repos/pyllmvalidate-benchmark/output")
     OUTPUT_PATH = Path("output")
     RESULTS_FILE = OUTPUT_PATH / "results.json"
 
@@ -48,7 +49,6 @@ def evaluate():
         good_path = BUGS_IN_PY_PATH / Path(
             f"framework/bin/temp/black-{i + 1}/good/black"
         )
-        bad_path = BUGS_IN_PY_PATH / Path(f"framework/bin/temp/black-{i + 1}/bad/black")
 
         testcase = get_testcase(good_path)
 
@@ -62,7 +62,8 @@ def evaluate():
 
         # Test good patch (if needed)
         if should_test_good:
-            good_result = run_tool(bug_description, testcase, good_path)
+            diff = DIFFS_PATH / Path(f"{i + 1}/good_patch.txt")
+            good_result = run_tool(bug_description, testcase, good_path, diff)
             if good_result.returncode == 3:
                 print(f"Tool crash on correct patch #{i + 1}")
                 break
@@ -80,7 +81,11 @@ def evaluate():
 
         # Test bad patch (if needed)
         if should_test_bad:
-            bad_result = run_tool(bug_description, testcase, bad_path)
+            diff = DIFFS_PATH / Path(f"{i + 1}/bad_patch.txt")
+            bad_path = BUGS_IN_PY_PATH / Path(
+                f"framework/bin/temp/black-{i + 1}/bad/black"
+            )
+            bad_result = run_tool(bug_description, testcase, bad_path, diff)
             if bad_result.returncode == 3:
                 print(f"Tool crash on incorrect patch #{i + 1}")
                 break
@@ -102,7 +107,7 @@ def evaluate():
 
 
 def run_tool(
-    bug_description: str, testcase: str, path_to_project: Path
+    bug_description: str, testcase: str, path_to_project: Path, diff: Path
 ) -> subprocess.CompletedProcess:
     result = subprocess.run(
         [
@@ -111,6 +116,8 @@ def run_tool(
             str(path_to_project),
             "-b",
             bug_description,
+            "--diff",
+            diff,
             testcase,
         ],
         text=True,
