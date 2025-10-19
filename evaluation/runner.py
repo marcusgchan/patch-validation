@@ -66,7 +66,11 @@ def evaluate():
             good_result = run_tool(bug_description, testcase, good_path, diff)
             if good_result.returncode == 3:
                 print(f"Tool crash on correct patch #{i + 1}")
-                break
+                if good_result.stderr:
+                    (OUTPUT_PATH / Path(f"{i + 1}-good-error.txt")).write_text(
+                        good_result.stderr
+                    )
+                    break
 
             y_pred.append(1 if good_result.returncode == 0 else 0)
             y_true.append(1)
@@ -74,10 +78,7 @@ def evaluate():
             (OUTPUT_PATH / Path(f"{i + 1}-good-output.txt")).write_text(
                 good_result.stdout
             )
-            if good_result.stderr:
-                (OUTPUT_PATH / Path(f"{i + 1}-good-error.txt")).write_text(
-                    good_result.stderr
-                )
+            save_results(y_true, y_pred, RESULTS_FILE)
 
         # Test bad patch (if needed)
         if should_test_bad:
@@ -88,19 +89,19 @@ def evaluate():
             bad_result = run_tool(bug_description, testcase, bad_path, diff)
             if bad_result.returncode == 3:
                 print(f"Tool crash on incorrect patch #{i + 1}")
-                break
+                if bad_result.stderr:
+                    (OUTPUT_PATH / Path(f"{i + 1}-bad-error.txt")).write_text(
+                        bad_result.stderr
+                    )
+                    break
             y_pred.append(1 if bad_result.returncode == 0 else 0)
             y_true.append(0)
 
             (OUTPUT_PATH / Path(f"{i + 1}-bad-output.txt")).write_text(
                 bad_result.stdout
             )
-            if bad_result.stderr:
-                (OUTPUT_PATH / Path(f"{i + 1}-bad-error.txt")).write_text(
-                    bad_result.stderr
-                )
+            save_results(y_true, y_pred, RESULTS_FILE)
 
-        save_results(y_true, y_pred, RESULTS_FILE)
         print(f"Completed case {i + 1}, saved results")
 
     print(f"Results saved to {RESULTS_FILE}")

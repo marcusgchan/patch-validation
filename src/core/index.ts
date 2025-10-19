@@ -27,9 +27,9 @@ export function promptLLM(
     tools: createToolSet(targetDir),
     maxRetries: 0,
     onStepFinish: async () => {
-      await Bun.sleep(45000);
+      await Bun.sleep(25000);
     },
-    stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
+    stopWhen: [stepCountIs(1000), hasToolCall("finalAnswer")],
     system: systemPrompt,
     prompt: `Bug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
     temperature: 0,
