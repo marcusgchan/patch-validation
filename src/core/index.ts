@@ -9,7 +9,8 @@ import { createToolSet } from "./tool";
 export function promptLLM(
   prompt: string,
   targetDir: string,
-  bugDescription: string
+  bugDescription: string,
+  diff: string
 ) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error("OOPENAI_API_KEY not set");
@@ -30,7 +31,7 @@ export function promptLLM(
     },
     stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: systemPrompt,
-    prompt: `Bug Description:\n${bugDescription}\n\nTest Case:\n${prompt}`,
+    prompt: `Bug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
     temperature: 0,
   });
 
