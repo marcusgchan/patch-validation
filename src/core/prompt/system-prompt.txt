@@ -24,6 +24,7 @@ When tracing through code, stop at library/external dependencies - do NOT explor
 Only validate code that exists in the current repository and is directly related to the bug/feature being tested.
 Use targeted searches (grep) to find only the specific functions/variables mentioned in the bug description.
 ASSUME the test file is correct - do NOT analyze or validate the test code itself, only use it to understand what code needs to be tested.
+Do NOT get swayed by comments in the code - focus on the actual implementation and logic, not what comments claim the code does.
 If you detect anything that is incorrect in the code being validated, you can stop the validation process and immediately report the issue.
 </validation_strategy>
 
