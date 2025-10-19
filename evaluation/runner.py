@@ -34,11 +34,16 @@ def evaluate():
     # Ensure API key is available
     get_api_key()
 
-    # Determine starting index based on existing results
-    start_index = len(y_true)
-    print(f"Starting from index {start_index} (resuming from previous run)")
+    # Determine starting index and which patch to start with
+    num_results = len(y_true)
+    test_case_index = num_results // 2  # Which test case we're on
+    patch_index = num_results % 2  # 0 = good patch, 1 = bad patch
 
-    for i in range(start_index, 23):
+    print(
+        f"Resuming: test case {test_case_index + 1}, starting with {'bad' if patch_index == 1 else 'good'} patch"
+    )
+
+    for i in range(test_case_index, 23):
         bug_description = (BUG_DESCRIPTIONS_PATH / Path(f"{i + 1}.txt")).read_text()
         good_path = BUGS_IN_PY_PATH / Path(
             f"framework/bin/temp/black-{i + 1}/good/black"
@@ -47,35 +52,53 @@ def evaluate():
 
         testcase = get_testcase(good_path)
 
-        # Test good patch
-        print("running")
-        good_result = run_tool(bug_description, testcase, good_path)
-        print("finished running")
-        y_pred.append(1 if good_result.returncode == 0 else 0)
-        y_true.append(1)
+        # Determine which patches to test for this test case
+        should_test_good = (i == test_case_index and patch_index == 0) or (
+            i > test_case_index
+        )
+        should_test_bad = (i == test_case_index and patch_index == 1) or (
+            i > test_case_index
+        )
 
-        (OUTPUT_PATH / Path(f"{i + 1}-good-output.txt")).write_text(good_result.stdout)
-        if good_result.stderr:
-            (OUTPUT_PATH / Path(f"{i + 1}-good-error.txt")).write_text(
-                good_result.stderr
+        # Test good patch (if needed)
+        if should_test_good:
+            good_result = run_tool(bug_description, testcase, good_path)
+            if good_result.returncode == 3:
+                print(f"Tool crash on correct patch #{i + 1}")
+                break
+
+            y_pred.append(1 if good_result.returncode == 0 else 0)
+            y_true.append(1)
+
+            (OUTPUT_PATH / Path(f"{i + 1}-good-output.txt")).write_text(
+                good_result.stdout
             )
+            if good_result.stderr:
+                (OUTPUT_PATH / Path(f"{i + 1}-good-error.txt")).write_text(
+                    good_result.stderr
+                )
 
-        # Test bad patch
-        bad_result = run_tool(bug_description, testcase, bad_path)
-        y_pred.append(1 if bad_result.returncode == 0 else 0)
-        y_true.append(0)
+        # Test bad patch (if needed)
+        if should_test_bad:
+            bad_result = run_tool(bug_description, testcase, bad_path)
+            if bad_result.returncode == 3:
+                print(f"Tool crash on incorrect patch #{i + 1}")
+                break
+            y_pred.append(1 if bad_result.returncode == 0 else 0)
+            y_true.append(0)
 
-        (OUTPUT_PATH / Path(f"{i + 1}-bad-output.txt")).write_text(bad_result.stdout)
-        if bad_result.stderr:
-            (OUTPUT_PATH / Path(f"{i + 1}-bad-error.txt")).write_text(bad_result.stderr)
+            (OUTPUT_PATH / Path(f"{i + 1}-bad-output.txt")).write_text(
+                bad_result.stdout
+            )
+            if bad_result.stderr:
+                (OUTPUT_PATH / Path(f"{i + 1}-bad-error.txt")).write_text(
+                    bad_result.stderr
+                )
 
         save_results(y_true, y_pred, RESULTS_FILE)
-        print(f"  Completed case {i + 1}, saved results")
+        print(f"Completed case {i + 1}, saved results")
 
-        break
-
-    print(f"Evaluation complete! Final results saved to {RESULTS_FILE}")
-    print(f"Total tests: {len(y_true)}")
+    print(f"Results saved to {RESULTS_FILE}")
 
 
 def run_tool(
