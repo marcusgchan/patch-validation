@@ -27,12 +27,10 @@ def evaluate():
     OUTPUT_PATH = Path("output")
     RESULTS_FILE = OUTPUT_PATH / "results.json"
 
-    # Create output directory if it doesn't exist
     OUTPUT_PATH.mkdir(exist_ok=True)
 
-    # Load existing results or initialize empty arrays
     y_true, y_pred = load_existing_results(RESULTS_FILE)
-    # Ensure API key is available
+
     get_api_key()
 
     # Determine starting index and which patch to start with
@@ -52,15 +50,11 @@ def evaluate():
 
         testcase = get_testcase(good_path)
 
-        # Determine which patches to test for this test case
         should_test_good = (i == test_case_index and patch_index == 0) or (
             i > test_case_index
         )
-        should_test_bad = (i == test_case_index and patch_index == 1) or (
-            i > test_case_index
-        )
+        should_test_bad = (i == test_case_index) or (i > test_case_index)
 
-        # Test good patch (if needed)
         if should_test_good:
             diff = DIFFS_PATH / Path(f"{i + 1}/good_patch.txt")
             good_result = run_tool(bug_description, testcase, good_path, diff)
