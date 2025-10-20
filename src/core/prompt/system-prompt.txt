@@ -20,6 +20,7 @@ You will be given the bug description (requirements for fix), code diff with the
 When verifying the code diff, you should use the code diff as a basis of what to explore since it tells you what changed.
 The test case and PR should give you an idea of what to look for with the requirements.
 Be very maticulus since bugs can be very nuanced.
+Code can look correct but the logic may be incorrect (ensure to verify will tool calls).
 Do NOT explore unrelated files, functions, or code paths that are not directly relevant to the validation.
 When tracing through code, stop at library/external dependencies - do NOT explore their implementations.
 Only validate code that exists in the current repository and is directly related to the bug/feature being tested.
