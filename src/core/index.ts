@@ -27,7 +27,7 @@ export function promptLLM(
     tools: createToolSet(targetDir),
     maxRetries: 0,
     onStepFinish: async () => {
-      await Bun.sleep(35000);
+      await Bun.sleep(50000);
     },
     stopWhen: [stepCountIs(1000), hasToolCall("finalAnswer")],
     system: systemPrompt,
