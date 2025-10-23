@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import subprocess
@@ -18,13 +19,13 @@ prompt_template = "Bug Description:\n{bug_description}\nTest Case:\n{testcase}"
 #   go to bad patch
 #   run tool
 #   store results
-def evaluate():
+def evaluate(output_path: str = "output"):
     BUGS_IN_PY_PATH = Path("/Users/marcus/repos/BugsInPy")
     BUG_DESCRIPTIONS_PATH = Path(
         "/Users/marcus/repos/pyllmvalidate-benchmark/descriptions"
     )
     DIFFS_PATH = Path("/Users/marcus/repos/pyllmvalidate-benchmark/output")
-    OUTPUT_PATH = Path("output")
+    OUTPUT_PATH = Path(output_path)
     RESULTS_FILE = OUTPUT_PATH / "results.json"
 
     OUTPUT_PATH.mkdir(exist_ok=True)
@@ -158,3 +159,16 @@ def get_api_key():
         raise Exception("Missing API_KEY in .env in /evaluation")
 
     return key
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run validation evaluation")
+    parser.add_argument(
+        "--output",
+        "-o",
+        default="output",
+        help="Output directory for results (default: output)",
+    )
+
+    args = parser.parse_args()
+    evaluate(args.output)
