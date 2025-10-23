@@ -1,14 +1,11 @@
-import { stepCountIs, streamText, hasToolCall } from "ai";
-import SYSTEM_PROMPT from "./prompt/system-prompt.txt";
-import { openai } from "@ai-sdk/openai";
-import { getProjectFolderName, getProjectPath } from "./util/path";
-import { createToolSet } from "./tool";
+import { createAnalysisAgent } from "./agents/analysis-agent";
+import { createValidationAgent } from "./agents/validation-agent";
 
 // TODO: Verify dependencies
 
-export function promptLLM(
-  prompt: string,
+export function createAnalysisStream(
   targetDir: string,
+  prompt: string,
   bugDescription: string,
   diff: string
 ) {
@@ -16,24 +13,25 @@ export function promptLLM(
     throw new Error("OOPENAI_API_KEY not set");
   }
 
-  // Replace placeholders in system prompt with actual project metadata
-  const systemPrompt = SYSTEM_PROMPT.replace(
-    "{{FOLDER_NAME}}",
-    getProjectFolderName(targetDir)
-  ).replace("{{FOLDER_PATH}}", getProjectPath(targetDir));
-
-  const result = streamText({
-    model: openai("gpt-4.1"),
-    tools: createToolSet(targetDir),
-    maxRetries: 0,
-    onStepFinish: async () => {
-      await Bun.sleep(50000);
-    },
-    stopWhen: [stepCountIs(1000), hasToolCall("finalAnswer")],
-    system: systemPrompt,
+  const analysisAgent = createAnalysisAgent(targetDir);
+  return analysisAgent.stream({
     prompt: `Bug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
-    temperature: 0,
   });
+}
 
-  return result;
+export function createValidationStream(
+  targetDir: string,
+  prompt: string,
+  bugDescription: string,
+  diff: string,
+  analysisText: string
+) {
+  if (process.env.OPENAI_API_KEY === undefined) {
+    throw new Error("OOPENAI_API_KEY not set");
+  }
+
+  const validationAgent = createValidationAgent(targetDir);
+  return validationAgent.stream({
+    prompt: `Based on the analysis results, validate the code changes:\n\n${analysisText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
+  });
 }

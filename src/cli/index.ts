@@ -1,5 +1,5 @@
 import { parseArgs } from "util";
-import { promptLLM } from "../core";
+import { createAnalysisStream, createValidationStream } from "../core";
 import type {
   GlobToolExecuteReturn,
   GrepToolExecuteReturn,
@@ -75,22 +75,28 @@ export async function initCli() {
   }
 
   const finalTargetDir = targetDir || process.cwd();
-  const result = promptLLM(prompt, finalTargetDir, bugDescription, diff);
   let exitCode = 0;
+  let analysisText = "";
 
-  for await (const chunk of result.fullStream) {
+  // Phase 1: Stream Analysis Agent
+  console.log("=== PHASE 1: ANALYSIS ===\n");
+  const analysisStream = createAnalysisStream(
+    finalTargetDir,
+    prompt,
+    bugDescription,
+    diff
+  );
+  for await (const chunk of analysisStream.fullStream) {
     switch (chunk.type) {
       case "text-delta": {
+        analysisText += chunk.text;
         process.stdout.write(chunk.text);
         break;
       }
       case "tool-call": {
         console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
-        // console.log(`Tool call input:`, chunk.input);
         break;
       }
-      // TODO: Handle tool errors properly
-      // Currently it will keep recalling tool even if the error isn't fixable (e.g. invalid cli args)
       case "tool-error": {
         console.log(`Tool error: ${chunk.error}`);
         break;
@@ -105,21 +111,17 @@ export async function initCli() {
           case "lsTool": {
             const data = chunk.output as LsToolExecuteReturn;
             console.log(data.title);
-
             if (data.metadata.truncated) {
               console.log("Showing truncated results:");
             } else {
               console.log(`Showing ${data.metadata.count} result(s):`);
             }
-
             console.log(data.output);
             break;
           }
-
           case "readTool": {
             const data = chunk.output as ReadToolExecuteReturn;
             console.log(data.title);
-
             if (data.type === "SUCCESS") {
               console.log(
                 data.metadata.readEntireFile
@@ -127,30 +129,103 @@ export async function initCli() {
                   : "Reading portion of file"
               );
             }
-
             console.log(data.output);
             break;
           }
-
           case "globTool": {
             const data = chunk.output as GlobToolExecuteReturn;
             console.log(data.title);
             console.log(data.output);
             break;
           }
-
           case "grepTool": {
             const data = chunk.output as GrepToolExecuteReturn;
             console.log(data.title);
             console.log(data.output);
             break;
           }
+        }
+        break;
+      }
+      case "finish": {
+        console.log("\n");
+        break;
+      }
+    }
+  }
 
+  console.log("\n=== PHASE 1 COMPLETE ===\n");
+
+  // Phase 2-3: Stream Validation Agent
+  console.log("=== PHASE 2-3: VALIDATION ===\n");
+  const validationStream = createValidationStream(
+    finalTargetDir,
+    prompt,
+    bugDescription,
+    diff,
+    analysisText
+  );
+
+  for await (const chunk of validationStream.fullStream) {
+    switch (chunk.type) {
+      case "text-delta": {
+        process.stdout.write(chunk.text);
+        break;
+      }
+      case "tool-call": {
+        console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
+        break;
+      }
+      case "tool-error": {
+        console.log(`Tool error: ${chunk.error}`);
+        break;
+      }
+      case "error": {
+        console.log(`Error: ${chunk.error}`);
+        exitCode = 3;
+        break;
+      }
+      case "tool-result": {
+        switch (chunk.toolName) {
+          case "lsTool": {
+            const data = chunk.output as LsToolExecuteReturn;
+            console.log(data.title);
+            if (data.metadata.truncated) {
+              console.log("Showing truncated results:");
+            } else {
+              console.log(`Showing ${data.metadata.count} result(s):`);
+            }
+            console.log(data.output);
+            break;
+          }
+          case "readTool": {
+            const data = chunk.output as ReadToolExecuteReturn;
+            console.log(data.title);
+            if (data.type === "SUCCESS") {
+              console.log(
+                data.metadata.readEntireFile
+                  ? "Reading entire file"
+                  : "Reading portion of file"
+              );
+            }
+            console.log(data.output);
+            break;
+          }
+          case "globTool": {
+            const data = chunk.output as GlobToolExecuteReturn;
+            console.log(data.title);
+            console.log(data.output);
+            break;
+          }
+          case "grepTool": {
+            const data = chunk.output as GrepToolExecuteReturn;
+            console.log(data.title);
+            console.log(data.output);
+            break;
+          }
           case "finalAnswer": {
             const data = chunk.output as FinalAnswerToolExecuteReturn;
-
             exitCode = data.metadata.result ? 0 : 1;
-
             const reason = "REASON:\n" + data.metadata.reason;
             if (!data.metadata.result) {
               console.log(`INCORRECT\n${reason}`);
@@ -168,5 +243,6 @@ export async function initCli() {
     }
   }
 
+  console.log("\n=== PHASE 2-3 COMPLETE ===\n");
   process.exit(exitCode);
 }
