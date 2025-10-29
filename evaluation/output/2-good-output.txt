@@ -1,0 +1,333 @@
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "test_fmtonoff4", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+test_fmtonoff4
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_fmtonoff4
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_fmtonoff4
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/test_black.py:636:    def test_fmtonoff4(self) -> None:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "generate_ignored_nodes", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+generate_ignored_nodes
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/data/fmtonoff.py:112:    because . the . handling . inside . generate_ignored_nodes()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/data/fmtonoff.py:327:    because . the . handling . inside . generate_ignored_nodes()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3075:                ignored_nodes = list(generate_ignored_nodes(leaf))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3112:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3075:                ignored_nodes = list(generate_ignored_nodes(leaf))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3112:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/docs/reference/reference_functions.rst:136:.. autofunction:: black.generate_ignored_nodes
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/docs/reference/reference_functions.rst:136:.. autofunction:: black.generate_ignored_nodes
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/tests/data/fmtonoff.py:112:    because . the . handling . inside . generate_ignored_nodes()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/tests/data/fmtonoff.py:327:    because . the . handling . inside . generate_ignored_nodes()
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "def fmt_on", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+def fmt_on
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3133:def fmt_on(container: LN) -> bool:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "def contains_fmt_on_at_column", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+def contains_fmt_on_at_column
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3143:def contains_fmt_on_at_column(container: LN, column: int) -> bool:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "def first_leaf_column", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+def first_leaf_column
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3157:def first_leaf_column(node: Node) -> Optional[int]:
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py
+Reading portion of file
+3112:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+3113:    """Starting from the container of `leaf`, generate all leaves until `# fmt: on`.
+3114:
+3115:    Stops at the end of the block.
+3116:    """
+3117:    container: Optional[LN] = container_of(leaf)
+3118:    while container is not None and container.type != token.ENDMARKER:
+3119:        if fmt_on(container):
+3120:            return
+3121:
+3122:        # fix for fmt: on in children
+3123:        if contains_fmt_on_at_column(container, leaf.column):
+3124:            for child in container.children:
+3125:                if contains_fmt_on_at_column(child, leaf.column):
+3126:                    return
+3127:                yield child
+3128:        else:
+3129:            yield container
+3130:            container = container.next_sibling
+3131:
+3132:
+3133:def fmt_on(container: LN) -> bool:
+3134:    is_fmt_on = False
+3135:    for comment in list_comments(container.prefix, is_endmarker=False):
+3136:        if comment.value in FMT_ON:
+3137:            is_fmt_on = True
+3138:        elif comment.value in FMT_OFF:
+3139:            is_fmt_on = False
+3140:    return is_fmt_on
+3141:
+3142:
+3143:def contains_fmt_on_at_column(container: LN, column: int) -> bool:
+3144:    for child in container.children:
+3145:        if (
+3146:            isinstance(child, Node)
+3147:            and first_leaf_column(child) == column
+3148:            or isinstance(child, Leaf)
+3149:            and child.column == column
+3150:        ):
+3151:            if fmt_on(child):
+3152:                return True
+3153:
+3154:    return False
+3155:
+3156:
+3157:def first_leaf_column(node: Node) -> Optional[int]:
+3158:    for child in node.children:
+3159:        if isinstance(child, Leaf):
+3160:            return child.column
+3161:    return None
+3162:
+3163:
+3164:def maybe_make_parens_invisible_in_atom(node: LN, parent: LN) -> bool:
+3165:    """If it's safe, make the parens in the atom `node` invisible, recursively.
+3166:    Additionally, remove repeated, adjacent invisible parens from the atom `node`
+3167:    as they are redundant.
+3168:
+3169:    Returns whether the node should itself be wrapped in invisible parentheses.
+3170:
+3171:    """
+3172:    if (
+3173:        node.type != syms.atom
+3174:        or is_empty_tuple(node)
+3175:        or is_one_tuple(node)
+3176:        or (is_yield(node) and parent.type != syms.expr_stmt)
+3177:        or max_delimiter_priority_in_atom(node) >= COMMA_PRIORITY
+3178:    ):
+3179:        return False
+3180:
+3181:    first = node.children[0]
+3182:    last = node.children[-1]
+3183:    if first.type == token.LPAR and last.type == token.RPAR:
+3184:        middle = node.children[1]
+3185:        # make parentheses invisible
+3186:        first.value = ""  # type: ignore
+3187:        last.value = ""  # type: ignore
+3188:        maybe_make_parens_invisible_in_atom(middle, parent=parent)
+3189:
+3190:        if is_atom_with_invisible_parens(middle):
+3191:            # Strip the invisible parens from `middle` by replacing
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/test_black.py
+Reading portion of file
+636:    def test_fmtonoff4(self) -> None:
+637:        source, expected = read_data("fmtonoff4")
+638:        actual = fs(source)
+639:        self.assertFormatEqual(expected, actual)
+640:        black.assert_equivalent(source, actual)
+641:        black.assert_stable(source, actual, black.FileMode())
+642:
+643:    @patch("black.dump_to_file", dump_to_stderr)
+644:    def test_remove_empty_parentheses_after_class(self) -> None:
+645:        source, expected = read_data("class_blank_parentheses")
+646:        actual = fs(source)
+647:        self.assertFormatEqual(expected, actual)
+648:        black.assert_equivalent(source, actual)
+649:        black.assert_stable(source, actual, black.FileMode())
+650:
+651:    @patch("black.dump_to_file", dump_to_stderr)
+652:    def test_new_line_between_class_and_code(self) -> None:
+653:        source, expected = read_data("class_methods_new_line")
+654:        actual = fs(source)
+655:        self.assertFormatEqual(expected, actual)
+656:        black.assert_equivalent(source, actual)
+657:        black.assert_stable(source, actual, black.FileMode())
+658:
+659:    @patch("black.dump_to_file", dump_to_stderr)
+660:    def test_bracket_match(self) -> None:
+661:        source, expected = read_data("bracketmatch")
+662:        actual = fs(source)
+663:        self.assertFormatEqual(expected, actual)
+664:        black.assert_equivalent(source, actual)
+665:        black.assert_stable(source, actual, black.FileMode())
+666:
+667:    @patch("black.dump_to_file", dump_to_stderr)
+668:    def test_tuple_assign(self) -> None:
+669:        source, expected = read_data("tupleassign")
+670:        actual = fs(source)
+671:        self.assertFormatEqual(expected, actual)
+672:        black.assert_equivalent(source, actual)
+673:        black.assert_stable(source, actual, black.FileMode())
+674:
+675:    @patch("black.dump_to_file", dump_to_stderr)
+676:    def test_beginning_backslash(self) -> None:
+677:        source, expected = read_data("beginning_backslash")
+678:        actual = fs(source)
+679:        self.assertFormatEqual(expected, actual)
+680:        black.assert_equivalent(source, actual)
+681:        black.assert_stable(source, actual, black.FileMode())
+682:
+683:    def test_tab_comment_indentation(self) -> None:
+684:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t# comment\n\tpass\n"
+685:        contents_spc = "if 1:\n    if 2:\n        pass\n    # comment\n    pass\n"
+686:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+687:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+688:
+689:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t\t# comment\n\tpass\n"
+690:        contents_spc = "if 1:\n    if 2:\n        pass\n        # comment\n    pass\n"
+691:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+692:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+693:
+694:        # mixed tabs and spaces (valid Python 2 code)
+695:        contents_tab = "if 1:\n        if 2:\n\t\tpass\n\t# comment\n        pass\n"
+
+🔧 Calling tool: globTool
+**/fmtonoff4*
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/data/fmtonoff4.py
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/tests/data/fmtonoff4.py
+Reading entire file
+1:# fmt: off
+2:@test([
+3:    1, 2,
+4:    3, 4,
+5:])
+6:# fmt: on
+7:def f(): pass
+8:
+9:@test([
+10:    1, 2,
+11:    3, 4,
+12:])
+13:def f(): pass
+14:
+15:# output
+16:
+17:# fmt: off
+18:@test([
+19:    1, 2,
+20:    3, 4,
+21:])
+22:# fmt: on
+23:def f():
+24:    pass
+25:
+26:
+27:@test(
+28:    [1, 2, 3, 4,]
+29:)
+30:def f():
+31:    pass
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "list_comments", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+list_comments
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:2354:    for pc in list_comments(leaf.prefix, is_endmarker=leaf.type == token.ENDMARKER):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:2377:def list_comments(prefix: str, *, is_endmarker: bool) -> List[ProtoComment]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3009:    for pc in list_comments(node.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3065:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3135:    for comment in list_comments(container.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/docs/reference/reference_functions.rst:142:.. autofunction:: black.list_comments
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:2354:    for pc in list_comments(leaf.prefix, is_endmarker=leaf.type == token.ENDMARKER):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:2377:def list_comments(prefix: str, *, is_endmarker: bool) -> List[ProtoComment]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3009:    for pc in list_comments(node.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3065:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3120:        for comment in list_comments(container.prefix, is_endmarker=False):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/docs/reference/reference_functions.rst:142:.. autofunction:: black.list_comments
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py
+Reading portion of file
+2377:def list_comments(prefix: str, *, is_endmarker: bool) -> List[ProtoComment]:
+2378:    """Return a list of :class:`ProtoComment` objects parsed from the given `prefix`."""
+2379:    result: List[ProtoComment] = []
+2380:    if not prefix or "#" not in prefix:
+2381:        return result
+2382:
+2383:    consumed = 0
+2384:    nlines = 0
+2385:    ignored_lines = 0
+2386:    for index, line in enumerate(prefix.split("\n")):
+2387:        consumed += len(line) + 1  # adding the length of the split '\n'
+2388:        line = line.lstrip()
+2389:        if not line:
+2390:            nlines += 1
+2391:        if not line.startswith("#"):
+2392:            # Escaped newlines outside of a comment are not really newlines at
+2393:            # all. We treat a single-line comment following an escaped newline
+2394:            # as a simple trailing comment.
+2395:            if line.endswith("\\"):
+2396:                ignored_lines += 1
+2397:            continue
+2398:
+2399:        if index == ignored_lines and not is_endmarker:
+2400:            comment_type = token.COMMENT  # simple trailing comment
+2401:        else:
+2402:            comment_type = STANDALONE_COMMENT
+2403:        comment = make_comment(line)
+2404:        result.append(
+2405:            ProtoComment(
+2406:                type=comment_type, value=comment, newlines=nlines, consumed=consumed
+2407:            )
+2408:        )
+2409:        nlines = 0
+2410:    return result
+2411:
+2412:
+2413:def make_comment(content: str) -> str:
+2414:    """Return a consistently formatted comment from the given `content` string.
+2415:
+2416:    All comments (except for "##", "#!", "#:", '#'", "#%%") should have a single
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "FMT_ON", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+FMT_ON
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:2332:FMT_ON = {"# fmt: on", "# fmt:on", "# yapf: enable"}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3136:        if comment.value in FMT_ON:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:2332:FMT_ON = {"# fmt: on", "# fmt:on", "# yapf: enable"}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3121:            if comment.value in FMT_ON:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "FMT_OFF", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black" ]
+FMT_OFF
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:2331:FMT_OFF = {"# fmt: off", "# fmt:off", "# yapf: disable"}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3010:        if pc.value in FMT_OFF:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3066:            if comment.value in FMT_OFF:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py:3138:        elif comment.value in FMT_OFF:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:2331:FMT_OFF = {"# fmt: off", "# fmt:off", "# yapf: disable"}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3010:        if pc.value in FMT_OFF:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3066:            if comment.value in FMT_OFF:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/env/src/black/black.py:3123:            elif comment.value in FMT_OFF:
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-2/good/black/black.py
+Reading portion of file
+2331:FMT_OFF = {"# fmt: off", "# fmt:off", "# yapf: disable"}
+2332:FMT_ON = {"# fmt: on", "# fmt:on", "# yapf: enable"}
+2333:
+2334:
+2335:def generate_comments(leaf: LN) -> Iterator[Leaf]:
+2336:    """Clean the prefix of the `leaf` and generate comments from it, if any.
+2337:
+2338:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+2339:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+2340:    move because it does away with modifying the grammar to include all the
+
+🔧 Calling tool: finalAnswer
+CORRECT
+REASON:
+The code diff introduces a fix for handling '# fmt: on' comments at the same indentation level as '# fmt: off', specifically addressing the issue where formatting was not resumed after a block boundary or decorators. The new logic in 'generate_ignored_nodes', 'fmt_on', and 'contains_fmt_on_at_column' correctly checks for '# fmt: on' at the relevant column and resumes formatting as intended. The test case 'test_fmtonoff4' exercises this behavior, and the implementation matches the requirements described in the bug report and PR. All helper functions and constants are correctly defined and used.
+
+

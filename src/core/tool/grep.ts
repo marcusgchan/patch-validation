@@ -59,6 +59,8 @@ export function createGrepTool(targetDir: string) {
 
       const grepCommand = ["rg", "--no-heading", "--line-number"];
       // params.include && grepCommand.push(...["--glob", params.include]);
+      // Use custom ignore file to exclude .py.original files
+      grepCommand.push("--ignore-file", ".rgignore");
       grepCommand.push(params.pattern);
       const absolutePath =
         params.path === undefined

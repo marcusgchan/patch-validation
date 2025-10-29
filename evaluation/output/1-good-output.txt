@@ -1,0 +1,354 @@
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "def reformat_many", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black" ]
+def reformat_many
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:612:def reformat_many(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:612:def reformat_many(
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py
+Reading portion of file
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = None
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            executor.shutdown()
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "ProcessPoolExecutor", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black" ]
+ProcessPoolExecutor
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:5:from concurrent.futures import Executor, ProcessPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:615:    """Reformat multiple files using a ProcessPoolExecutor."""
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:658:    (Use ProcessPoolExecutors for actual parallelism.)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/blackd.py:2:from concurrent.futures import Executor, ProcessPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/blackd.py:60:    executor = ProcessPoolExecutor()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1258:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1276:    @patch("black.ProcessPoolExecutor", autospec=True)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1359:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/blackd.py:2:from concurrent.futures import Executor, ProcessPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/blackd.py:60:    executor = ProcessPoolExecutor()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:5:from concurrent.futures import Executor, ProcessPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:615:    """Reformat multiple files using a ProcessPoolExecutor."""
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:621:    executor = ProcessPoolExecutor(max_workers=worker_count)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:650:    (Use ProcessPoolExecutors for actual parallelism.)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1258:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1338:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/tqdm/contrib/concurrent.py:81:    driven by `concurrent.futures.ProcessPoolExecutor`.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/tqdm/contrib/concurrent.py:89:        `concurrent.futures.ProcessPoolExecutor.__init__`.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/tqdm/contrib/concurrent.py:93:        `concurrent.futures.ProcessPoolExecutor.map`. [default: 1].
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/tqdm/contrib/concurrent.py:95:    from concurrent.futures import ProcessPoolExecutor
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/tqdm/contrib/concurrent.py:106:    return _executor_map(ProcessPoolExecutor, fn, *iterables, **tqdm_kwargs)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/concurrent/futures/process.pyi:13:    class ProcessPoolExecutor(Executor):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/concurrent/futures/process.pyi:19:    class ProcessPoolExecutor(Executor):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/mypy/typeshed/third_party/2/concurrent/futures/process.pyi:13:    class ProcessPoolExecutor(Executor):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/lib/python3.8/site-packages/mypy/typeshed/third_party/2/concurrent/futures/process.pyi:19:    class ProcessPoolExecutor(Executor):
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "test_works_in_mono_process_only_environment",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black"
+]
+test_works_in_mono_process_only_environment
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_works_in_mono_process_only_environment
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_works_in_mono_process_only_environment
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py
+Reading portion of file
+1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+1278:        mock_executor.side_effect = OSError()
+1279:        mode = black.FileMode()
+1280:        with cache_dir() as workspace:
+1281:            one = (workspace / "one.py").resolve()
+1282:            with one.open("w") as fobj:
+1283:                fobj.write("print('hello')")
+1284:            two = (workspace / "two.py").resolve()
+1285:            with two.open("w") as fobj:
+1286:                fobj.write("print('hello')")
+1287:            black.write_cache({}, [one], mode)
+1288:            self.invokeBlack([str(workspace)])
+1289:            with one.open("r") as fobj:
+1290:                self.assertEqual(fobj.read(), "print('hello')")
+1291:            with two.open("r") as fobj:
+1292:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1293:            cache = black.read_cache(mode)
+1294:            self.assertIn(one, cache)
+1295:            self.assertIn(two, cache)
+1296:
+1297:    def test_no_cache_when_writeback_diff(self) -> None:
+1298:        mode = black.FileMode()
+1299:        with cache_dir() as workspace:
+1300:            src = (workspace / "test.py").resolve()
+1301:            with src.open("w") as fobj:
+1302:                fobj.write("print('hello')")
+1303:            self.invokeBlack([str(src), "--diff"])
+1304:            cache_file = black.get_cache_file(mode)
+1305:            self.assertFalse(cache_file.exists())
+1306:
+1307:    def test_no_cache_when_stdin(self) -> None:
+1308:        mode = black.FileMode()
+1309:        with cache_dir():
+1310:            result = CliRunner().invoke(
+1311:                black.main, ["-"], input=BytesIO(b"print('hello')")
+1312:            )
+1313:            self.assertEqual(result.exit_code, 0)
+1314:            cache_file = black.get_cache_file(mode)
+1315:            self.assertFalse(cache_file.exists())
+1316:
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "invokeBlack", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black" ]
+invokeBlack
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:155:    def invokeBlack(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:657:        self.invokeBlack([str(source_path), "--target-version", "py36"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:659:        self.invokeBlack([str(source_path), "--target-version", "py37"], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:672:        self.invokeBlack([str(source_path), "--target-version", "py37"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:674:        self.invokeBlack([str(source_path), "--target-version", "py36"], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1239:            self.invokeBlack([str(src)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1250:            self.invokeBlack([str(src)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1267:            self.invokeBlack([str(workspace)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1288:            self.invokeBlack([str(workspace)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1303:            self.invokeBlack([str(src), "--diff"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1367:            self.invokeBlack([str(workspace)], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1383:            self.invokeBlack([str(src1), "--diff", "--check"], exit_code=1)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1386:            self.invokeBlack([str(src2), "--diff", "--check"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1388:            self.invokeBlack([str(src1), str(src2), "--diff", "--check"], exit_code=1)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1393:            self.invokeBlack([])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1402:            self.invokeBlack([str(workspace.resolve())])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1431:            self.invokeBlack([str(path), "--pyi"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1454:            self.invokeBlack([str(p) for p in paths] + ["--pyi"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1483:            self.invokeBlack([str(path), *PY36_ARGS])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1506:            self.invokeBlack([str(p) for p in paths] + PY36_ARGS)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1635:            self.invokeBlack(["-", option, "**()(!!*)"], exit_code=2)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py:1758:            self.invokeBlack(args, exit_code=2, ignore_config=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:155:    def invokeBlack(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:657:        self.invokeBlack([str(source_path), "--target-version", "py36"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:659:        self.invokeBlack([str(source_path), "--target-version", "py37"], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:672:        self.invokeBlack([str(source_path), "--target-version", "py37"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:674:        self.invokeBlack([str(source_path), "--target-version", "py36"], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1239:            self.invokeBlack([str(src)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1250:            self.invokeBlack([str(src)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1267:            self.invokeBlack([str(workspace)])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1282:            self.invokeBlack([str(src), "--diff"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1346:            self.invokeBlack([str(workspace)], exit_code=123)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1362:            self.invokeBlack([str(src1), "--diff", "--check"], exit_code=1)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1365:            self.invokeBlack([str(src2), "--diff", "--check"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1367:            self.invokeBlack([str(src1), str(src2), "--diff", "--check"], exit_code=1)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1372:            self.invokeBlack([])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1381:            self.invokeBlack([str(workspace.resolve())])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1410:            self.invokeBlack([str(path), "--pyi"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1433:            self.invokeBlack([str(p) for p in paths] + ["--pyi"])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1462:            self.invokeBlack([str(path), *PY36_ARGS])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1485:            self.invokeBlack([str(p) for p in paths] + PY36_ARGS)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1614:            self.invokeBlack(["-", option, "**()(!!*)"], exit_code=2)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/tests/test_black.py:1737:            self.invokeBlack(args, exit_code=2, ignore_config=False)
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/tests/test_black.py
+Reading portion of file
+155:    def invokeBlack(
+156:        self, args: List[str], exit_code: int = 0, ignore_config: bool = True
+157:    ) -> None:
+158:        runner = BlackRunner()
+159:        if ignore_config:
+160:            args = ["--config", str(THIS_DIR / "empty.toml"), *args]
+161:        result = runner.invoke(black.main, args)
+162:        self.assertEqual(result.exit_code, exit_code, msg=runner.stderr_bytes.decode())
+163:
+164:    @patch("black.dump_to_file", dump_to_stderr)
+165:    def checkSourceFile(self, name: str) -> None:
+166:        path = THIS_DIR.parent / name
+167:        source, expected = read_data(str(path), data=False)
+168:        actual = fs(source)
+169:        self.assertFormatEqual(expected, actual)
+170:        black.assert_equivalent(source, actual)
+171:        black.assert_stable(source, actual, black.FileMode())
+172:        self.assertFalse(ff(path))
+173:
+174:    @patch("black.dump_to_file", dump_to_stderr)
+175:    def test_empty(self) -> None:
+176:        source = expected = ""
+177:        actual = fs(source)
+178:        self.assertFormatEqual(expected, actual)
+179:        black.assert_equivalent(source, actual)
+180:        black.assert_stable(source, actual, black.FileMode())
+181:
+182:    def test_empty_ff(self) -> None:
+183:        expected = ""
+184:        tmp_file = Path(black.dump_to_file())
+185:        try:
+186:            self.assertFalse(ff(tmp_file, write_back=black.WriteBack.YES))
+187:            with open(tmp_file, encoding="utf8") as f:
+188:                actual = f.read()
+189:        finally:
+190:            os.unlink(tmp_file)
+191:        self.assertFormatEqual(expected, actual)
+192:
+193:    def test_self(self) -> None:
+194:        self.checkSourceFile("tests/test_black.py")
+
+🔧 Calling tool: grepTool
+[ "rg", "--no-heading", "--line-number", "schedule_formatting", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black" ]
+schedule_formatting
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:631:            schedule_formatting(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py:647:async def schedule_formatting(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/docs/reference/reference_functions.rst:55:.. autofunction:: black.schedule_formatting
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/docs/reference/reference_functions.rst:55:.. autofunction:: black.schedule_formatting
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:624:            schedule_formatting(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/env/src/black/black.py:639:async def schedule_formatting(
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py
+Reading portion of file
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+
+🔧 Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/good/black/black.py
+Reading portion of file
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+720:    fast: bool,
+721:    mode: Mode,
+722:    write_back: WriteBack = WriteBack.NO,
+723:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+724:) -> bool:
+725:    """Format file under `src` path. Return True if changed.
+726:
+
+🔧 Calling tool: finalAnswer
+CORRECT
+REASON:
+The code diff introduces a try/except block around the creation of the ProcessPoolExecutor in reformat_many, catching OSError and falling back to a serial execution (executor=None) if multiprocessing is not supported (e.g., in AWS Lambda or read-only /dev/shm environments). The test case test_works_in_mono_process_only_environment mocks this failure and verifies that formatting still works as expected. The shutdown logic is also guarded to only call executor.shutdown() if the executor was created. This matches the requirements in the bug description and issues, and the code is correct for the intended fix.
+
+

@@ -15,7 +15,7 @@ export function createValidationAgent(targetDir: string) {
       ...createToolSet(targetDir),
     },
     onStepFinish: async () => {
-      await Bun.sleep(15 * 1000);
+      await Bun.sleep(20 * 1000);
     },
     stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: `<identity>

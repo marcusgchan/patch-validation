@@ -59,6 +59,8 @@ export function createGlobTool(targetDir: string) {
       const grepCommand = [
         "rg",
         "--files",
+        "--ignore-file",
+        ".rgignore",
         "--glob",
         params.pattern,
         absolutePath,
