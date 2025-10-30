@@ -3,25 +3,42 @@ export * from "./ls";
 export * from "./grep";
 export * from "./glob";
 export * from "./finalAnswer";
+export * from "./createTodo";
+export * from "./updateTodo";
 
 import { createReadTool } from "./read";
 import { createLsTool } from "./ls";
 import { createGrepTool } from "./grep";
 import { createGlobTool } from "./glob";
 import { createFinalAnswerTool } from "./finalAnswer";
+import { createTodoTool } from "./createTodo";
+import { createUpdateTodoTool } from "./updateTodo";
 import type { TypedToolCall, TypedToolResult } from "ai";
+import type { TodoItem } from "./createTodo";
 
-export function createToolSet(targetDir: string) {
+export function createValidationToolSet(
+  targetDir: string,
+  ctx: { todos: TodoItem[] }
+) {
   const toolSet = {
     readTool: createReadTool(targetDir),
-    // lsTool: createLsTool(targetDir),
     grepTool: createGrepTool(targetDir),
     globTool: createGlobTool(targetDir),
     finalAnswer: createFinalAnswerTool(),
+    updateTodo: createUpdateTodoTool(ctx),
   };
 
   return toolSet;
 }
 
-export type ToolCall = TypedToolCall<ReturnType<typeof createToolSet>>;
-export type ToolResult = TypedToolResult<ReturnType<typeof createToolSet>>;
+export function createAnalysisToolSet(targetDir: string) {
+  const toolSet = {
+    readTool: createReadTool(targetDir),
+    grepTool: createGrepTool(targetDir),
+    globTool: createGlobTool(targetDir),
+    finalAnswer: createFinalAnswerTool(),
+    createTodo: createTodoTool(),
+  };
+
+  return toolSet;
+}

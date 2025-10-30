@@ -6,6 +6,9 @@ import type {
   LsToolExecuteReturn,
   ReadToolExecuteReturn,
   FinalAnswerToolExecuteReturn,
+  CreateTodoToolExecuteReturn,
+  UpdateTodoToolExecuteReturn,
+  TodoItem,
 } from "../core/tool";
 
 export async function initCli() {
@@ -77,6 +80,7 @@ export async function initCli() {
   const finalTargetDir = targetDir || process.cwd();
   let exitCode = 0;
   let analysisText = "";
+  let todoList: TodoItem[] | null = null;
 
   // Phase 1: Stream Analysis Agent
   console.log("=== PHASE 1: ANALYSIS ===\n");
@@ -144,6 +148,13 @@ export async function initCli() {
             console.log(data.output);
             break;
           }
+          case "createTodo": {
+            const data = chunk.output as CreateTodoToolExecuteReturn;
+            todoList = data.metadata.todos;
+            console.log(data.title);
+            console.log(data.output);
+            break;
+          }
         }
         break;
       }
@@ -156,14 +167,19 @@ export async function initCli() {
 
   console.log("\n=== PHASE 1 COMPLETE ===\n");
 
-  // Phase 2-3: Stream Validation Agent
   console.log("=== PHASE 2-3: VALIDATION ===\n");
+  if (!todoList) {
+    throw new Error(
+      "Analysis phase did not produce a todo list. The analysis agent must call createTodo."
+    );
+  }
   const validationStream = createValidationStream(
     finalTargetDir,
     prompt,
     bugDescription,
     diff,
-    analysisText
+    analysisText,
+    todoList
   );
 
   for await (const chunk of validationStream.fullStream) {
@@ -219,6 +235,12 @@ export async function initCli() {
           }
           case "grepTool": {
             const data = chunk.output as GrepToolExecuteReturn;
+            console.log(data.title);
+            console.log(data.output);
+            break;
+          }
+          case "updateTodo": {
+            const data = chunk.output as UpdateTodoToolExecuteReturn;
             console.log(data.title);
             console.log(data.output);
             break;

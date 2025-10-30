@@ -1,5 +1,6 @@
 import { createAnalysisAgent } from "./agents/analysis-agent";
 import { createValidationAgent } from "./agents/validation-agent";
+import type { TodoItem } from "./tool";
 
 // TODO: Verify dependencies
 
@@ -24,14 +25,19 @@ export function createValidationStream(
   prompt: string,
   bugDescription: string,
   diff: string,
-  analysisText: string
+  analysisText: string,
+  todoList: TodoItem[]
 ) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error("OOPENAI_API_KEY not set");
   }
 
-  const validationAgent = createValidationAgent(targetDir);
+  const todoListText = todoList
+    .map((todo, index) => `- [ ] ${todo.description} (ID: ${todo.id})`)
+    .join("\n");
+
+  const validationAgent = createValidationAgent(targetDir, todoList);
   return validationAgent.stream({
-    prompt: `Based on the analysis results, validate the code changes:\n\n${analysisText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
+    prompt: `Todo List for Validation:\n${todoListText}\n\nAnalysis Results:\n${analysisText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
   });
 }
