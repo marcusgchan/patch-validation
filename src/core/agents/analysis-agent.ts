@@ -9,7 +9,7 @@ export function createAnalysisAgent(targetDir: string) {
       ...createAnalysisToolSet(targetDir),
     },
     onStepFinish: async () => {
-      await Bun.sleep(15 * 1000);
+      await Bun.sleep(20 * 1000);
     },
     stopWhen: [stepCountIs(50), hasToolCall("createTodo")],
     system: `<identity>

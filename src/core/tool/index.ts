@@ -7,13 +7,11 @@ export * from "./createTodo";
 export * from "./updateTodo";
 
 import { createReadTool } from "./read";
-import { createLsTool } from "./ls";
 import { createGrepTool } from "./grep";
 import { createGlobTool } from "./glob";
 import { createFinalAnswerTool } from "./finalAnswer";
 import { createTodoTool } from "./createTodo";
 import { createUpdateTodoTool } from "./updateTodo";
-import type { TypedToolCall, TypedToolResult } from "ai";
 import type { TodoItem } from "./createTodo";
 
 export function createValidationToolSet(

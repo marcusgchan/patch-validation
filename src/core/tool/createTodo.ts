@@ -31,13 +31,6 @@ Each todo item should be specific and actionable. The todos will be used by the 
               .describe(
                 "A specific, actionable validation item to check during validation"
               ),
-            isCompleted: z
-              .string()
-              .refine((s) => s === "false")
-              .transform((s) => s === "true")
-              .describe(
-                "Whether this todo item has been completed (should always be false)"
-              ),
           })
         )
         .min(1)
@@ -47,7 +40,7 @@ Each todo item should be specific and actionable. The todos will be used by the 
       const todos = params.todos.map((todo, index) => ({
         id: `todo-${index + 1}`,
         description: todo.description,
-        isCompleted: todo.isCompleted,
+        isCompleted: false,
       }));
 
       const todoList = todos

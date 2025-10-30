@@ -10,7 +10,7 @@ export function createValidationAgent(targetDir: string, todoList: TodoItem[]) {
       ...createValidationToolSet(targetDir, { todos: todoList }),
     },
     onStepFinish: async () => {
-      await Bun.sleep(20 * 1000);
+      await Bun.sleep(30 * 1000);
     },
     stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: `<identity>
