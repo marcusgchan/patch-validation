@@ -36,7 +36,10 @@ export function createValidationStream(
     .map((todo, index) => `- [ ] ${todo.description} (ID: ${todo.id})`)
     .join("\n");
 
-  const validationAgent = createValidationAgent(targetDir, todoList);
+  const validationAgent = createValidationAgent(targetDir, {
+    todos: todoList,
+    diff,
+  });
   return validationAgent.stream({
     prompt: `Todo List for Validation:\n${todoListText}\n\nAnalysis Results:\n${analysisText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
   });

@@ -8,6 +8,7 @@ export interface UpdateTodoToolExecuteReturn {
   metadata: {
     updatedId?: string;
     error?: string;
+    reason?: string;
     todos: TodoItem[];
   };
   output: string;
@@ -17,7 +18,7 @@ export function createUpdateTodoTool(ctx: { todos: TodoItem[] }) {
   return tool({
     name: "updateTodo",
     description: `Mark a todo item as completed. Use this tool after you have validated a specific todo item from the list.
-Call this tool for each todo item you complete during validation. Use the todo item's ID to identify which item to mark as completed.`,
+Call this tool for each todo item you complete during validation. Use the todo item's ID to identify which item to mark as completed. Include a brief (1-2 sentences) reason explaining how you reached the conclusion.`,
     inputSchema: z.object({
       id: z
         .string()
@@ -25,9 +26,15 @@ Call this tool for each todo item you complete during validation. Use the todo i
         .describe(
           "The ID of the todo item to mark as completed (e.g., 'todo-1', 'todo-2', etc.)"
         ),
+      reason: z
+        .string()
+        .min(1)
+        .describe(
+          "Brief reasoning (1-3 sentences) explaining how you validated this todo item"
+        ),
     }),
     execute: async (params): Promise<UpdateTodoToolExecuteReturn> => {
-      const { id } = params;
+      const { id, reason } = params;
       const todoItem = ctx.todos.find((todo) => todo.id === id);
 
       if (!todoItem) {
@@ -49,9 +56,10 @@ Call this tool for each todo item you complete during validation. Use the todo i
           title: "Todo Already Completed",
           metadata: {
             updatedId: id,
+            reason,
             todos: ctx.todos.map((todo) => ({ ...todo })),
           },
-          output: `Todo item '${id}' was already marked as completed: "${todoItem.description}"`,
+          output: `Todo item '${id}' was already marked as completed: "${todoItem.description}"\nReason: ${reason}`,
         };
       }
 
@@ -72,9 +80,10 @@ Call this tool for each todo item you complete during validation. Use the todo i
         title: "Todo Item Completed",
         metadata: {
           updatedId: id,
+          reason,
           todos: ctx.todos.map((todo) => ({ ...todo })),
         },
-        output: `Marked todo item '${id}' as completed\n\nUpdated Todo List:\n${todoListDisplay}`,
+        output: `Marked todo item '${id}' as completed\nReason: ${reason}\n\nUpdated Todo List:\n${todoListDisplay}`,
       };
     },
   });

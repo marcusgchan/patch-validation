@@ -5,6 +5,7 @@ export * from "./glob";
 export * from "./finalAnswer";
 export * from "./createTodo";
 export * from "./updateTodo";
+export * from "./getDiff";
 
 import { createReadTool } from "./read";
 import { createGrepTool } from "./grep";
@@ -12,11 +13,12 @@ import { createGlobTool } from "./glob";
 import { createFinalAnswerTool } from "./finalAnswer";
 import { createTodoTool } from "./createTodo";
 import { createUpdateTodoTool } from "./updateTodo";
+import { createGetDiffTool } from "./getDiff";
 import type { TodoItem } from "./createTodo";
 
 export function createValidationToolSet(
   targetDir: string,
-  ctx: { todos: TodoItem[] }
+  ctx: { todos: TodoItem[]; diff: string }
 ) {
   const toolSet = {
     readTool: createReadTool(targetDir),
@@ -24,6 +26,7 @@ export function createValidationToolSet(
     globTool: createGlobTool(targetDir),
     finalAnswer: createFinalAnswerTool(),
     updateTodo: createUpdateTodoTool(ctx),
+    getDiff: createGetDiffTool(ctx),
   };
 
   return toolSet;
