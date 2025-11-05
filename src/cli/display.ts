@@ -1,4 +1,8 @@
 import type {
+  CreateAnalysisStreamResult,
+  CreateValidationStreamResult,
+} from "../core";
+import type {
   GlobToolExecuteReturn,
   GrepToolExecuteReturn,
   LsToolExecuteReturn,
@@ -9,6 +13,7 @@ import type {
   TodoItem,
 } from "../core/tool";
 
+// TODO: add proper typing
 type StreamChunk = any;
 
 export type AnalysisState = {
@@ -173,7 +178,7 @@ export function handleValidationChunk(
 }
 
 export async function displayAnalysisStream(
-  fullStream: AsyncIterable<any>
+  fullStream: CreateAnalysisStreamResult["fullStream"]
 ): Promise<AnalysisState> {
   const state: AnalysisState = {
     analysisText: "",
@@ -187,7 +192,7 @@ export async function displayAnalysisStream(
 }
 
 export async function displayValidationStream(
-  fullStream: AsyncIterable<any>
+  fullStream: CreateValidationStreamResult["fullStream"]
 ): Promise<ValidationState> {
   const state: ValidationState = { exitCode: 0 };
   for await (const chunk of fullStream) {
