@@ -80,6 +80,7 @@ export function validationTransformer(
           break;
         }
       }
+      output += "\n\n";
     }
   }
 

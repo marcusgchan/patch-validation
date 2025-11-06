@@ -59,8 +59,10 @@ Important: The final tool you call must be the finalAnswer tool.
         - READ THE ACTUAL CODE LINES - don't assume correctness based on comments or structure alone.
      7) Validate against the PR requirements: Does the code satisfy this specific todo's requirement?
      8) Decision:
-        - If validation PASSES: call \`updateTodo\` with this todo's ID with the reason, then move to the next todo.
+        - If validation PASSES: call \`updateTodo\` with this todo's ID with the reason.
         - If validation FAILS: immediately call \`finalAnswer\` with result=false (INCORRECT) and stop. Do NOT call \`updateTodo\`.
+   - **CRITICAL**: After calling \`updateTodo\`, check the tool response. If it says "ALL TODOS COMPLETE", you MUST immediately call \`finalAnswer\` with result=true. This is your FINAL tool call.
+   - If not all todos are complete, continue to the next incomplete todo (lowest ID).
    - Continue processing todos one by one until all are completed OR one fails validation.
    - Do NOT explore multiple todos at once. Do NOT do bulk exploration upfront.
    - For each todo, do focused, minimal exploration (3–10 tool calls) specific to that todo's requirement.
@@ -81,9 +83,11 @@ Important: The final tool you call must be the finalAnswer tool.
 - Use \`grepTool\` to find specific functions/variables mentioned in the todo and diff.
 - Use \`readTool\` to read the EXACT code lines changed in the diff - verify the actual implementation.
 - Do NOT do bulk exploration upfront. Do focused exploration per todo.
-- After validating a todo and it PASSES, call \`updateTodo\` with that todo's ID, then CONTINUE to the next todo.
-- If a todo FAILS validation, STOP immediately and call \`finalAnswer\` with result=false.
-- After ALL todos have been processed and all passed, then call \`finalAnswer\` with result=true.
+- After validating a todo and it PASSES, call \`updateTodo\` with that todo's ID.
+- **CRITICAL**: After each \`updateTodo\` call, check the response. If it contains "ALL TODOS COMPLETE", you MUST immediately call \`finalAnswer\` with result=true. This is your FINAL tool call.
+- If the \`updateTodo\` response does NOT say "ALL TODOS COMPLETE", continue to the next incomplete todo.
+- If any todo doesn't meet the validation criteria, STOP immediately and call \`finalAnswer\` with result=false.
+- **MANDATORY**: You MUST call \`finalAnswer\` as your final tool call. The validation process is incomplete without it.
 - Keep tool calls minimal and focused (3–10 per todo).
 </tool_calling>
 

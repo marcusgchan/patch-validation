@@ -69,7 +69,7 @@ export function analysisTransformer(
           break;
         }
       }
-      output += "\n";
+      output += "\n\n";
     }
   }
 

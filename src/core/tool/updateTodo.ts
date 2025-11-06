@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import z from "zod";
-import type { TodoItem } from "./createTodo";
+import type { TodoItem } from "../types/todo-item";
 
 export interface UpdateTodoToolExecuteReturn {
   type: "SUCCESS" | "ERROR";
@@ -75,6 +75,12 @@ Call this tool for each todo item you complete during validation. Use the todo i
         )
         .join("\n");
 
+      // Check if all todos are now complete
+      const allComplete = ctx.todos.every((todo) => todo.isCompleted);
+      const completionMessage = allComplete
+        ? "\n\n*** ALL TODOS COMPLETE - YOU MUST NOW CALL finalAnswer WITH result=true ***"
+        : "";
+
       return {
         type: "SUCCESS",
         title: "Todo Item Completed",
@@ -83,7 +89,7 @@ Call this tool for each todo item you complete during validation. Use the todo i
           reason,
           todos: ctx.todos.map((todo) => ({ ...todo })),
         },
-        output: `Marked todo item '${id}' as completed\nReason: ${reason}\n\nUpdated Todo List:\n${todoListDisplay}`,
+        output: `Marked todo item '${id}' as completed\nReason: ${reason}\n\nUpdated Todo List:\n${todoListDisplay}${completionMessage}`,
       };
     },
   });

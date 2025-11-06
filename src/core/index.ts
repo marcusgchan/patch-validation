@@ -82,7 +82,6 @@ export async function createValidationGenerate(
   prompt: string,
   bugDescription: string,
   diff: string,
-  analysisText: string,
   todoList: TodoItem[]
 ) {
   if (process.env.OPENAI_API_KEY === undefined) {
@@ -98,7 +97,7 @@ export async function createValidationGenerate(
     diff,
   });
   const generatedResponse = await validationAgent.generate({
-    prompt: `Todo List for Validation:\n${todoListText}\n\nAnalysis Results:\n${analysisText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
+    prompt: `Todo List for Validation:\n${todoListText}\n\nBug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}`,
   });
 
   return validationTransformer(generatedResponse);

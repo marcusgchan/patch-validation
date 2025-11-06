@@ -94,7 +94,6 @@ export async function initCli() {
     prompt,
     bugDescription,
     diff,
-    analysisResult.analysisText,
     analysisResult.todoList
   );
   console.log(validationResult.output);
