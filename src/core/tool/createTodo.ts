@@ -1,11 +1,6 @@
 import { tool } from "ai";
 import z from "zod";
-
-export interface TodoItem {
-  id: string;
-  description: string;
-  isCompleted: boolean;
-}
+import type { TodoItem } from "../types/todo-item";
 
 export interface CreateTodoToolExecuteReturn {
   type: "SUCCESS";

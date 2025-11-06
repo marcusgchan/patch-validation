@@ -1,6 +1,8 @@
 import type {
   CreateAnalysisStreamResult,
   CreateValidationStreamResult,
+  CreateAnalysisGenerateResult,
+  CreateValidationGenerateResult,
 } from "../core";
 import type {
   GlobToolExecuteReturn,
@@ -10,8 +12,8 @@ import type {
   FinalAnswerToolExecuteReturn,
   CreateTodoToolExecuteReturn,
   UpdateTodoToolExecuteReturn,
-  TodoItem,
 } from "../core/tool";
+import type { TodoItem } from "../core/types/todo-item";
 
 // TODO: add proper typing
 type StreamChunk = any;

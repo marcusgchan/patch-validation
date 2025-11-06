@@ -54,7 +54,7 @@ export function createReadTool(targetDir: string) {
         : path.join(getProjectPath(targetDir), params.filepath);
       const file = Bun.file(absolutePath);
 
-      if (!file.exists()) {
+      if (!(await file.exists())) {
         return {
           type: "FAILURE",
           title: absolutePath,

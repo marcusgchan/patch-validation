@@ -1,14 +1,16 @@
 import { Experimental_Agent as Agent, stepCountIs, hasToolCall } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createValidationToolSet } from "../tool";
-import type { TodoItem } from "../tool";
+import type { TodoItem } from "../types/todo-item";
+
+export type ValidationAgentResult = ReturnType<typeof createValidationAgent>;
 
 export function createValidationAgent(
   targetDir: string,
   ctx: { todos: TodoItem[]; diff: string }
 ) {
   return new Agent({
-    model: openai("gpt-4.1"),
+    model: openai("gpt-5"),
     tools: {
       ...createValidationToolSet(targetDir, {
         todos: ctx.todos,
@@ -16,7 +18,7 @@ export function createValidationAgent(
       }),
     },
     onStepFinish: async () => {
-      await Bun.sleep(65 * 1000);
+      await Bun.sleep(5 * 1000);
     },
     stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: `<identity>
@@ -33,9 +35,11 @@ folder_path: {{FOLDER_PATH}}
 </env>
 
 <task>
-Your job is to validate the code by working through the todo list ONE ITEM AT A TIME, then provide a final answer.
+Your job is to validate the code by working through the todo list ONE ITEM AT A TIME.
+Once you gained enough information to make a decision, provide a final answer by calling the finalAnswer tool.
+Important: The final tool you call must be the finalAnswer tool.
 
-**CRITICAL WORKFLOW - Process todos sequentially, NOT in parallel**:
+**CRITICAL WORKFLOW - Process todos sequentially and call finalAnswer when you are done:
 1. **Validation (Phase 2)** - Strict sequential processing:
    - Start with the FIRST incomplete todo item (lowest ID).
    - For THIS specific todo item ONLY:
@@ -69,7 +73,6 @@ Your job is to validate the code by working through the todo list ONE ITEM AT A 
      - CORRECT: All todos validated, bug is fixed, no new issues, logic is sound
      - INCORRECT: Bug not fixed, new issues, logic flawed, or fix incomplete
    - Summary: After each todo validation, either continue to next todo (if passed) or call finalAnswer (if failed). Call finalAnswer after last todo only if all passed.
-
 </task>
 
 <tool_calling>
@@ -87,7 +90,7 @@ Your job is to validate the code by working through the todo list ONE ITEM AT A 
 <communication>
 Be concise and professional. Format responses in markdown. Use backticks for file/function names.
 </communication>`,
-    temperature: 0,
+    // temperature: 0,
   });
 }
 

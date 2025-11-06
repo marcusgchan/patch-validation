@@ -1,7 +1,12 @@
 import { parseArgs } from "util";
-import { createAnalysisStream, createValidationStream } from "../core";
+import {
+  createAnalysisStream,
+  createValidationStream,
+  createAnalysisGenerate,
+  createValidationGenerate,
+} from "../core";
 import { displayAnalysisStream, displayValidationStream } from "./display";
-import type { TodoItem } from "../core/tool";
+import type { TodoItem } from "../core/types/todo-item";
 
 export async function initCli() {
   const { values, positionals } = parseArgs({
@@ -71,37 +76,29 @@ export async function initCli() {
 
   const finalTargetDir = targetDir || process.cwd();
 
-  // Phase 1: Stream Analysis Agent
+  // Phase 1: Generate Analysis Agent (non-streaming)
   console.log("=== PHASE 1: ANALYSIS ===\n");
-  const analysisStream = createAnalysisStream(
+  const analysisResult = await createAnalysisGenerate(
     finalTargetDir,
     prompt,
     bugDescription,
     diff
   );
-  const analysisState = await displayAnalysisStream(analysisStream.fullStream);
+  console.log(analysisResult.output);
 
   console.log("\n=== PHASE 1 COMPLETE ===\n");
 
   console.log("=== PHASE 2-3: VALIDATION ===\n");
-  if (!analysisState.todoList) {
-    throw new Error(
-      "Analysis phase did not produce a todo list. The analysis agent must call createTodo."
-    );
-  }
-  const validationStream = createValidationStream(
+  const validationResult = await createValidationGenerate(
     finalTargetDir,
     prompt,
     bugDescription,
     diff,
-    analysisState.analysisText,
-    analysisState.todoList
+    analysisResult.analysisText,
+    analysisResult.todoList
   );
-
-  const validationState = await displayValidationStream(
-    validationStream.fullStream
-  );
+  console.log(validationResult.output);
 
   console.log("\n=== PHASE 2-3 COMPLETE ===\n");
-  process.exit(validationState.exitCode);
+  process.exit(validationResult.result ? 0 : 1);
 }

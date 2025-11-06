@@ -14,7 +14,7 @@ import { createFinalAnswerTool } from "./finalAnswer";
 import { createTodoTool } from "./createTodo";
 import { createUpdateTodoTool } from "./updateTodo";
 import { createGetDiffTool } from "./getDiff";
-import type { TodoItem } from "./createTodo";
+import type { TodoItem } from "../types/todo-item";
 
 export function createValidationToolSet(
   targetDir: string,

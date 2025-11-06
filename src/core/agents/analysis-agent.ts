@@ -2,14 +2,16 @@ import { Experimental_Agent as Agent, stepCountIs, hasToolCall } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { createAnalysisToolSet } from "../tool";
 
+export type AnalysisAgentResult = ReturnType<typeof createAnalysisAgent>;
+
 export function createAnalysisAgent(targetDir: string) {
   return new Agent({
-    model: openai("gpt-4.1"),
+    model: openai("gpt-5"),
     tools: {
       ...createAnalysisToolSet(targetDir),
     },
     onStepFinish: async () => {
-      await Bun.sleep(40 * 1000);
+      await Bun.sleep(1 * 1000);
     },
     stopWhen: [stepCountIs(50), hasToolCall("createTodo")],
     system: `<identity>
@@ -35,13 +37,14 @@ Understand the context:
 
 Create todo list using \`createTodo\` tool with specific, actionable items to check:
    - Map each todo directly to a PR requirement (from bug description or diff intent)
-   - Does the fix address the PR's root cause and acceptance criteria?
-   - Are error conditions required by the PR handled?
-   - Is the logic complete and correct for the changed scope?
-   - Are there implementation flaws that violate the PR intent?
-   - Does the test verify the PR requirement?
-   - Are PR-relevant edge cases handled?
-   - Are there race/resource issues within the changed code path?
+   - Examples of what to look for:
+    - Does the fix address the PR's root cause and acceptance criteria?
+    - Are error conditions required by the PR handled?
+    - Are there implementation flaws that violate the PR intent?
+    - Does the test verify the PR requirement?
+    - Are PR-relevant edge cases handled?
+    - Are there race/resource issues within the changed code path?
+  - Ensure the todo list is concise and focused
 
 For each todo item, use tools to gather information and understand the requirements. Some examples are:
    - Call \`grepTool\` to find the test case mentioned in the prompt
@@ -67,7 +70,7 @@ You MUST call \`createTodo\` to complete your task.
 <communication>
 Be concise and professional. Format responses in markdown. Use backticks for file/function names.
 </communication>`,
-    temperature: 0,
+    // temperature: 0,
   });
 }
 
