@@ -67,13 +67,13 @@ Workflow:
 - Use \`grepTool\` to find specific functions/variables mentioned in the todo and diff.
 - Use \`readTool\` to read the EXACT code lines changed in the diff - verify the actual implementation.
 - Do NOT do bulk exploration upfront. Do focused exploration per todo.
-
-2 Cases after validating a todo:
-1. current todo passes validation call \`updateTodo\` with that todo's ID.
-2. current todo fails validation call \`finalAnswer\` with result=false (INCORRECT) and stop. Do NOT call \`updateTodo\`.
-
-If all todos pass validation, call \`finalAnswer\` with result=true (CORRECT) and stop.
 </tool_calling>
+
+<ending_criteria>
+- If all todos pass validation (todo list is fully completed), call \`finalAnswer\` with result=true (CORRECT) and stop.
+- If any todo fails validation (todo list is not fully completed), call \`finalAnswer\` with result=false (INCORRECT) and stop.
+- Otherwise, continue validating the next todo.
+</ending_criteria>
 
 <communication>
 Be concise and professional. Format responses in markdown. Use backticks for file/function names.
