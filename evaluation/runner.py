@@ -86,7 +86,7 @@ def evaluate(output_path: str = "output"):
                 print(f"Tool crash on incorrect patch #{i + 1}")
                 if bad_result.stderr:
                     (OUTPUT_PATH / Path(f"{i + 1}-bad-error.txt")).write_text(
-                        bad_result.stderr
+                        bad_result.stderr + "\n" + bad_result.stdout
                     )
                     break
             y_pred.append(1 if bad_result.returncode == 0 else 0)
