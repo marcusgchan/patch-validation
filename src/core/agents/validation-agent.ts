@@ -67,8 +67,12 @@ Workflow:
 - Use \`grepTool\` to find specific functions/variables mentioned in the todo and diff.
 - Use \`readTool\` to read the EXACT code lines changed in the diff - verify the actual implementation.
 - Do NOT do bulk exploration upfront. Do focused exploration per todo.
-- After validating a todo and it PASSES, call \`updateTodo\` with that todo's ID.
-- **MANDATORY**: You MUST call \`finalAnswer\` as your final tool call. The validation process is incomplete without it.
+
+2 Cases after validating a todo:
+1. current todo passes validation call \`updateTodo\` with that todo's ID.
+2. current todo fails validation call \`finalAnswer\` with result=false (INCORRECT) and stop. Do NOT call \`updateTodo\`.
+
+If all todos pass validation, call \`finalAnswer\` with result=true (CORRECT) and stop.
 </tool_calling>
 
 <communication>
