@@ -1,12 +1,5 @@
 import { parseArgs } from "util";
-import {
-  createAnalysisStream,
-  createValidationStream,
-  createAnalysisGenerate,
-  createValidationGenerate,
-} from "../core";
-import { displayAnalysisStream, displayValidationStream } from "./display";
-import type { TodoItem } from "../core/types/todo-item";
+import { createAnalysisGenerate, createValidationGenerate } from "../core";
 
 export async function initCli() {
   const { values, positionals } = parseArgs({
@@ -88,7 +81,7 @@ export async function initCli() {
 
   console.log("\n=== PHASE 1 COMPLETE ===\n");
 
-  console.log("=== PHASE 2-3: VALIDATION ===\n");
+  console.log("=== PHASE 2: VALIDATION ===\n");
   const validationResult = await createValidationGenerate(
     finalTargetDir,
     prompt,
@@ -98,6 +91,6 @@ export async function initCli() {
   );
   console.log(validationResult.output);
 
-  console.log("\n=== PHASE 2-3 COMPLETE ===\n");
+  console.log("\n=== PHASE 2 COMPLETE ===\n");
   process.exit(validationResult.result ? 0 : 1);
 }
