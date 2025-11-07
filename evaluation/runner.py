@@ -63,7 +63,7 @@ def evaluate(output_path: str = "output"):
                 print(f"Tool crash on correct patch #{i + 1}")
                 if good_result.stderr:
                     (OUTPUT_PATH / Path(f"{i + 1}-good-error.txt")).write_text(
-                        good_result.stderr
+                        good_result.stderr + "\n" + good_result.stdout
                     )
                     break
 
