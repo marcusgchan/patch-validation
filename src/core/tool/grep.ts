@@ -69,7 +69,7 @@ export function createGrepTool(targetDir: string) {
           ? params.path
           : path.join(targetDir, params.path);
       grepCommand.push(absolutePath);
-      console.log(grepCommand);
+
       const proc = Bun.spawnSync(grepCommand);
 
       if (proc.exitCode === 1) {
