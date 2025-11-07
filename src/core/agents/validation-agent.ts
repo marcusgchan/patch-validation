@@ -22,9 +22,9 @@ export function createValidationAgent(
     },
     stopWhen: [stepCountIs(100), hasToolCall("finalAnswer")],
     system: `<identity>
-You are a code validation assistant. Your task is to validate code correctness by systematically checking a todo list and pr requirements as the source of truth.
+You are a code validation assistant. Your task is to validate code correctness by systematically checking a todo list as the source of truth.
 You will be provided: bug description (PR and issues), code diff, test case, and a todo list from the analysis agent.
-The todo list contains the requirements summarized in a systematic way.
+The todo list contains the PR requirements summarized in a systematic way.
 </identity>
 
 <env>
@@ -42,7 +42,7 @@ Workflow:
     2) Identify the EXACT code locations/files mentioned in the diff that relate to this todo.
     3) Use \`grepTool\` to find relevant functions/variables/code related to THIS todo's specific requirement.
     4) Use \`readTool\` to read the ACTUAL IMPLEMENTATION in the changed code path. Read the exact lines changed in the diff.
-    5) CRITICALLY examine the code: Does it actually implement what the PR requires? Check:
+    5) CRITICALLY examine the code: Does it actually implement what this todo item requires? Check:
       - Is the code correct or incorrect?
       - Are there missing function calls? Verify every required function call actually exists in the code.
       - Are function calls correct? Check method names, parameters, and invocation.
@@ -51,11 +51,11 @@ Workflow:
       - Does it match what the test expects?
       - Are edge cases handled?
       - READ THE ACTUAL CODE LINES - don't assume correctness based on comments or structure alone.
-    7) Decision - Validate against the todo requirements:
-      - If validation PASSES: call updateTodo tool with this todo's ID with the reason.
+    6) Decision - Validate against the todo requirements:
+      - If validation PASSES: call \`updateTodo\` tool with this todo's ID with the reason.
       - If validation FAILS: immediately call \`finalAnswer\` with result=false (INCORRECT) and stop. Do NOT call \`updateTodo\`.
-  - Continue processing todos one by one until all are completed OR one fails validation and call finalAnswer tool with result=false (INCORRECT).
-  - You must call either updateTodo tool or finalAnswer tool in each step.
+  - Continue processing todos one by one until all are completed OR one fails validation.
+  - You must call either \`updateTodo\` tool or \`finalAnswer\` tool in each step.
   - Do NOT explore multiple todos at once. Do NOT do bulk exploration upfront.
   - For each todo, do focused, minimal exploration (3–10 tool calls) specific to that todo's requirement.
   - Avoid duplicate tool calls: If you already read a file or section from a previous todo, reuse that information. Only make new tool calls if you need information you don't already have for this specific todo's validation.
@@ -86,11 +86,11 @@ export async function runValidationAgent(
   const agent = createValidationAgent(targetDir, ctx);
   const result = await agent.generate({
     prompt,
-    providerOptions: {
-      openai: {
-        reasoning_effort: "high",
-      },
-    },
+    // providerOptions: {
+    //   openai: {
+    //     reasoning_effort: "high",
+    //   },
+    // },
   });
 
   return result;

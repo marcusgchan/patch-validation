@@ -62,6 +62,7 @@ export function analysisTransformer(
               break;
             }
           }
+          output += "\n";
           break;
         }
         case "tool-error": {
@@ -69,7 +70,6 @@ export function analysisTransformer(
           break;
         }
       }
-      output += "\n";
     }
   }
 

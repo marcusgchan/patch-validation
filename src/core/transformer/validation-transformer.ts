@@ -73,6 +73,7 @@ export function validationTransformer(
               break;
             }
           }
+          output += "\n";
           break;
         }
         case "tool-error": {
@@ -80,7 +81,6 @@ export function validationTransformer(
           break;
         }
       }
-      output += "\n";
     }
   }
 
