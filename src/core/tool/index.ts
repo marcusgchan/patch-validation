@@ -2,14 +2,12 @@ export * from "./read";
 export * from "./ls";
 export * from "./grep";
 export * from "./glob";
-export * from "./finalAnswer";
 export * from "./createTodo";
 export * from "./updateTodo";
 
 import { createReadTool } from "./read";
 import { createGrepTool } from "./grep";
 import { createGlobTool } from "./glob";
-import { createFinalAnswerTool } from "./finalAnswer";
 import { createTodoTool } from "./createTodo";
 import { createUpdateTodoTool } from "./updateTodo";
 
@@ -18,7 +16,6 @@ export function createValidationToolSet(targetDir: string) {
     readTool: createReadTool(targetDir),
     grepTool: createGrepTool(targetDir),
     globTool: createGlobTool(targetDir),
-    finalAnswer: createFinalAnswerTool(),
     updateTodo: createUpdateTodoTool(),
   };
 
@@ -30,7 +27,6 @@ export function createAnalysisToolSet(targetDir: string) {
     readTool: createReadTool(targetDir),
     grepTool: createGrepTool(targetDir),
     globTool: createGlobTool(targetDir),
-    finalAnswer: createFinalAnswerTool(),
     createTodo: createTodoTool(),
   };
 
