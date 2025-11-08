@@ -90,7 +90,7 @@ export async function createValidationGenerate(
 
   const validationAgent = createValidationAgent(targetDir);
   const generatedResponse = await validationAgent.generate({
-    prompt: `Bug Description:\n${bugDescription}\n\nCode Diff:\n${diff}\n\nTest Case:\n${prompt}\n\nTodo Item:\n${todoDescription}`,
+    prompt: `<bug_description>\n${bugDescription}\n</bug_description>\n<code_diff>\n${diff}\n</code_diff>\n<test_case>\n${prompt}\n</test_case>\n<todo_item>\n${todoDescription}\n</todo_item>`,
   });
 
   return validationTransformer(generatedResponse);
@@ -115,6 +115,9 @@ export async function validateTodoList(
       todoList.length
     }\ndescription: '${todo.description}'\n\n`;
 
+    console.log(`Validating todo item ${i + 1} of ${todoList.length}`);
+    console.log(`description: '${todo.description}'`);
+
     const validationResult = await createValidationGenerate(
       targetDir,
       prompt,
@@ -123,6 +126,7 @@ export async function validateTodoList(
       todo.description
     );
     output += validationResult.output;
+    console.log(validationResult.output);
 
     if (!validationResult.result) {
       return {
@@ -134,6 +138,9 @@ export async function validateTodoList(
     output += `Todo item ${i + 1} of ${
       todoList.length
     } is correct\ndescription: '${todo.description}'\n\n`;
+
+    console.log(`Todo item ${i + 1} of ${todoList.length} is correct`);
+    console.log(`description: '${todo.description}'`);
 
     await Bun.sleep(1 * 1000);
   }

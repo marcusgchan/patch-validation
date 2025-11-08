@@ -30,7 +30,7 @@ export interface UpdateTodoToolExecuteReturn {
 export function createUpdateTodoTool() {
   return tool({
     name: "updateTodo",
-    description: `Mark current todo item as correct or incorrect. Use this tool after you have validated the current todo item. Include a brief (1-2 sentences) reason explaining how you reached the conclusion.`,
+    description: `Mark current todo item as correct or incorrect. This tool must be used after you have validated the current todo item. Include a brief (1-2 sentences) reason explaining how you reached the conclusion.`,
     inputSchema: schema,
     execute: async (params): Promise<UpdateTodoToolExecuteReturn> => {
       const { result, reason } = params;
