@@ -85,6 +85,7 @@ export function validationTransformer(
   }
 
   if (result === null || !reason || !output) {
+    console.log("stop reason", generatedResponse.finishReason);
     console.log("missing required validation result", {
       result,
       reason,

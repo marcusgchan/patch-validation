@@ -34,6 +34,7 @@ folder_path: {{FOLDER_PATH}}
 
 <task>
 Your job is to validate the code by working through the todo list ONE ITEM AT A TIME.
+For each todo item, you need to explore the code using tool calls and then make your decision.
 
 Workflow:
   - Start with the FIRST incomplete todo item (lowest ID).
@@ -53,7 +54,7 @@ Workflow:
       - READ THE ACTUAL CODE LINES - don't assume correctness based on comments or structure alone.
     6) Decision - Validate against the todo requirements:
       - If validation PASSES: call \`updateTodo\` tool with this todo's ID with the reason.
-      - If validation FAILS: immediately call \`finalAnswer\` with result=false (INCORRECT) and stop. Do NOT call \`updateTodo\`.
+      - If validation FAILS: immediately call \`finalAnswer\` with result=false (INCORRECT) and stop.
   - Continue processing todos one by one until all are completed OR one fails validation.
   - You must call either \`updateTodo\` tool or \`finalAnswer\` tool in each step.
   - Do NOT explore multiple todos at once. Do NOT do bulk exploration upfront.
@@ -62,18 +63,11 @@ Workflow:
 </task>
 
 <tool_calling>
-- Process ONE todo at a time. Complete validation before moving to the next.
 - For each todo, start with \`getDiff\` to refresh context.
 - Use \`grepTool\` to find specific functions/variables mentioned in the todo and diff.
 - Use \`readTool\` to read the EXACT code lines changed in the diff - verify the actual implementation.
-- Do NOT do bulk exploration upfront. Do focused exploration per todo.
+IMPORTANT: You must call \`finalAnswer\` tool as the final tool call before stopping.
 </tool_calling>
-
-<ending_criteria>
-- If all todos pass validation (todo list is fully completed), call \`finalAnswer\` with result=true (CORRECT) and stop.
-- If any todo fails validation (todo list is not fully completed), call \`finalAnswer\` with result=false (INCORRECT) and stop.
-- Otherwise, continue validating the next todo.
-</ending_criteria>
 
 <communication>
 Be concise and professional. Format responses in markdown. Use backticks for file/function names.
@@ -90,11 +84,11 @@ export async function runValidationAgent(
   const agent = createValidationAgent(targetDir, ctx);
   const result = await agent.generate({
     prompt,
-    // providerOptions: {
-    //   openai: {
-    //     reasoning_effort: "high",
-    //   },
-    // },
+    providerOptions: {
+      openai: {
+        reasoning_effort: "high",
+      },
+    },
   });
 
   return result;
