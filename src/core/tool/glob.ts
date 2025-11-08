@@ -92,7 +92,7 @@ export function createGlobTool(targetDir: string) {
         };
       }
 
-      const maxLength = 100;
+      const maxLength = 50;
       const matchedFilepaths = proc.stdout.toString().trim().split("\n");
       let truncated = false;
 
