@@ -33,19 +33,15 @@ export function createGrepTool(targetDir: string) {
       pattern: z
         .string()
         .min(1)
-        .describe("The regex pattern to search for in file contents."),
+        .describe(
+          "The regex pattern to search for in file contents. Special regex characters (like parentheses, brackets, dots, etc.) must be escaped with backslashes if you want to match them literally."
+        ),
       path: z
         .string()
         .optional()
         .describe(
-          `The directoryThe directory to search in. IMPORTANT: Omit this field to use the default project directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a relative valid directory path if provided. to search in. Defaults to the project directory if not provided. If provided, path should be relative to the project root.`
+          `The directory to search in. IMPORTANT: Omit this field to use the default project directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a relative valid directory path if provided.`
         ),
-      // include: z
-      //   .string()
-      //   .optional()
-      //   .describe(
-      //     'File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'
-      //   ),
     }),
     execute: async (params): Promise<GrepToolExecuteReturn> => {
       if (!checkRgInstalled()) {
@@ -57,19 +53,20 @@ export function createGrepTool(targetDir: string) {
         };
       }
 
-      const grepCommand = ["rg", "--no-heading", "--line-number"];
-      // params.include && grepCommand.push(...["--glob", params.include]);
-      // Use custom ignore file to exclude .py.original files
-      grepCommand.push("--ignore-file", ".rgignore");
-      grepCommand.push(params.pattern);
       const absolutePath =
         params.path === undefined
           ? targetDir
           : path.isAbsolute(params.path)
           ? params.path
           : path.join(targetDir, params.path);
-      grepCommand.push(absolutePath);
 
+      const grepCommand = ["rg", "--no-heading", "--line-number"];
+      // params.include && grepCommand.push(...["--glob", params.include]);
+      // Use custom ignore file to exclude .py.original files
+      grepCommand.push("--ignore-file", ".rgignore");
+      grepCommand.push(params.pattern);
+      grepCommand.push(absolutePath);
+      console.log(grepCommand);
       const proc = Bun.spawnSync(grepCommand);
 
       if (proc.exitCode === 1) {
@@ -97,7 +94,7 @@ export function createGrepTool(targetDir: string) {
         };
       }
 
-      const maxLength = 100;
+      const maxLength = 50;
       const matches = proc.stdout.toString().trim().split("\n");
       let truncated = false;
 

@@ -1,5 +1,9 @@
 import { parseArgs } from "util";
-import { createAnalysisGenerate, createValidationGenerate } from "../core";
+import {
+  createAnalysisGenerate,
+  createValidationGenerate,
+  validateTodoList,
+} from "../core";
 
 export async function initCli() {
   const { values, positionals } = parseArgs({
@@ -79,10 +83,11 @@ export async function initCli() {
   );
   console.log(analysisResult.output);
 
-  console.log("\n=== PHASE 1 COMPLETE ===\n");
+  console.log("=== PHASE 1 COMPLETE ===\n");
 
   console.log("=== PHASE 2: VALIDATION ===\n");
-  const validationResult = await createValidationGenerate(
+
+  const validationResult = await validateTodoList(
     finalTargetDir,
     prompt,
     bugDescription,
@@ -91,6 +96,6 @@ export async function initCli() {
   );
   console.log(validationResult.output);
 
-  console.log("\n=== PHASE 2 COMPLETE ===\n");
+  console.log("=== PHASE 2 COMPLETE ===\n");
   process.exit(validationResult.result ? 0 : 1);
 }

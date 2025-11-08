@@ -1,5 +1,8 @@
 - Tool that searches for content within files in a codebase using ripgrep
 - Use this tool when you need to find specific text, patterns, or code within files
+- CRITICAL: Patterns are treated as REGEX, not literal text
+- CRITICAL: If searching for literal text that contains special regex characters (like parentheses, brackets, dots, asterisks, plus signs, question marks, etc.), you MUST escape them with backslashes
+- CRITICAL: Examples: To search for "def schedule_formatting(" use "def schedule_formatting\\(" - To search for "function()" use "function\\(\\)" - To search for "file.txt" use "file\\.txt"
 - CRITICAL: Always use recursive search patterns that search through all subdirectories
 - CRITICAL: Focus on searching for names of things (variables, functions, classes, etc.) rather than language-specific syntax
 - CRITICAL: For the path parameter, you can use either absolute paths or relative paths from the project root

@@ -29,6 +29,9 @@ folder_path: {{FOLDER_PATH}}
 <task>
 Your ONLY job is to create a comprehensive todo list for the validation agent. You are NOT validating the code.
 
+All todo items MUST be verifiable through static code analysis only. The validation agent has NO access to running code, test execution, or runtime behavior.
+- Todos must be checkable by reading code, analyzing structure, checking types, and examining logic
+
 **Process**:
 Understand the context:
    - What bug is being fixed?

@@ -1,6 +1,4 @@
 import type { ValidationAgentResult } from "../agents/validation-agent";
-import type { FinalAnswerToolExecuteReturn } from "../tool/finalAnswer";
-import type { GetDiffToolExecuteReturn } from "../tool/getDiff";
 import type { GlobToolExecuteReturn } from "../tool/glob";
 import type { GrepToolSuccessExecuteReturn } from "../tool/grep";
 import type { ReadToolExecuteReturn } from "../tool/read";
@@ -31,18 +29,12 @@ export function validationTransformer(
           output += `Calling tool: ${content.toolName}\n`;
 
           switch (content.toolName) {
-            case "finalAnswer": {
-              const finalAnswerResult =
-                content.output as FinalAnswerToolExecuteReturn;
-              result = finalAnswerResult.metadata.result;
-              reason = finalAnswerResult.metadata.reason;
-              output += finalAnswerResult.output;
-              break;
-            }
             case "updateTodo": {
               const updateTodoResult =
                 content.output as UpdateTodoToolExecuteReturn;
-              todoList = updateTodoResult.metadata.todos;
+              result = updateTodoResult.metadata.result === "CORRECT";
+              reason = updateTodoResult.metadata.reason;
+
               output += updateTodoResult.title + "\n";
               output += updateTodoResult.output;
               break;
@@ -66,14 +58,8 @@ export function validationTransformer(
               output += globToolResult.output;
               break;
             }
-            case "getDiff": {
-              const getDiffResult = content.output as GetDiffToolExecuteReturn;
-              output += getDiffResult.title + "\n";
-              output += getDiffResult.output;
-              break;
-            }
           }
-          output += "\n";
+          output += "\n\n";
           break;
         }
         case "tool-error": {

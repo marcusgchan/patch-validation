@@ -1,10 +1,4 @@
 import type {
-  CreateAnalysisStreamResult,
-  CreateValidationStreamResult,
-  CreateAnalysisGenerateResult,
-  CreateValidationGenerateResult,
-} from "../core";
-import type {
   GlobToolExecuteReturn,
   GrepToolExecuteReturn,
   LsToolExecuteReturn,
@@ -16,7 +10,7 @@ import type {
 import type { TodoItem } from "../core/types/todo-item";
 
 // TODO: add proper typing
-type StreamChunk = any;
+// type StreamChunk = any;
 
 export type AnalysisState = {
   analysisText: string;
@@ -110,95 +104,95 @@ function displayToolResult(
   }
 }
 
-export function handleAnalysisChunk(chunk: StreamChunk, state: AnalysisState) {
-  switch (chunk.type) {
-    case "text-delta": {
-      state.analysisText += chunk.text as string;
-      process.stdout.write(chunk.text as string);
-      return;
-    }
-    case "tool-call": {
-      console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
-      return;
-    }
-    case "tool-error": {
-      console.log(`Tool error: ${chunk.error}`);
-      return;
-    }
-    case "error": {
-      console.log(`Error: ${chunk.error}`);
-      state.exitCode = 3;
-      return;
-    }
-    case "tool-result": {
-      displayToolResult(chunk.toolName as string, chunk.output, state);
-      return;
-    }
-    case "finish": {
-      console.log("\n");
-      return;
-    }
-  }
-}
+// export function handleAnalysisChunk(chunk: StreamChunk, state: AnalysisState) {
+//   switch (chunk.type) {
+//     case "text-delta": {
+//       state.analysisText += chunk.text as string;
+//       process.stdout.write(chunk.text as string);
+//       return;
+//     }
+//     case "tool-call": {
+//       console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
+//       return;
+//     }
+//     case "tool-error": {
+//       console.log(`Tool error: ${chunk.error}`);
+//       return;
+//     }
+//     case "error": {
+//       console.log(`Error: ${chunk.error}`);
+//       state.exitCode = 3;
+//       return;
+//     }
+//     case "tool-result": {
+//       displayToolResult(chunk.toolName as string, chunk.output, state);
+//       return;
+//     }
+//     case "finish": {
+//       console.log("\n");
+//       return;
+//     }
+//   }
+// }
 
-export function handleValidationChunk(
-  chunk: StreamChunk,
-  state: ValidationState
-) {
-  switch (chunk.type) {
-    case "text-delta": {
-      process.stdout.write(chunk.text as string);
-      return;
-    }
-    case "tool-call": {
-      console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
-      return;
-    }
-    case "tool-error": {
-      console.log(`Tool error: ${chunk.error}`);
-      return;
-    }
-    case "error": {
-      console.log(`Error: ${chunk.error}`);
-      state.exitCode = 3;
-      return;
-    }
-    case "tool-result": {
-      displayToolResult(
-        chunk.toolName as string,
-        chunk.output,
-        undefined,
-        state
-      );
-      return;
-    }
-    case "finish": {
-      console.log("\n");
-      return;
-    }
-  }
-}
+// export function handleValidationChunk(
+//   chunk: StreamChunk,
+//   state: ValidationState
+// ) {
+//   switch (chunk.type) {
+//     case "text-delta": {
+//       process.stdout.write(chunk.text as string);
+//       return;
+//     }
+//     case "tool-call": {
+//       console.log(`\n🔧 Calling tool: ${chunk.toolName}`);
+//       return;
+//     }
+//     case "tool-error": {
+//       console.log(`Tool error: ${chunk.error}`);
+//       return;
+//     }
+//     case "error": {
+//       console.log(`Error: ${chunk.error}`);
+//       state.exitCode = 3;
+//       return;
+//     }
+//     case "tool-result": {
+//       displayToolResult(
+//         chunk.toolName as string,
+//         chunk.output,
+//         undefined,
+//         state
+//       );
+//       return;
+//     }
+//     case "finish": {
+//       console.log("\n");
+//       return;
+//     }
+//   }
+// }
 
-export async function displayAnalysisStream(
-  fullStream: CreateAnalysisStreamResult["fullStream"]
-): Promise<AnalysisState> {
-  const state: AnalysisState = {
-    analysisText: "",
-    todoList: null,
-    exitCode: 0,
-  };
-  for await (const chunk of fullStream) {
-    handleAnalysisChunk(chunk, state);
-  }
-  return state;
-}
+// export async function displayAnalysisStream(
+//   fullStream: CreateAnalysisStreamResult["fullStream"]
+// ): Promise<AnalysisState> {
+//   const state: AnalysisState = {
+//     analysisText: "",
+//     todoList: null,
+//     exitCode: 0,
+//   };
+//   for await (const chunk of fullStream) {
+//     handleAnalysisChunk(chunk, state);
+//   }
+//   return state;
+// }
 
-export async function displayValidationStream(
-  fullStream: CreateValidationStreamResult["fullStream"]
-): Promise<ValidationState> {
-  const state: ValidationState = { exitCode: 0 };
-  for await (const chunk of fullStream) {
-    handleValidationChunk(chunk, state);
-  }
-  return state;
-}
+// export async function displayValidationStream(
+//   fullStream: CreateValidationStreamResult["fullStream"]
+// ): Promise<ValidationState> {
+//   const state: ValidationState = { exitCode: 0 };
+//   for await (const chunk of fullStream) {
+//     handleValidationChunk(chunk, state);
+//   }
+//   return state;
+// }

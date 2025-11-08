@@ -62,7 +62,7 @@ export function analysisTransformer(
               break;
             }
           }
-          output += "\n";
+          output += "\n\n";
           break;
         }
         case "tool-error": {

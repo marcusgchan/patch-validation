@@ -42,7 +42,7 @@ Each todo item should be specific and actionable. The todos will be used by the 
         .map((todo) => `- [ ] ${todo.description} (ID: ${todo.id})`)
         .join("\n");
 
-      const markdownTodoList = `Todo List (${todos.length} items):\n\n${todoList}`;
+      const markdownTodoList = `Todo List (${todos.length} items):\n${todoList}`;
 
       return {
         type: "SUCCESS",
