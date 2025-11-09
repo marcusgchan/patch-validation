@@ -1,6 +1,6 @@
 - Tool that searches for files in a codebase by name patterns
 - Use this tool when you need to find files by their names or paths
-- CRITICAL: Always use recursive glob patterns that start with **/ to search through all subdirectories
+- Always use recursive glob patterns that start with **/ to search
 - NEVER use non-recursive patterns - they only search the root directory
 
 COMMON PATTERNS:
@@ -8,7 +8,6 @@ COMMON PATTERNS:
 - Find files by extension: "**/*.ts", "**/*.js", "**/*.json"
 - Find files containing text in name: "**/*filename*"
 - Find files in specific folder: "**/src/**/*" or "**/src/*"
-- Find all files: "**/*" (matches everything)
 
 - If no files found, try a more generic pattern or check if the path structure is different
 - Do not ask user any questions

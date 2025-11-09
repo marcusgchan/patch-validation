@@ -55,7 +55,8 @@ Workflow:
 
 <tool_calling>
 - Use \`grepTool\` to find specific functions/variables mentioned in the todo and diff or related functions/variables from the PR/Issues.
-- Use \`readTool\` to read the EXACT code lines. Call grep tool first to find the correct section of the file.
+- Use \`readTool\` to read the EXACT code lines. Call \`grepTool\` first to find the correct section of the file and then use the line number to read the exact code lines.
+- Have an emphasis on using \`grepTool\` over \`globTool\`.
 - Use \`updateTodo\` tool as the final tool call before stopping.
 - Ensure every tool call is focused and efficient. You have up to 10 steps to complete validation, so use them wisely.
 You must call \`updateTodo\` tool when you are finished exploring the code for the current as the user requires this.
