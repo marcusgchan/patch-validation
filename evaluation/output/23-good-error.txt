@@ -1,0 +1,1944 @@
+Error: Missing required validation result
+
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_python2", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "read_data\\('python2'\\)",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def read_data\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def whitespace\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def lib2to3_parse\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def assert_equivalent\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "from blib2to3 import pygram",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def assert_stable\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def format_str\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black" ]
+Calling tool: grepTool
+test_python2
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_python2
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/test_black.py:184:    def test_python2(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/test_black.py
+170:        actual = fs(source)
+171:        self.assertFormatEqual(expected, actual)
+172:        black.assert_equivalent(source, actual)
+173:        black.assert_stable(source, actual, line_length=ll)
+174:
+175:    @patch("black.dump_to_file", dump_to_stderr)
+176:    def test_empty_lines(self) -> None:
+177:        source, expected = read_data('empty_lines')
+178:        actual = fs(source)
+179:        self.assertFormatEqual(expected, actual)
+180:        black.assert_equivalent(source, actual)
+181:        black.assert_stable(source, actual, line_length=ll)
+182:
+183:    @patch("black.dump_to_file", dump_to_stderr)
+184:    def test_python2(self) -> None:
+185:        source, expected = read_data('python2')
+186:        actual = fs(source)
+187:        self.assertFormatEqual(expected, actual)
+188:        # black.assert_equivalent(source, actual)
+189:        black.assert_stable(source, actual, line_length=ll)
+190:
+191:    def test_report(self) -> None:
+192:        report = black.Report()
+193:        out_lines = []
+194:        err_lines = []
+195:
+196:        def out(msg: str, **kwargs: Any) -> None:
+197:            out_lines.append(msg)
+198:
+199:        def err(msg: str, **kwargs: Any) -> None:
+200:            err_lines.append(msg)
+201:
+202:        with patch("black.out", out), patch("black.err", err):
+203:            report.done(Path('f1'), changed=False)
+204:            self.assertEqual(len(out_lines), 1)
+205:            self.assertEqual(len(err_lines), 0)
+206:            self.assertEqual(out_lines[-1], 'f1 already well formatted, good job.')
+207:            self.assertEqual(unstyle(str(report)), '1 file left unchanged.')
+208:            self.assertEqual(report.return_code, 0)
+209:            report.done(Path('f2'), changed=True)
+210:            self.assertEqual(len(out_lines), 2)
+211:            self.assertEqual(len(err_lines), 0)
+212:            self.assertEqual(out_lines[-1], 'reformatted f2')
+213:            self.assertEqual(
+214:                unstyle(str(report)), '1 file reformatted, 1 file left unchanged.'
+215:            )
+216:            self.assertEqual(report.return_code, 0)
+217:            report.check = True
+218:            self.assertEqual(report.return_code, 1)
+219:            report.check = False
+220:            report.failed(Path('e1'), 'boom')
+221:            self.assertEqual(len(out_lines), 2)
+222:            self.assertEqual(len(err_lines), 1)
+223:            self.assertEqual(err_lines[-1], 'error: cannot format e1: boom')
+224:            self.assertEqual(
+225:                unstyle(str(report)),
+226:                '1 file reformatted, 1 file left unchanged, '
+227:                '1 file failed to reformat.',
+228:            )
+229:            self.assertEqual(report.return_code, 123)
+230:            report.done(Path('f3'), changed=True)
+231:            self.assertEqual(len(out_lines), 3)
+232:            self.assertEqual(len(err_lines), 1)
+233:            self.assertEqual(out_lines[-1], 'reformatted f3')
+234:            self.assertEqual(
+235:                unstyle(str(report)),
+236:                '2 files reformatted, 1 file left unchanged, '
+237:                '1 file failed to reformat.',
+238:            )
+239:            self.assertEqual(report.return_code, 123)
+240:            report.failed(Path('e2'), 'boom')
+241:            self.assertEqual(len(out_lines), 3)
+242:            self.assertEqual(len(err_lines), 2)
+243:            self.assertEqual(err_lines[-1], 'error: cannot format e2: boom')
+244:            self.assertEqual(
+245:                unstyle(str(report)),
+246:                '2 files reformatted, 1 file left unchanged, '
+247:                '2 files failed to reformat.',
+248:            )
+249:            self.assertEqual(report.return_code, 123)
+250:            report.done(Path('f4'), changed=False)
+251:            self.assertEqual(len(out_lines), 4)
+252:            self.assertEqual(len(err_lines), 2)
+253:            self.assertEqual(out_lines[-1], 'f4 already well formatted, good job.')
+254:            self.assertEqual(
+255:                unstyle(str(report)),
+256:                '2 files reformatted, 2 files left unchanged, '
+257:                '2 files failed to reformat.',
+258:            )
+259:            self.assertEqual(report.return_code, 123)
+260:            report.check = True
+261:            self.assertEqual(
+262:                unstyle(str(report)),
+263:                '2 files would be reformatted, 2 files would be left unchanged, '
+264:                '2 files would fail to reformat.',
+265:            )
+266:
+267:    def test_is_python36(self) -> None:
+268:        node = black.lib2to3_parse("def f(*, arg): ...\n")
+269:        self.assertFalse(black.is_python36(node))
+270:        node = black.lib2to3_parse("def f(*, arg,): ...\n")
+271:        self.assertTrue(black.is_python36(node))
+272:        node = black.lib2to3_parse("def f(*, arg): f'string'\n")
+273:        self.assertTrue(black.is_python36(node))
+274:        source, expected = read_data('function')
+275:        node = black.lib2to3_parse(source)
+276:        self.assertTrue(black.is_python36(node))
+277:        node = black.lib2to3_parse(expected)
+278:        self.assertTrue(black.is_python36(node))
+279:        source, expected = read_data('expression')
+280:        node = black.lib2to3_parse(source)
+281:        self.assertFalse(black.is_python36(node))
+282:        node = black.lib2to3_parse(expected)
+283:        self.assertFalse(black.is_python36(node))
+284:
+285:
+286:if __name__ == '__main__':
+287:    unittest.main()
+
+Calling tool: grepTool
+read_data\('python2'\)
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/test_black.py:185:        source, expected = read_data('python2')
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/test_black.py:26:def read_data(name: str) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:from functools import partial
+3:from io import StringIO
+4:import os
+5:from pathlib import Path
+6:import sys
+7:from typing import Any, List, Tuple
+8:import unittest
+9:from unittest.mock import patch
+10:
+11:from click import unstyle
+12:
+13:import black
+14:
+15:ll = 88
+16:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+17:fs = partial(black.format_str, line_length=ll)
+18:THIS_FILE = Path(__file__)
+19:THIS_DIR = THIS_FILE.parent
+20:
+21:
+22:def dump_to_stderr(*output: str) -> str:
+23:    return '\n' + '\n'.join(output) + '\n'
+24:
+25:
+26:def read_data(name: str) -> Tuple[str, str]:
+27:    """read_data('test_name') -> 'input', 'output'"""
+28:    if not name.endswith('.py'):
+29:        name += '.py'
+30:    _input: List[str] = []
+31:    _output: List[str] = []
+32:    with open(THIS_DIR / name, 'r', encoding='utf8') as test:
+33:        lines = test.readlines()
+34:    result = _input
+35:    for line in lines:
+36:        if line.rstrip() == '# output':
+37:            result = _output
+38:            continue
+39:
+40:        result.append(line)
+41:    if _input and not _output:
+42:        # If there's no output marker, treat the entire file as already pre-formatted.
+43:        _output = _input[:]
+44:    return ''.join(_input).strip() + '\n', ''.join(_output).strip() + '\n'
+45:
+46:
+47:class BlackTestCase(unittest.TestCase):
+48:    maxDiff = None
+49:
+50:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+51:        if actual != expected and not os.environ.get('SKIP_AST_PRINT'):
+52:            bdv: black.DebugVisitor[Any]
+53:            black.out('Expected tree:', fg='green')
+54:            try:
+55:                exp_node = black.lib2to3_parse(expected)
+56:                bdv = black.DebugVisitor()
+57:                list(bdv.visit(exp_node))
+58:            except Exception as ve:
+59:                black.err(str(ve))
+60:            black.out('Actual tree:', fg='red')
+61:            try:
+62:                exp_node = black.lib2to3_parse(actual)
+63:                bdv = black.DebugVisitor()
+64:                list(bdv.visit(exp_node))
+65:            except Exception as ve:
+66:                black.err(str(ve))
+67:        self.assertEqual(expected, actual)
+68:
+69:    @patch("black.dump_to_file", dump_to_stderr)
+70:    def test_self(self) -> None:
+71:        source, expected = read_data('test_black')
+72:        actual = fs(source)
+73:        self.assertFormatEqual(expected, actual)
+74:        black.assert_equivalent(source, actual)
+75:        black.assert_stable(source, actual, line_length=ll)
+76:        self.assertFalse(ff(THIS_FILE))
+77:
+78:    @patch("black.dump_to_file", dump_to_stderr)
+79:    def test_black(self) -> None:
+80:        source, expected = read_data('../black')
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/python2.py
+1:#!/usr/bin/env python2
+2:
+3:import sys
+4:
+5:print >> sys.stderr , "Warning:" ,
+6:print >> sys.stderr , "this is a blast from the past."
+7:print >> sys.stderr , "Look, a repr:", `sys`
+8:
+9:
+10:def function((_globals, _locals)):
+11:    exec "print 'hi from exec!'" in _globals, _locals
+12:
+13:
+14:function((globals(), locals()))
+15:
+16:
+17:# output
+18:
+19:
+20:#!/usr/bin/env python2
+21:
+22:import sys
+23:
+24:print >>sys.stderr, "Warning:",
+25:print >>sys.stderr, "this is a blast from the past."
+26:print >>sys.stderr, "Look, a repr:", ` sys `
+27:
+28:
+29:def function((_globals, _locals)):
+30:    exec "print 'hi from exec!'" in _globals, _locals
+31:
+32:
+33:function((globals(), locals()))
+
+Calling tool: grepTool
+def whitespace\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:860:def whitespace(leaf: Leaf) -> str:  # noqa C901
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:847:def whitespace(leaf: Leaf) -> str:  # noqa C901
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+820:                break
+821:
+822:        internal_stmt = next(children)
+823:        for child in internal_stmt.children:
+824:            yield from self.visit(child)
+825:
+826:    def visit_decorators(self, node: Node) -> Iterator[Line]:
+827:        for child in node.children:
+828:            yield from self.line()
+829:            yield from self.visit(child)
+830:
+831:    def visit_SEMI(self, leaf: Leaf) -> Iterator[Line]:
+832:        yield from self.line()
+833:
+834:    def visit_ENDMARKER(self, leaf: Leaf) -> Iterator[Line]:
+835:        yield from self.visit_default(leaf)
+836:        yield from self.line()
+837:
+838:    def __attrs_post_init__(self) -> None:
+839:        """You are in a twisty little maze of passages."""
+840:        v = self.visit_stmt
+841:        self.visit_if_stmt = partial(v, keywords={'if', 'else', 'elif'})
+842:        self.visit_while_stmt = partial(v, keywords={'while', 'else'})
+843:        self.visit_for_stmt = partial(v, keywords={'for', 'else'})
+844:        self.visit_try_stmt = partial(v, keywords={'try', 'except', 'else', 'finally'})
+845:        self.visit_except_clause = partial(v, keywords={'except'})
+846:        self.visit_funcdef = partial(v, keywords={'def'})
+847:        self.visit_with_stmt = partial(v, keywords={'with'})
+848:        self.visit_classdef = partial(v, keywords={'class'})
+849:        self.visit_async_funcdef = self.visit_async_stmt
+850:        self.visit_decorated = self.visit_decorators
+851:
+852:
+853:BRACKET = {token.LPAR: token.RPAR, token.LSQB: token.RSQB, token.LBRACE: token.RBRACE}
+854:OPENING_BRACKETS = set(BRACKET.keys())
+855:CLOSING_BRACKETS = set(BRACKET.values())
+856:BRACKETS = OPENING_BRACKETS | CLOSING_BRACKETS
+857:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+858:
+859:
+860:def whitespace(leaf: Leaf) -> str:  # noqa C901
+861:    """Return whitespace prefix if needed for the given `leaf`."""
+862:    NO = ''
+863:    SPACE = ' '
+864:    DOUBLESPACE = '  '
+865:    t = leaf.type
+866:    p = leaf.parent
+867:    v = leaf.value
+868:    if t in ALWAYS_NO_SPACE:
+869:        return NO
+870:
+871:    if t == token.COMMENT:
+872:        return DOUBLESPACE
+873:
+874:    assert p is not None, f"INTERNAL ERROR: hand-made leaf without parent: {leaf!r}"
+875:    if t == token.COLON and p.type not in {syms.subscript, syms.subscriptlist}:
+876:        return NO
+877:
+878:    prev = leaf.prev_sibling
+879:    if not prev:
+880:        prevp = preceding_leaf(p)
+881:        if not prevp or prevp.type in OPENING_BRACKETS:
+882:            return NO
+883:
+884:        if t == token.COLON:
+885:            return SPACE if prevp.type == token.COMMA else NO
+886:
+887:        if prevp.type == token.EQUAL:
+888:            if prevp.parent and prevp.parent.type in {
+889:                syms.arglist,
+890:                syms.argument,
+891:                syms.parameters,
+892:                syms.typedargslist,
+893:                syms.varargslist,
+894:            }:
+895:                return NO
+896:
+897:        elif prevp.type == token.DOUBLESTAR:
+898:            if prevp.parent and prevp.parent.type in {
+899:                syms.arglist,
+900:                syms.argument,
+901:                syms.dictsetmaker,
+902:                syms.parameters,
+903:                syms.typedargslist,
+904:                syms.varargslist,
+905:            }:
+906:                return NO
+907:
+908:        elif prevp.type == token.COLON:
+909:            if prevp.parent and prevp.parent.type in {syms.subscript, syms.sliceop}:
+910:                return NO
+911:
+912:        elif (
+913:            prevp.parent
+914:            and prevp.parent.type in {syms.factor, syms.star_expr}
+915:            and prevp.type in MATH_OPERATORS
+916:        ):
+917:            return NO
+918:
+919:        elif (
+920:            prevp.type == token.RIGHTSHIFT
+921:            and prevp.parent
+922:            and prevp.parent.type == syms.shift_expr
+923:            and prevp.prev_sibling
+924:            and prevp.prev_sibling.type == token.NAME
+925:            and prevp.prev_sibling.value == 'print'
+926:        ):
+927:            # Python 2 print chevron
+928:            return NO
+929:
+930:    elif prev.type in OPENING_BRACKETS:
+931:        return NO
+932:
+933:    if p.type in {syms.parameters, syms.arglist}:
+934:        # untyped function signatures or calls
+935:        if t == token.RPAR:
+936:            return NO
+937:
+938:        if not prev or prev.type != token.COMMA:
+939:            return NO
+940:
+941:    if p.type == syms.varargslist:
+942:        # lambdas
+943:        if t == token.RPAR:
+944:            return NO
+945:
+946:        if prev and prev.type != token.COMMA:
+947:            return NO
+948:
+949:    elif p.type == syms.typedargslist:
+950:        # typed function signatures
+951:        if not prev:
+952:            return NO
+953:
+954:        if t == token.EQUAL:
+955:            if prev.type != syms.tname:
+956:                return NO
+957:
+958:        elif prev.type == token.EQUAL:
+959:            # A bit hacky: if the equal sign has whitespace, it means we
+960:            # previously found it's a typed argument.  So, we're using that, too.
+961:            return prev.prefix
+962:
+963:        elif prev.type != token.COMMA:
+964:            return NO
+965:
+966:    elif p.type == syms.tname:
+967:        # type names
+968:        if not prev:
+969:            prevp = preceding_leaf(p)
+970:            if not prevp or prevp.type != token.COMMA:
+971:                return NO
+972:
+973:    elif p.type == syms.trailer:
+974:        # attributes and calls
+975:        if t == token.LPAR or t == token.RPAR:
+976:            return NO
+977:
+978:        if not prev:
+979:            if t == token.DOT:
+980:                prevp = preceding_leaf(p)
+981:                if not prevp or prevp.type != token.NUMBER:
+982:                    return NO
+983:
+984:            elif t == token.LSQB:
+985:                return NO
+986:
+987:        elif prev.type != token.COMMA:
+988:            return NO
+989:
+990:    elif p.type == syms.argument:
+991:        # single argument
+992:        if t == token.EQUAL:
+993:            return NO
+994:
+995:        if not prev:
+996:            prevp = preceding_leaf(p)
+997:            if not prevp or prevp.type == token.LPAR:
+998:                return NO
+999:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+1000:        elif prev.type == token.EQUAL or prev.type == token.DOUBLESTAR:
+1001:            return NO
+1002:
+1003:    elif p.type == syms.decorator:
+1004:        # decorators
+1005:        return NO
+1006:
+1007:    elif p.type == syms.dotted_name:
+1008:        if prev:
+1009:            return NO
+1010:
+1011:        prevp = preceding_leaf(p)
+1012:        if not prevp or prevp.type == token.AT or prevp.type == token.DOT:
+1013:            return NO
+1014:
+1015:    elif p.type == syms.classdef:
+1016:        if t == token.LPAR:
+1017:            return NO
+1018:
+1019:        if prev and prev.type == token.LPAR:
+1020:            return NO
+1021:
+1022:    elif p.type == syms.subscript:
+1023:        # indexing
+1024:        if not prev:
+1025:            assert p.parent is not None, "subscripts are always parented"
+1026:            if p.parent.type == syms.subscriptlist:
+1027:                return SPACE
+1028:
+1029:            return NO
+1030:
+1031:        else:
+1032:            return NO
+1033:
+1034:    elif p.type == syms.atom:
+1035:        if prev and t == token.DOT:
+1036:            # dots, but not the first one.
+1037:            return NO
+1038:
+1039:    elif (
+1040:        p.type == syms.listmaker
+1041:        or p.type == syms.testlist_gexp
+1042:        or p.type == syms.subscriptlist
+1043:    ):
+1044:        # list interior, including unpacking
+1045:        if not prev:
+1046:            return NO
+1047:
+1048:    elif p.type == syms.dictsetmaker:
+1049:        # dict and set interior, including unpacking
+1050:        if not prev:
+1051:            return NO
+1052:
+1053:        if prev.type == token.DOUBLESTAR:
+1054:            return NO
+1055:
+1056:    elif p.type in {syms.factor, syms.star_expr}:
+1057:        # unary ops
+1058:        if not prev:
+1059:            prevp = preceding_leaf(p)
+1060:            if not prevp or prevp.type in OPENING_BRACKETS:
+1061:                return NO
+1062:
+1063:            prevp_parent = prevp.parent
+1064:            assert prevp_parent is not None
+1065:            if prevp.type == token.COLON and prevp_parent.type in {
+1066:                syms.subscript, syms.sliceop
+1067:            }:
+1068:                return NO
+1069:
+1070:            elif prevp.type == token.EQUAL and prevp_parent.type == syms.argument:
+1071:                return NO
+1072:
+1073:        elif t == token.NAME or t == token.NUMBER:
+1074:            return NO
+1075:
+1076:    elif p.type == syms.import_from:
+1077:        if t == token.DOT:
+1078:            if prev and prev.type == token.DOT:
+1079:                return NO
+1080:
+1081:        elif t == token.NAME:
+1082:            if v == 'import':
+1083:                return SPACE
+1084:
+1085:            if prev and prev.type == token.DOT:
+1086:                return NO
+1087:
+1088:    elif p.type == syms.sliceop:
+1089:        return NO
+1090:
+1091:    return SPACE
+1092:
+1093:
+1094:def preceding_leaf(node: Optional[LN]) -> Optional[Leaf]:
+1095:    """Returns the first leaf that precedes `node`, if any."""
+1096:    while node:
+1097:        res = node.prev_sibling
+1098:        if res:
+1099:            if isinstance(res, Leaf):
+1100:                return res
+1101:
+1102:            try:
+1103:                return list(res.leaves())[-1]
+1104:
+1105:            except IndexError:
+1106:                return None
+1107:
+1108:        node = node.parent
+1109:    return None
+1110:
+1111:
+1112:def is_delimiter(leaf: Leaf) -> int:
+1113:    """Returns the priority of the `leaf` delimiter. Returns 0 if not delimiter.
+1114:
+1115:    Higher numbers are higher priority.
+1116:    """
+1117:    if leaf.type == token.COMMA:
+1118:        return COMMA_PRIORITY
+1119:
+1120:    if leaf.type in COMPARATORS:
+1121:        return COMPARATOR_PRIORITY
+1122:
+1123:    if (
+1124:        leaf.type in MATH_OPERATORS
+1125:        and leaf.parent
+1126:        and leaf.parent.type not in {syms.factor, syms.star_expr}
+1127:    ):
+1128:        return MATH_PRIORITY
+1129:
+1130:    return 0
+1131:
+1132:
+1133:def generate_comments(leaf: Leaf) -> Iterator[Leaf]:
+1134:    """Cleans the prefix of the `leaf` and generates comments from it, if any.
+1135:
+1136:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+1137:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+1138:    move because it does away with modifying the grammar to include all the
+1139:    possible places in which comments can be placed.
+1140:
+1141:    The sad consequence for us though is that comments don't "belong" anywhere.
+1142:    This is why this function generates simple parentless Leaf objects for
+1143:    comments.  We simply don't know what the correct parent should be.
+1144:
+1145:    No matter though, we can live without this.  We really only need to
+1146:    differentiate between inline and standalone comments.  The latter don't
+1147:    share the line with any code.
+1148:
+1149:    Inline comments are emitted as regular token.COMMENT leaves.  Standalone
+1150:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1151:    """
+1152:    p = leaf.prefix
+1153:    if not p:
+1154:        return
+1155:
+1156:    if '#' not in p:
+1157:        return
+1158:
+1159:    nlines = 0
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/tests/function.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:import sys
+4:
+5:from third_party import X, Y, Z
+6:
+7:from library import some_connection, \
+8:                    some_decorator
+9:f'trigger 3.6 mode'
+10:def func_no_args():
+11:  a; b; c
+12:  if True: raise RuntimeError
+13:  if False: ...
+14:  for i in range(10):
+15:    print(i)
+16:    continue
+17:  exec("new-style exec", {}, {})
+18:  return None
+19:async def coroutine(arg, exec=False):
+20: "Single-line docstring. Multiline is harder to reformat."
+21: async with some_connection() as conn:
+22:     await conn.do_what_i_mean('SELECT bobby, tables FROM xkcd', timeout=2)
+23: await asyncio.sleep(1)
+24:@asyncio.coroutine
+25:@some_decorator(
+26:with_args=True,
+27:many_args=[1,2,3]
+28:)
+29:def function_signature_stress_test(number:int,no_annotation=None,text:str="default",* ,debug:bool=False,**kwargs) -> str:
+30: return text[number:-1]
+31:def spaces(a=1, b=(), c=[], d={}, e=True, f=-1, g=1 if False else 2, h="", i=r''):
+32: offset = attr.ib(default=attr.Factory( lambda: _r.uniform(10000, 200000)))
+33: assert task._cancel_stack[:len(old_stack)] == old_stack
+34:def spaces2(result= _core.Value(None)):
+35: ...
+36:def example(session):
+37:    result = session.query(models.Customer.id).filter(
+38:        models.Customer.account_id == account_id,
+39:        models.Customer.email == email_address,
+40:    ).order_by(
+41:        models.Customer.id.asc()
+42:    ).all()
+43:def long_lines():
+44:    if True:
+45:        typedargslist.extend(
+46:            gen_annotated_params(ast_args.kwonlyargs, ast_args.kw_defaults, parameters, implicit_default=True)
+47:        )
+48:    _type_comment_re = re.compile(
+49:        r"""
+50:        ^
+51:        [\t ]*
+52:        \#[ ]type:[ ]*
+53:        (?P<type>
+54:            [^#\t\n]+?
+55:        )
+56:        (?<!ignore)     # note: this will force the non-greedy + in <type> to match
+57:                        # a trailing space which is why we need the silliness below
+58:        (?<!ignore[ ]{1})(?<!ignore[ ]{2})(?<!ignore[ ]{3})(?<!ignore[ ]{4})
+59:        (?<!ignore[ ]{5})(?<!ignore[ ]{6})(?<!ignore[ ]{7})(?<!ignore[ ]{8})
+60:        (?<!ignore[ ]{9})(?<!ignore[ ]{10})
+61:        [\t ]*
+62:        (?P<nl>
+63:            (?:\#[^\n]*)?
+64:            \n?
+65:        )
+66:        $
+67:        """, re.MULTILINE | re.VERBOSE
+68:    )
+69:
+70:# output
+71:
+72:
+73:#!/usr/bin/env python3
+74:import asyncio
+75:import sys
+76:
+77:from third_party import X, Y, Z
+78:
+79:from library import some_connection, some_decorator
+80:
+81:f'trigger 3.6 mode'
+82:
+83:
+84:def func_no_args():
+85:    a
+86:    b
+87:    c
+88:    if True:
+89:        raise RuntimeError
+90:
+91:    if False:
+92:        ...
+93:    for i in range(10):
+94:        print(i)
+95:        continue
+96:
+97:    exec("new-style exec", {}, {})
+98:    return None
+99:
+100:
+101:async def coroutine(arg, exec=False):
+102:    "Single-line docstring. Multiline is harder to reformat."
+103:    async with some_connection() as conn:
+104:        await conn.do_what_i_mean('SELECT bobby, tables FROM xkcd', timeout=2)
+105:    await asyncio.sleep(1)
+106:
+107:
+108:@asyncio.coroutine
+109:@some_decorator(with_args=True, many_args=[1, 2, 3])
+110:def function_signature_stress_test(
+111:    number: int,
+112:    no_annotation=None,
+113:    text: str = "default",
+114:    *,
+115:    debug: bool = False,
+116:    **kwargs,
+117:) -> str:
+118:    return text[number:-1]
+119:
+120:
+121:def spaces(a=1, b=(), c=[], d={}, e=True, f=-1, g=1 if False else 2, h="", i=r''):
+122:    offset = attr.ib(default=attr.Factory(lambda: _r.uniform(10000, 200000)))
+123:    assert task._cancel_stack[:len(old_stack)] == old_stack
+124:
+125:
+126:def spaces2(result=_core.Value(None)):
+127:    ...
+128:
+129:
+130:def example(session):
+131:    result = session.query(models.Customer.id).filter(
+132:        models.Customer.account_id == account_id, models.Customer.email == email_address
+133:    ).order_by(
+134:        models.Customer.id.asc()
+135:    ).all()
+136:
+137:
+138:def long_lines():
+139:    if True:
+140:        typedargslist.extend(
+141:            gen_annotated_params(
+142:                ast_args.kwonlyargs,
+143:                ast_args.kw_defaults,
+144:                parameters,
+145:                implicit_default=True,
+146:            )
+147:        )
+148:    _type_comment_re = re.compile(
+149:        r"""
+150:        ^
+151:        [\t ]*
+152:        \#[ ]type:[ ]*
+153:        (?P<type>
+154:            [^#\t\n]+?
+155:        )
+156:        (?<!ignore)     # note: this will force the non-greedy + in <type> to match
+157:                        # a trailing space which is why we need the silliness below
+158:        (?<!ignore[ ]{1})(?<!ignore[ ]{2})(?<!ignore[ ]{3})(?<!ignore[ ]{4})
+159:        (?<!ignore[ ]{5})(?<!ignore[ ]{6})(?<!ignore[ ]{7})(?<!ignore[ ]{8})
+160:        (?<!ignore[ ]{9})(?<!ignore[ ]{10})
+161:        [\t ]*
+162:        (?P<nl>
+163:            (?:\#[^\n]*)?
+164:            \n?
+165:        )
+166:        $
+167:        """,
+168:        re.MULTILINE | re.VERBOSE,
+169:    )
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE)
+33:
+34:python_symbols = Symbols(python_grammar)
+35:
+36:python_grammar_no_print_statement = python_grammar.copy()
+37:del python_grammar_no_print_statement.keywords["print"]
+38:
+39:python_grammar_no_exec_statement = python_grammar.copy()
+40:del python_grammar_no_exec_statement.keywords["exec"]
+41:
+42:python_grammar_no_print_statement_no_exec_statement = python_grammar.copy()
+43:del python_grammar_no_print_statement_no_exec_statement.keywords["print"]
+44:del python_grammar_no_print_statement_no_exec_statement.keywords["exec"]
+45:
+46:pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE)
+47:pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:238:def lib2to3_parse(src_txt: str) -> Node:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:246:def lib2to3_parse(src_txt: str) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+250:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+251:        src_txt += nl
+252:    for grammar in GRAMMARS:
+253:        drv = driver.Driver(grammar, pytree.convert)
+254:        try:
+255:            result = drv.parse_string(src_txt, True)
+256:            break
+257:
+258:        except ParseError as pe:
+259:            lineno, column = pe.context[1]
+260:            lines = src_txt.splitlines()
+261:            try:
+262:                faulty_line = lines[lineno - 1]
+263:            except IndexError:
+264:                faulty_line = "<line number missing in source>"
+265:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+266:    else:
+267:        raise exc from None
+268:
+269:    if isinstance(result, Leaf):
+270:        result = Node(syms.file_input, [result])
+271:    return result
+272:
+273:
+274:def lib2to3_unparse(node: Node) -> str:
+275:    """Given a lib2to3 node, return its string representation."""
+276:    code = str(node)
+277:    return code
+278:
+279:
+280:T = TypeVar('T')
+281:
+282:
+283:class Visitor(Generic[T]):
+284:    """Basic lib2to3 visitor that yields things on visiting."""
+285:
+286:    def visit(self, node: LN) -> Iterator[T]:
+287:        if node.type < 256:
+288:            name = token.tok_name[node.type]
+289:        else:
+290:            name = type_repr(node.type)
+291:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+292:
+293:    def visit_default(self, node: LN) -> Iterator[T]:
+294:        if isinstance(node, Node):
+295:            for child in node.children:
+296:                yield from self.visit(child)
+297:
+298:
+299:@dataclass
+
+Calling tool: grepTool
+def assert_equivalent\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:1528:def assert_equivalent(src: str, dst: str) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:1504:def assert_equivalent(src: str, dst: str) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/lib/python3.8/site-packages/mypy/test/testsubtypes.py:200:    def assert_equivalent(self, s: Type, t: Type) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+1520:        if self.failure_count:
+1521:            s = 's' if self.failure_count > 1 else ''
+1522:            report.append(
+1523:                click.style(f'{self.failure_count} file{s} {failed}', fg='red')
+1524:            )
+1525:        return ', '.join(report) + '.'
+1526:
+1527:
+1528:def assert_equivalent(src: str, dst: str) -> None:
+1529:    """Raises AssertionError if `src` and `dst` aren't equivalent.
+1530:
+1531:    This is a temporary sanity check until Black becomes stable.
+1532:    """
+1533:
+1534:    import ast
+1535:    import traceback
+1536:
+1537:    def _v(node: ast.AST, depth: int = 0) -> Iterator[str]:
+1538:        """Simple visitor generating strings to compare ASTs by content."""
+1539:        yield f"{'  ' * depth}{node.__class__.__name__}("
+1540:
+1541:        for field in sorted(node._fields):
+1542:            try:
+1543:                value = getattr(node, field)
+1544:            except AttributeError:
+1545:                continue
+1546:
+1547:            yield f"{'  ' * (depth+1)}{field}="
+1548:
+1549:            if isinstance(value, list):
+1550:                for item in value:
+1551:                    if isinstance(item, ast.AST):
+1552:                        yield from _v(item, depth + 2)
+1553:
+1554:            elif isinstance(value, ast.AST):
+1555:                yield from _v(value, depth + 2)
+1556:
+1557:            else:
+1558:                yield f"{'  ' * (depth+2)}{value!r},  # {value.__class__.__name__}"
+1559:
+1560:        yield f"{'  ' * depth})  # /{node.__class__.__name__}"
+1561:
+1562:    try:
+1563:        src_ast = ast.parse(src)
+1564:    except Exception as exc:
+1565:        major, minor = sys.version_info[:2]
+1566:        raise AssertionError(
+1567:            f"cannot use --safe with this file; failed to parse source file "
+1568:            f"with Python {major}.{minor}'s builtin AST. Re-run with --fast "
+1569:            f"or stop using deprecated Python 2 syntax. AST error message: {exc}"
+1570:        )
+1571:
+1572:    try:
+1573:        dst_ast = ast.parse(dst)
+1574:    except Exception as exc:
+1575:        log = dump_to_file(''.join(traceback.format_tb(exc.__traceback__)), dst)
+1576:        raise AssertionError(
+1577:            f"INTERNAL ERROR: Black produced invalid code: {exc}. "
+1578:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+1579:            f"This invalid output might be helpful: {log}"
+
+Calling tool: grepTool
+from blib2to3 import pygram
+Matched content:
+21:from blib2to3 import pygram, pytree
+
+Calling tool: grepTool
+def assert_stable\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:1594:def assert_stable(src: str, dst: str, line_length: int) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:1565:def assert_stable(src: str, dst: str, line_length: int) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+1588:            f"the source.  "
+1589:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+1590:            f"This diff might be helpful: {log}"
+1591:        ) from None
+1592:
+1593:
+1594:def assert_stable(src: str, dst: str, line_length: int) -> None:
+1595:    """Raises AssertionError if `dst` reformats differently the second time.
+1596:
+1597:    This is a temporary sanity check until Black becomes stable.
+1598:    """
+1599:    newdst = format_str(dst, line_length=line_length)
+1600:    if dst != newdst:
+1601:        log = dump_to_file(
+1602:            diff(src, dst, 'source', 'first pass'),
+1603:            diff(dst, newdst, 'first pass', 'second pass'),
+1604:        )
+1605:        raise AssertionError(
+1606:            f"INTERNAL ERROR: Black produced different code on the second pass "
+1607:            f"of the formatter.  "
+1608:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+1609:            f"This diff might be helpful: {log}"
+1610:        ) from None
+1611:
+1612:
+1613:def dump_to_file(*output: str) -> str:
+1614:    """Dumps `output` to a temporary file. Returns path to the file."""
+1615:    import tempfile
+1616:
+1617:    with tempfile.NamedTemporaryFile(
+1618:        mode='w', prefix='blk_', suffix='.log', delete=False
+1619:    ) as f:
+1620:        for lines in output:
+1621:            f.write(lines)
+1622:            f.write('\n')
+1623:    return f.name
+1624:
+1625:
+1626:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+1627:    """Returns a udiff string between strings `a` and `b`."""
+1628:    import difflib
+1629:
+1630:    a_lines = [line + '\n' for line in a.split('\n')]
+1631:    b_lines = [line + '\n' for line in b.split('\n')]
+1632:    return ''.join(
+1633:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+1634:    )
+1635:
+1636:
+1637:if __name__ == '__main__':
+1638:    main()
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+1:#!/usr/bin/env python3
+2:
+3:import asyncio
+4:from asyncio.base_events import BaseEventLoop
+5:from concurrent.futures import Executor, ProcessPoolExecutor
+6:from functools import partial
+7:import keyword
+8:import os
+9:from pathlib import Path
+10:import tokenize
+11:import sys
+12:from typing import (
+13:    Dict, Generic, Iterable, Iterator, List, Optional, Set, Tuple, TypeVar, Union
+14:)
+15:
+16:from attr import dataclass, Factory
+17:import click
+18:
+19:# lib2to3 fork
+20:from blib2to3.pytree import Node, Leaf, type_repr
+21:from blib2to3 import pygram, pytree
+22:from blib2to3.pgen2 import driver, token
+23:from blib2to3.pgen2.parse import ParseError
+24:
+25:__version__ = "18.3a3"
+26:DEFAULT_LINE_LENGTH = 88
+27:# types
+28:syms = pygram.python_symbols
+29:FileContent = str
+30:Encoding = str
+31:Depth = int
+32:NodeType = int
+33:LeafID = int
+34:Priority = int
+35:LN = Union[Leaf, Node]
+36:out = partial(click.secho, bold=True, err=True)
+37:err = partial(click.secho, fg='red', err=True)
+38:
+39:
+40:class NothingChanged(UserWarning):
+
+Calling tool: grepTool
+def format_str\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:218:def format_str(src_contents: str, line_length: int) -> FileContent:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:218:def format_str(src_contents: str, line_length: int) -> FileContent:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+200:
+201:def format_file_contents(
+202:    src_contents: str, line_length: int, fast: bool
+203:) -> FileContent:
+204:    """Reformats a file and returns its contents and encoding."""
+205:    if src_contents.strip() == '':
+206:        raise NothingChanged
+207:
+208:    dst_contents = format_str(src_contents, line_length=line_length)
+209:    if src_contents == dst_contents:
+210:        raise NothingChanged
+211:
+212:    if not fast:
+213:        assert_equivalent(src_contents, dst_contents)
+214:        assert_stable(src_contents, dst_contents, line_length=line_length)
+215:    return dst_contents
+216:
+217:
+218:def format_str(src_contents: str, line_length: int) -> FileContent:
+219:    """Reformats a string and returns new contents."""
+220:    src_node = lib2to3_parse(src_contents)
+221:    dst_contents = ""
+222:    lines = LineGenerator()
+223:    elt = EmptyLineTracker()
+224:    py36 = is_python36(src_node)
+225:    empty_line = Line()
+226:    after = 0
+227:    for current_line in lines.visit(src_node):
+228:        for _ in range(after):
+229:            dst_contents += str(empty_line)
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+
+Calling tool: createTodo
+Todo List Created
+Todo List (14 items):
+- [ ] Verify `GRAMMARS` is defined at module scope in black.py containing exactly 4 entries in this order: `pygram.python_grammar_no_print_statement_no_exec_statement`, `pygram.python_grammar_no_print_statement`, `pygram.python_grammar_no_exec_statement`, `pygram.python_grammar`. (ID: todo-1)
+- [ ] Confirm `blib2to3/pygram.py` defines the new grammars by copying `python_grammar` and deleting keywords: `python_grammar_no_exec_statement` deletes only "exec"; `python_grammar_no_print_statement_no_exec_statement` deletes both "print" and "exec". (ID: todo-2)
+- [ ] Inspect `lib2to3_parse` in black.py: ensure it iterates over `GRAMMARS`, constructs `driver.Driver(grammar, pytree.convert)` for each, attempts `parse_string(..., True)`, and breaks on first success. (ID: todo-3)
+- [ ] Inspect `lib2to3_parse` error handling: on `ParseError`, it computes `lineno`, `column`, extracts the faulty line safely with IndexError guard, builds `exc = ValueError("Cannot parse: {lineno}:{column}: {faulty_line}")`, and after exhausting all grammars, raises `exc` with `from None`. (ID: todo-4)
+- [ ] Verify `lib2to3_parse` preserves the existing behavior of appending a platform-appropriate newline if the source text doesn’t end with one and still wraps a `Leaf` parse result into `Node(syms.file_input, [result])`. (ID: todo-5)
+- [ ] Check the `whitespace(leaf)` function in black.py contains the new special-case that returns NO when the preceding significant leaf (`prevp`) is a RIGHTSHIFT token with parent `syms.shift_expr` and the previous sibling is a NAME with value 'print' (Python 2 print chevron). (ID: todo-6)
+- [ ] Confirm the new chevron-print whitespace rule is located under the `if not prev:` branch and does not affect normal right-shift operations (i.e., it is gated on `prevp.prev_sibling.value == 'print'`). (ID: todo-7)
+- [ ] Verify that function call spacing rules under `p.type == syms.trailer` still return NO for `token.LPAR` so there is no space before parentheses in calls (ensuring `exec("...")` remains `exec(...)`). (ID: todo-8)
+- [ ] Verify `assert_equivalent` in black.py was updated: on failure to `ast.parse(src)`, it now raises an AssertionError whose message includes the running Python major.minor version and advises to re-run with --fast or stop using deprecated Python 2 syntax. (ID: todo-9)
+- [ ] Ensure `format_file_contents` only calls `assert_equivalent` and `assert_stable` when `fast` is False, so tests using `format_str` or fast mode won’t trigger the AST check for Python 2 syntax. (ID: todo-10)
+- [ ] Validate tests/test_black.py `test_python2` reads from `tests/python2.py`, formats via `fs = partial(black.format_str, ...)`, compares to expected, skips `black.assert_equivalent(source, actual)`, and still calls `black.assert_stable(...)`. (ID: todo-11)
+- [ ] Inspect tests/python2.py fixture: input section includes Python 2-only constructs (print chevron with `>>` and `exec "..." in _globals, _locals`); expected output retains Python 2 semantics and specifically shows `print >>sys.stderr, ...` (no space between `>>` and the target). (ID: todo-12)
+- [ ] Inspect tests/function.py fixture: input includes `exec("new-style exec", {}, {})` and an async function with parameter named `exec`; expected output keeps `exec("...")` without a space before `(` and preserves `exec` as a valid parameter name. (ID: todo-13)
+- [ ] Cross-check that `format_str` calls `lib2to3_parse` so the new multi-grammar parsing logic is actually used during formatting. (ID: todo-14)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 14
+description: 'Verify `GRAMMARS` is defined at module scope in black.py containing exactly 4 entries in this order: `pygram.python_grammar_no_print_statement_no_exec_statement`, `pygram.python_grammar_no_print_statement`, `pygram.python_grammar_no_exec_statement`, `pygram.python_grammar`.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "GRAMMARS\\s*=\\s*\\[",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+Calling tool: grepTool
+GRAMMARS\s*=\s*\[
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:238:GRAMMARS = [
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+250:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+251:        src_txt += nl
+252:    for grammar in GRAMMARS:
+253:        drv = driver.Driver(grammar, pytree.convert)
+254:        try:
+255:            result = drv.parse_string(src_txt, True)
+256:            break
+257:
+258:        except ParseError as pe:
+259:            lineno, column = pe.context[1]
+260:            lines = src_txt.splitlines()
+261:            try:
+262:                faulty_line = lines[lineno - 1]
+263:            except IndexError:
+264:                faulty_line = "<line number missing in source>"
+265:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+266:    else:
+267:        raise exc from None
+268:
+269:    if isinstance(result, Leaf):
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Found GRAMMARS defined at module scope in black.py (lines 238-243) with exactly 4 entries in the required order. Verified usage iterates over this list.
+
+
+Todo item 1 of 14 is correct
+description: 'Verify `GRAMMARS` is defined at module scope in black.py containing exactly 4 entries in this order: `pygram.python_grammar_no_print_statement_no_exec_statement`, `pygram.python_grammar_no_print_statement`, `pygram.python_grammar_no_exec_statement`, `pygram.python_grammar`.'
+Validating todo item 2 of 14
+description: 'Confirm `blib2to3/pygram.py` defines the new grammars by copying `python_grammar` and deleting keywords: `python_grammar_no_exec_statement` deletes only "exec"; `python_grammar_no_print_statement_no_exec_statement` deletes both "print" and "exec".'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+Calling tool: grepTool
+python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:241:    pygram.python_grammar_no_exec_statement,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.pyi:119:python_grammar_no_print_statement_no_exec_statement: Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.pyi:120:python_grammar_no_exec_statement: Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py:39:python_grammar_no_exec_statement = python_grammar.copy()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py:40:del python_grammar_no_exec_statement.keywords["exec"]
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py:42:python_grammar_no_print_statement_no_exec_statement = python_grammar.copy()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py:43:del python_grammar_no_print_statement_no_exec_statement.keywords["print"]
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py:44:del python_grammar_no_print_statement_no_exec_statement.keywords["exec"]
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE)
+33:
+34:python_symbols = Symbols(python_grammar)
+35:
+36:python_grammar_no_print_statement = python_grammar.copy()
+37:del python_grammar_no_print_statement.keywords["print"]
+38:
+39:python_grammar_no_exec_statement = python_grammar.copy()
+40:del python_grammar_no_exec_statement.keywords["exec"]
+41:
+42:python_grammar_no_print_statement_no_exec_statement = python_grammar.copy()
+43:del python_grammar_no_print_statement_no_exec_statement.keywords["print"]
+44:del python_grammar_no_print_statement_no_exec_statement.keywords["exec"]
+45:
+46:pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE)
+47:pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In blib2to3/pygram.py lines 39-44, new grammars are defined by copying python_grammar and deleting keywords: python_grammar_no_exec_statement deletes only "exec"; python_grammar_no_print_statement_no_exec_statement deletes both "print" and "exec".
+
+
+Todo item 2 of 14 is correct
+description: 'Confirm `blib2to3/pygram.py` defines the new grammars by copying `python_grammar` and deleting keywords: `python_grammar_no_exec_statement` deletes only "exec"; `python_grammar_no_print_statement_no_exec_statement` deletes both "print" and "exec".'
+Validating todo item 3 of 14
+description: 'Inspect `lib2to3_parse` in black.py: ensure it iterates over `GRAMMARS`, constructs `driver.Driver(grammar, pytree.convert)` for each, attempts `parse_string(..., True)`, and breaks on first success.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def lib2to3_parse\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:246:def lib2to3_parse(src_txt: str) -> Node:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:238:def lib2to3_parse(src_txt: str) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+250:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+251:        src_txt += nl
+252:    for grammar in GRAMMARS:
+253:        drv = driver.Driver(grammar, pytree.convert)
+254:        try:
+255:            result = drv.parse_string(src_txt, True)
+256:            break
+257:
+258:        except ParseError as pe:
+259:            lineno, column = pe.context[1]
+260:            lines = src_txt.splitlines()
+261:            try:
+262:                faulty_line = lines[lineno - 1]
+263:            except IndexError:
+264:                faulty_line = "<line number missing in source>"
+265:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+266:    else:
+267:        raise exc from None
+268:
+269:    if isinstance(result, Leaf):
+270:        result = Node(syms.file_input, [result])
+271:    return result
+272:
+273:
+274:def lib2to3_unparse(node: Node) -> str:
+275:    """Given a lib2to3 node, return its string representation."""
+276:    code = str(node)
+277:    return code
+278:
+279:
+280:T = TypeVar('T')
+281:
+282:
+283:class Visitor(Generic[T]):
+284:    """Basic lib2to3 visitor that yields things on visiting."""
+285:
+286:    def visit(self, node: LN) -> Iterator[T]:
+287:        if node.type < 256:
+288:            name = token.tok_name[node.type]
+289:        else:
+290:            name = type_repr(node.type)
+291:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+292:
+293:    def visit_default(self, node: LN) -> Iterator[T]:
+294:        if isinstance(node, Node):
+295:            for child in node.children:
+296:                yield from self.visit(child)
+297:
+298:
+299:@dataclass
+300:class DebugVisitor(Visitor[T]):
+301:    tree_depth: int = 0
+302:
+303:    def visit_default(self, node: LN) -> Iterator[T]:
+304:        indent = ' ' * (2 * self.tree_depth)
+305:        if isinstance(node, Node):
+306:            _type = type_repr(node.type)
+307:            out(f'{indent}{_type}', fg='yellow')
+308:            self.tree_depth += 1
+309:            for child in node.children:
+310:                yield from self.visit(child)
+311:
+312:            self.tree_depth -= 1
+313:            out(f'{indent}/{_type}', fg='yellow', bold=False)
+314:        else:
+315:            _type = token.tok_name.get(node.type, str(node.type))
+316:            out(f'{indent}{_type}', fg='blue', nl=False)
+317:            if node.prefix:
+318:                # We don't have to handle prefixes for `Node` objects since
+319:                # that delegates to the first child anyway.
+320:                out(f' {node.prefix!r}', fg='green', bold=False, nl=False)
+321:            out(f' {node.value!r}', fg='blue', bold=False)
+322:
+323:
+324:KEYWORDS = set(keyword.kwlist)
+325:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+326:FLOW_CONTROL = {'return', 'raise', 'break', 'continue'}
+327:STATEMENT = {
+328:    syms.if_stmt,
+329:    syms.while_stmt,
+330:    syms.for_stmt,
+331:    syms.try_stmt,
+332:    syms.except_clause,
+333:    syms.with_stmt,
+334:    syms.funcdef,
+335:    syms.classdef,
+336:}
+337:STANDALONE_COMMENT = 153
+338:LOGIC_OPERATORS = {'and', 'or'}
+339:COMPARATORS = {
+340:    token.LESS,
+341:    token.GREATER,
+342:    token.EQEQUAL,
+343:    token.NOTEQUAL,
+344:    token.LESSEQUAL,
+345:    token.GREATEREQUAL,
+346:}
+347:MATH_OPERATORS = {
+348:    token.PLUS,
+349:    token.MINUS,
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:def lib2to3_parse(src_txt: str) -> Node:
+239:    """Given a string with source, return the lib2to3 Node."""
+240:    grammar = pygram.python_grammar_no_print_statement
+241:    drv = driver.Driver(grammar, pytree.convert)
+242:    if src_txt[-1] != '\n':
+243:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+244:        src_txt += nl
+245:    try:
+246:        result = drv.parse_string(src_txt, True)
+247:    except ParseError as pe:
+248:        lineno, column = pe.context[1]
+249:        lines = src_txt.splitlines()
+250:        try:
+251:            faulty_line = lines[lineno - 1]
+252:        except IndexError:
+253:            faulty_line = "<line number missing in source>"
+254:        raise ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}") from None
+255:
+256:    if isinstance(result, Leaf):
+257:        result = Node(syms.file_input, [result])
+258:    return result
+259:
+260:
+261:def lib2to3_unparse(node: Node) -> str:
+262:    """Given a lib2to3 node, return its string representation."""
+263:    code = str(node)
+264:    return code
+265:
+266:
+267:T = TypeVar('T')
+268:
+269:
+270:class Visitor(Generic[T]):
+271:    """Basic lib2to3 visitor that yields things on visiting."""
+272:
+273:    def visit(self, node: LN) -> Iterator[T]:
+274:        if node.type < 256:
+275:            name = token.tok_name[node.type]
+276:        else:
+277:            name = type_repr(node.type)
+278:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+279:
+280:    def visit_default(self, node: LN) -> Iterator[T]:
+281:        if isinstance(node, Node):
+282:            for child in node.children:
+283:                yield from self.visit(child)
+284:
+285:
+286:@dataclass
+287:class DebugVisitor(Visitor[T]):
+288:    tree_depth: int = 0
+289:
+290:    def visit_default(self, node: LN) -> Iterator[T]:
+291:        indent = ' ' * (2 * self.tree_depth)
+292:        if isinstance(node, Node):
+293:            _type = type_repr(node.type)
+294:            out(f'{indent}{_type}', fg='yellow')
+295:            self.tree_depth += 1
+296:            for child in node.children:
+297:                yield from self.visit(child)
+298:
+299:            self.tree_depth -= 1
+300:            out(f'{indent}/{_type}', fg='yellow', bold=False)
+301:        else:
+302:            _type = token.tok_name.get(node.type, str(node.type))
+303:            out(f'{indent}{_type}', fg='blue', nl=False)
+304:            if node.prefix:
+305:                # We don't have to handle prefixes for `Node` objects since
+306:                # that delegates to the first child anyway.
+307:                out(f' {node.prefix!r}', fg='green', bold=False, nl=False)
+308:            out(f' {node.value!r}', fg='blue', bold=False)
+309:
+310:
+311:KEYWORDS = set(keyword.kwlist)
+312:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+313:FLOW_CONTROL = {'return', 'raise', 'break', 'continue'}
+314:STATEMENT = {
+315:    syms.if_stmt,
+316:    syms.while_stmt,
+317:    syms.for_stmt,
+318:    syms.try_stmt,
+319:    syms.except_clause,
+320:    syms.with_stmt,
+321:    syms.funcdef,
+322:    syms.classdef,
+323:}
+324:STANDALONE_COMMENT = 153
+325:LOGIC_OPERATORS = {'and', 'or'}
+326:COMPARATORS = {
+327:    token.LESS,
+328:    token.GREATER,
+329:    token.EQEQUAL,
+330:    token.NOTEQUAL,
+331:    token.LESSEQUAL,
+332:    token.GREATEREQUAL,
+333:}
+334:MATH_OPERATORS = {
+335:    token.PLUS,
+336:    token.MINUS,
+337:    token.STAR,
+338:    token.SLASH,
+339:    token.VBAR,
+340:    token.AMPER,
+341:    token.PERCENT,
+342:    token.CIRCUMFLEX,
+343:    token.TILDE,
+344:    token.LEFTSHIFT,
+345:    token.RIGHTSHIFT,
+346:    token.DOUBLESTAR,
+347:    token.DOUBLESLASH,
+348:}
+349:COMPREHENSION_PRIORITY = 20
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, lib2to3_parse iterates over GRAMMARS, constructs driver.Driver(grammar, pytree.convert) for each, calls drv.parse_string(src_txt, True), and breaks on first success; otherwise it raises the last captured error.
+
+
+Todo item 3 of 14 is correct
+description: 'Inspect `lib2to3_parse` in black.py: ensure it iterates over `GRAMMARS`, constructs `driver.Driver(grammar, pytree.convert)` for each, attempts `parse_string(..., True)`, and breaks on first success.'
+Validating todo item 4 of 14
+description: 'Inspect `lib2to3_parse` error handling: on `ParseError`, it computes `lineno`, `column`, extracts the faulty line safely with IndexError guard, builds `exc = ValueError("Cannot parse: {lineno}:{column}: {faulty_line}")`, and after exhausting all grammars, raises `exc` with `from None`.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def lib2to3_parse\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:246:def lib2to3_parse(src_txt: str) -> Node:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:238:def lib2to3_parse(src_txt: str) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+250:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+251:        src_txt += nl
+252:    for grammar in GRAMMARS:
+253:        drv = driver.Driver(grammar, pytree.convert)
+254:        try:
+255:            result = drv.parse_string(src_txt, True)
+256:            break
+257:
+258:        except ParseError as pe:
+259:            lineno, column = pe.context[1]
+260:            lines = src_txt.splitlines()
+261:            try:
+262:                faulty_line = lines[lineno - 1]
+263:            except IndexError:
+264:                faulty_line = "<line number missing in source>"
+265:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+266:    else:
+267:        raise exc from None
+268:
+269:    if isinstance(result, Leaf):
+270:        result = Node(syms.file_input, [result])
+271:    return result
+272:
+273:
+274:def lib2to3_unparse(node: Node) -> str:
+275:    """Given a lib2to3 node, return its string representation."""
+276:    code = str(node)
+277:    return code
+278:
+279:
+280:T = TypeVar('T')
+281:
+282:
+283:class Visitor(Generic[T]):
+284:    """Basic lib2to3 visitor that yields things on visiting."""
+285:
+286:    def visit(self, node: LN) -> Iterator[T]:
+287:        if node.type < 256:
+288:            name = token.tok_name[node.type]
+289:        else:
+290:            name = type_repr(node.type)
+291:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+292:
+293:    def visit_default(self, node: LN) -> Iterator[T]:
+294:        if isinstance(node, Node):
+295:            for child in node.children:
+296:                yield from self.visit(child)
+297:
+298:
+299:@dataclass
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:def lib2to3_parse(src_txt: str) -> Node:
+239:    """Given a string with source, return the lib2to3 Node."""
+240:    grammar = pygram.python_grammar_no_print_statement
+241:    drv = driver.Driver(grammar, pytree.convert)
+242:    if src_txt[-1] != '\n':
+243:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+244:        src_txt += nl
+245:    try:
+246:        result = drv.parse_string(src_txt, True)
+247:    except ParseError as pe:
+248:        lineno, column = pe.context[1]
+249:        lines = src_txt.splitlines()
+250:        try:
+251:            faulty_line = lines[lineno - 1]
+252:        except IndexError:
+253:            faulty_line = "<line number missing in source>"
+254:        raise ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}") from None
+255:
+256:    if isinstance(result, Leaf):
+257:        result = Node(syms.file_input, [result])
+258:    return result
+259:
+260:
+261:def lib2to3_unparse(node: Node) -> str:
+262:    """Given a lib2to3 node, return its string representation."""
+263:    code = str(node)
+264:    return code
+265:
+266:
+267:T = TypeVar('T')
+268:
+269:
+270:class Visitor(Generic[T]):
+271:    """Basic lib2to3 visitor that yields things on visiting."""
+272:
+273:    def visit(self, node: LN) -> Iterator[T]:
+274:        if node.type < 256:
+275:            name = token.tok_name[node.type]
+276:        else:
+277:            name = type_repr(node.type)
+278:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+279:
+280:    def visit_default(self, node: LN) -> Iterator[T]:
+281:        if isinstance(node, Node):
+282:            for child in node.children:
+283:                yield from self.visit(child)
+284:
+285:
+286:@dataclass
+287:class DebugVisitor(Visitor[T]):
+288:    tree_depth: int = 0
+289:
+290:    def visit_default(self, node: LN) -> Iterator[T]:
+291:        indent = ' ' * (2 * self.tree_depth)
+292:        if isinstance(node, Node):
+293:            _type = type_repr(node.type)
+294:            out(f'{indent}{_type}', fg='yellow')
+295:            self.tree_depth += 1
+296:            for child in node.children:
+297:                yield from self.visit(child)
+298:
+299:            self.tree_depth -= 1
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s lib2to3_parse (lines ~252–267), on ParseError it extracts lineno/column, safely retrieves the faulty line with an IndexError guard, assigns exc = ValueError(...), and after looping through all GRAMMARS, raises exc with “from None”. This matches the todo requirement.
+
+
+Todo item 4 of 14 is correct
+description: 'Inspect `lib2to3_parse` error handling: on `ParseError`, it computes `lineno`, `column`, extracts the faulty line safely with IndexError guard, builds `exc = ValueError("Cannot parse: {lineno}:{column}: {faulty_line}")`, and after exhausting all grammars, raises `exc` with `from None`.'
+Validating todo item 5 of 14
+description: 'Verify `lib2to3_parse` preserves the existing behavior of appending a platform-appropriate newline if the source text doesn’t end with one and still wraps a `Leaf` parse result into `Node(syms.file_input, [result])`.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def lib2to3_parse\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black"
+]
+stop reason stop
+missing required validation result {
+  result: null,
+  reason: null,
+}
+output
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py:246:def lib2to3_parse(src_txt: str) -> Node:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py:238:def lib2to3_parse(src_txt: str) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:GRAMMARS = [
+239:    pygram.python_grammar_no_print_statement_no_exec_statement,
+240:    pygram.python_grammar_no_print_statement,
+241:    pygram.python_grammar_no_exec_statement,
+242:    pygram.python_grammar,
+243:]
+244:
+245:
+246:def lib2to3_parse(src_txt: str) -> Node:
+247:    """Given a string with source, return the lib2to3 Node."""
+248:    grammar = pygram.python_grammar_no_print_statement
+249:    if src_txt[-1] != '\n':
+250:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+251:        src_txt += nl
+252:    for grammar in GRAMMARS:
+253:        drv = driver.Driver(grammar, pytree.convert)
+254:        try:
+255:            result = drv.parse_string(src_txt, True)
+256:            break
+257:
+258:        except ParseError as pe:
+259:            lineno, column = pe.context[1]
+260:            lines = src_txt.splitlines()
+261:            try:
+262:                faulty_line = lines[lineno - 1]
+263:            except IndexError:
+264:                faulty_line = "<line number missing in source>"
+265:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+266:    else:
+267:        raise exc from None
+268:
+269:    if isinstance(result, Leaf):
+270:        result = Node(syms.file_input, [result])
+271:    return result
+272:
+273:
+274:def lib2to3_unparse(node: Node) -> str:
+275:    """Given a lib2to3 node, return its string representation."""
+276:    code = str(node)
+277:    return code
+278:
+279:
+280:T = TypeVar('T')
+281:
+282:
+283:class Visitor(Generic[T]):
+284:    """Basic lib2to3 visitor that yields things on visiting."""
+285:
+286:    def visit(self, node: LN) -> Iterator[T]:
+287:        if node.type < 256:
+288:            name = token.tok_name[node.type]
+289:        else:
+290:            name = type_repr(node.type)
+291:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+292:
+293:    def visit_default(self, node: LN) -> Iterator[T]:
+294:        if isinstance(node, Node):
+295:            for child in node.children:
+296:                yield from self.visit(child)
+297:
+298:
+299:@dataclass
+300:class DebugVisitor(Visitor[T]):
+301:    tree_depth: int = 0
+302:
+303:    def visit_default(self, node: LN) -> Iterator[T]:
+304:        indent = ' ' * (2 * self.tree_depth)
+305:        if isinstance(node, Node):
+306:            _type = type_repr(node.type)
+307:            out(f'{indent}{_type}', fg='yellow')
+308:            self.tree_depth += 1
+309:            for child in node.children:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/good/black/env/src/black/black.py
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:def lib2to3_parse(src_txt: str) -> Node:
+239:    """Given a string with source, return the lib2to3 Node."""
+240:    grammar = pygram.python_grammar_no_print_statement
+241:    drv = driver.Driver(grammar, pytree.convert)
+242:    if src_txt[-1] != '\n':
+243:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+244:        src_txt += nl
+245:    try:
+246:        result = drv.parse_string(src_txt, True)
+247:    except ParseError as pe:
+248:        lineno, column = pe.context[1]
+249:        lines = src_txt.splitlines()
+250:        try:
+251:            faulty_line = lines[lineno - 1]
+252:        except IndexError:
+253:            faulty_line = "<line number missing in source>"
+254:        raise ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}") from None
+255:
+256:    if isinstance(result, Leaf):
+257:        result = Node(syms.file_input, [result])
+258:    return result
+259:
+260:
+261:def lib2to3_unparse(node: Node) -> str:
+262:    """Given a lib2to3 node, return its string representation."""
+263:    code = str(node)
+264:    return code
+265:
+266:
+267:T = TypeVar('T')
+268:
+269:
+270:class Visitor(Generic[T]):
+271:    """Basic lib2to3 visitor that yields things on visiting."""
+272:
+273:    def visit(self, node: LN) -> Iterator[T]:
+274:        if node.type < 256:
+275:            name = token.tok_name[node.type]
+276:        else:
+277:            name = type_repr(node.type)
+278:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+279:
+280:    def visit_default(self, node: LN) -> Iterator[T]:
+281:        if isinstance(node, Node):
+282:            for child in node.children:
+283:                yield from self.visit(child)
+284:
+285:
+286:@dataclass
+287:class DebugVisitor(Visitor[T]):
+288:    tree_depth: int = 0
+289:
+290:    def visit_default(self, node: LN) -> Iterator[T]:
+291:        indent = ' ' * (2 * self.tree_depth)
+292:        if isinstance(node, Node):
+293:            _type = type_repr(node.type)
+294:            out(f'{indent}{_type}', fg='yellow')
+295:            self.tree_depth += 1
+296:            for child in node.children:
+297:                yield from self.visit(child)
+298:
+299:            self.tree_depth -= 1
+300:            out(f'{indent}/{_type}', fg='yellow', bold=False)
+301:        else:
+302:            _type = token.tok_name.get(node.type, str(node.type))
+303:            out(f'{indent}{_type}', fg='blue', nl=False)
+304:            if node.prefix:
+305:                # We don't have to handle prefixes for `Node` objects since
+306:                # that delegates to the first child anyway.
+307:                out(f' {node.prefix!r}', fg='green', bold=False, nl=False)
+308:            out(f' {node.value!r}', fg='blue', bold=False)
+309:
+
+

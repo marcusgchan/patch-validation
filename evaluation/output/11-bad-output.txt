@@ -1,0 +1,1648 @@
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_comments6", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "comments6", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def read_data\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def split_line\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def is_special_comment\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "STANDALONE_COMMENT",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def comments_after\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def should_explode\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def is_line_short_enough\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "import token\\b", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "\\bimport token\\b", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "from (.|\\n)* import token",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "token\\.", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "import (.|\\n)*token",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black/black.py"
+]
+Calling tool: grepTool
+test_comments6
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_comments6
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/coverage_bugsinpy.txt:512:FAIL: test_comments6 (tests.test_black.BlackTestCase)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/coverage_bugsinpy.txt:517:  File "/workspace/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py", line 369, in test_comments6
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comments6
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py:366:    def test_comments6(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py
+340:
+341:    @patch("black.dump_to_file", dump_to_stderr)
+342:    def test_comments3(self) -> None:
+343:        source, expected = read_data("comments3")
+344:        actual = fs(source)
+345:        self.assertFormatEqual(expected, actual)
+346:        black.assert_equivalent(source, actual)
+347:        black.assert_stable(source, actual, line_length=ll)
+348:
+349:    @patch("black.dump_to_file", dump_to_stderr)
+350:    def test_comments4(self) -> None:
+351:        source, expected = read_data("comments4")
+352:        actual = fs(source)
+353:        self.assertFormatEqual(expected, actual)
+354:        black.assert_equivalent(source, actual)
+355:        black.assert_stable(source, actual, line_length=ll)
+356:
+357:    @patch("black.dump_to_file", dump_to_stderr)
+358:    def test_comments5(self) -> None:
+359:        source, expected = read_data("comments5")
+360:        actual = fs(source)
+361:        self.assertFormatEqual(expected, actual)
+362:        black.assert_equivalent(source, actual)
+363:        black.assert_stable(source, actual, line_length=ll)
+364:
+365:    @patch("black.dump_to_file", dump_to_stderr)
+366:    def test_comments6(self) -> None:
+367:        source, expected = read_data("comments6")
+368:        actual = fs(source)
+369:        self.assertFormatEqual(expected, actual)
+370:        black.assert_equivalent(source, actual)
+371:        black.assert_stable(source, actual, line_length=ll)
+372:
+373:    @patch("black.dump_to_file", dump_to_stderr)
+374:    def test_cantfit(self) -> None:
+375:        source, expected = read_data("cantfit")
+376:        actual = fs(source)
+377:        self.assertFormatEqual(expected, actual)
+378:        black.assert_equivalent(source, actual)
+379:        black.assert_stable(source, actual, line_length=ll)
+380:
+381:    @patch("black.dump_to_file", dump_to_stderr)
+382:    def test_import_spacing(self) -> None:
+383:        source, expected = read_data("import_spacing")
+384:        actual = fs(source)
+385:        self.assertFormatEqual(expected, actual)
+386:        black.assert_equivalent(source, actual)
+387:        black.assert_stable(source, actual, line_length=ll)
+388:
+389:    @patch("black.dump_to_file", dump_to_stderr)
+390:    def test_composition(self) -> None:
+391:        source, expected = read_data("composition")
+392:        actual = fs(source)
+393:        self.assertFormatEqual(expected, actual)
+394:        black.assert_equivalent(source, actual)
+395:        black.assert_stable(source, actual, line_length=ll)
+396:
+397:    @patch("black.dump_to_file", dump_to_stderr)
+398:    def test_empty_lines(self) -> None:
+399:        source, expected = read_data("empty_lines")
+400:        actual = fs(source)
+401:        self.assertFormatEqual(expected, actual)
+402:        black.assert_equivalent(source, actual)
+403:        black.assert_stable(source, actual, line_length=ll)
+404:
+405:    @patch("black.dump_to_file", dump_to_stderr)
+406:    def test_string_prefixes(self) -> None:
+407:        source, expected = read_data("string_prefixes")
+408:        actual = fs(source)
+409:        self.assertFormatEqual(expected, actual)
+410:        black.assert_equivalent(source, actual)
+411:        black.assert_stable(source, actual, line_length=ll)
+412:
+413:    @patch("black.dump_to_file", dump_to_stderr)
+414:    def test_numeric_literals(self) -> None:
+415:        source, expected = read_data("numeric_literals")
+416:        actual = fs(source, mode=black.FileMode.PYTHON36)
+417:        self.assertFormatEqual(expected, actual)
+418:        black.assert_equivalent(source, actual)
+419:        black.assert_stable(source, actual, line_length=ll)
+420:
+421:    @patch("black.dump_to_file", dump_to_stderr)
+422:    def test_numeric_literals_ignoring_underscores(self) -> None:
+423:        source, expected = read_data("numeric_literals_skip_underscores")
+424:        mode = (
+425:            black.FileMode.PYTHON36 | black.FileMode.NO_NUMERIC_UNDERSCORE_NORMALIZATION
+426:        )
+427:        actual = fs(source, mode=mode)
+428:        self.assertFormatEqual(expected, actual)
+429:        black.assert_equivalent(source, actual)
+430:        black.assert_stable(source, actual, line_length=ll, mode=mode)
+431:
+432:    @patch("black.dump_to_file", dump_to_stderr)
+433:    def test_numeric_literals_py2(self) -> None:
+434:        source, expected = read_data("numeric_literals_py2")
+435:        actual = fs(source)
+436:        self.assertFormatEqual(expected, actual)
+437:        black.assert_stable(source, actual, line_length=ll)
+438:
+439:    @patch("black.dump_to_file", dump_to_stderr)
+440:    def test_python2(self) -> None:
+441:        source, expected = read_data("python2")
+442:        actual = fs(source)
+443:        self.assertFormatEqual(expected, actual)
+444:        # black.assert_equivalent(source, actual)
+445:        black.assert_stable(source, actual, line_length=ll)
+446:
+447:    @patch("black.dump_to_file", dump_to_stderr)
+448:    def test_python2_unicode_literals(self) -> None:
+449:        source, expected = read_data("python2_unicode_literals")
+450:        actual = fs(source)
+451:        self.assertFormatEqual(expected, actual)
+452:        black.assert_stable(source, actual, line_length=ll)
+453:
+454:    @patch("black.dump_to_file", dump_to_stderr)
+455:    def test_stub(self) -> None:
+456:        mode = black.FileMode.PYI
+457:        source, expected = read_data("stub.pyi")
+458:        actual = fs(source, mode=mode)
+459:        self.assertFormatEqual(expected, actual)
+
+Calling tool: grepTool
+comments6
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py:366:    def test_comments6(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py:367:        source, expected = read_data("comments6")
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py:54:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager, redirect_stderr
+5:from functools import partial, wraps
+6:from io import BytesIO, TextIOWrapper
+7:import os
+8:from pathlib import Path
+9:import re
+10:import sys
+11:from tempfile import TemporaryDirectory
+12:from typing import (
+13:    Any,
+14:    BinaryIO,
+15:    Callable,
+16:    Coroutine,
+17:    Generator,
+18:    List,
+19:    Tuple,
+20:    Iterator,
+21:    TypeVar,
+22:)
+23:import unittest
+24:from unittest.mock import patch, MagicMock
+25:
+26:from click import unstyle
+27:from click.testing import CliRunner
+28:
+29:import black
+30:
+31:try:
+32:    import blackd
+33:    from aiohttp.test_utils import TestClient, TestServer
+34:except ImportError:
+35:    has_blackd_deps = False
+36:else:
+37:    has_blackd_deps = True
+38:
+39:
+40:ll = 88
+41:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+42:fs = partial(black.format_str, line_length=ll)
+43:THIS_FILE = Path(__file__)
+44:THIS_DIR = THIS_FILE.parent
+45:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+46:T = TypeVar("T")
+47:R = TypeVar("R")
+48:
+49:
+50:def dump_to_stderr(*output: str) -> str:
+51:    return "\n" + "\n".join(output) + "\n"
+52:
+53:
+54:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+55:    """read_data('test_name') -> 'input', 'output'"""
+56:    if not name.endswith((".py", ".pyi", ".out", ".diff")):
+57:        name += ".py"
+58:    _input: List[str] = []
+59:    _output: List[str] = []
+60:    base_dir = THIS_DIR / "data" if data else THIS_DIR
+61:    with open(base_dir / name, "r", encoding="utf8") as test:
+62:        lines = test.readlines()
+63:    result = _input
+64:    for line in lines:
+65:        line = line.replace(EMPTY_LINE, "")
+66:        if line.rstrip() == "# output":
+67:            result = _output
+68:            continue
+69:
+70:        result.append(line)
+71:    if _input and not _output:
+72:        # If there's no output marker, treat the entire file as already pre-formatted.
+73:        _output = _input[:]
+74:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+75:
+76:
+77:@contextmanager
+78:def cache_dir(exists: bool = True) -> Iterator[Path]:
+79:    with TemporaryDirectory() as workspace:
+80:        cache_dir = Path(workspace)
+81:        if not exists:
+82:            cache_dir = cache_dir / "new"
+83:        with patch("black.CACHE_DIR", cache_dir):
+84:            yield cache_dir
+85:
+86:
+87:@contextmanager
+88:def event_loop(close: bool) -> Iterator[None]:
+89:    policy = asyncio.get_event_loop_policy()
+90:    old_loop = policy.get_event_loop()
+91:    loop = policy.new_event_loop()
+92:    asyncio.set_event_loop(loop)
+93:    try:
+94:        yield
+95:
+96:    finally:
+97:        policy.set_event_loop(old_loop)
+98:        if close:
+99:            loop.close()
+100:
+101:
+102:def async_test(f: Callable[..., Coroutine[Any, None, R]]) -> Callable[..., None]:
+103:    @event_loop(close=True)
+104:    @wraps(f)
+105:    def wrapper(*args: Any, **kwargs: Any) -> None:
+106:        asyncio.get_event_loop().run_until_complete(f(*args, **kwargs))
+107:
+108:    return wrapper
+109:
+110:
+111:class BlackRunner(CliRunner):
+112:    """Modify CliRunner so that stderr is not merged with stdout.
+113:
+114:    This is a hack that can be removed once we depend on Click 7.x"""
+115:
+116:    def __init__(self) -> None:
+117:        self.stderrbuf = BytesIO()
+118:        self.stdoutbuf = BytesIO()
+119:        self.stdout_bytes = b""
+120:        self.stderr_bytes = b""
+
+Calling tool: globTool
+**/tests/data/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/data/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/tests/data/comments6.py
+1:from typing import Any, Tuple
+2:
+3:
+4:def f(
+5:    a,  # type: int
+6:):
+7:    pass
+8:
+9:
+10:# test type comments
+11:def f(a, b, c, d, e, f, g, h, i):
+12:    # type: (int, int, int, int, int, int, int, int, int) -> None
+13:    pass
+14:
+15:
+16:def f(
+17:    a,  # type: int
+18:    b,  # type: int
+19:    c,  # type: int
+20:    d,  # type: int
+21:    e,  # type: int
+22:    f,  # type: int
+23:    g,  # type: int
+24:    h,  # type: int
+25:    i,  # type: int
+26:):
+27:    # type: (...) -> None
+28:    pass
+29:
+30:
+31:def f(
+32:    arg,  # type: int
+33:    *args,  # type: *Any
+34:    default=False,  # type: bool
+35:    **kwargs,  # type: **Any
+36:):
+37:    # type: (...) -> None
+38:    pass
+39:
+40:
+41:def f(
+42:    a,  # type: int
+43:    b,  # type: int
+44:    c,  # type: int
+45:    d,  # type: int
+46:):
+47:    # type: (...) -> None
+48:
+49:    element = 0  # type: int
+50:    another_element = 1  # type: float
+51:    another_element_with_long_name = 2  # type: int
+52:    another_really_really_long_element_with_a_unnecessarily_long_name_to_describe_what_it_does_enterprise_style = (
+53:        3
+54:    )  # type: int
+55:
+56:    tup = (
+57:        another_element,  # type: int
+58:        another_really_really_long_element_with_a_unnecessarily_long_name_to_describe_what_it_does_enterprise_style,  # type: int
+59:    )  # type: Tuple[int, int]
+60:
+61:    a = (
+62:        element
+63:        + another_element
+64:        + another_element_with_long_name
+65:        + element
+66:        + another_element
+67:        + another_element_with_long_name
+68:    )  # type: int
+
+Calling tool: grepTool
+def split_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/lib/python3.8/site-packages/flake8/processor.py:224:    def split_line(self, token):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2088:        return "#"
+2089:
+2090:    if content[0] == "#":
+2091:        content = content[1:]
+2092:    if content and content[0] not in " !:#'%":
+2093:        content = " " + content
+2094:    return "#" + content
+2095:
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:
+2116:    # we don't want to split special comments like type annotations
+2117:    # https://github.com/python/typing/issues/186
+2118:    has_special_comment = False
+2119:    for leaf in line.leaves:
+2120:        for comment in line.comments_after(leaf):
+2121:            if leaf.type == token.COMMA and is_special_comment(comment):
+2122:                has_special_comment = True
+2123:
+2124:    if (
+2125:        has_special_comment
+2126:        and not line.should_explode
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2128:    ):
+2129:        yield line
+2130:        return
+2131:
+2132:    split_funcs: List[SplitFunc]
+2133:    if line.is_def:
+2134:        split_funcs = [left_hand_split]
+2135:    else:
+2136:
+2137:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2138:            for omit in generate_trailers_to_omit(line, line_length):
+2139:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2141:                    yield from lines
+2142:                    return
+2143:
+2144:            # All splits failed, best effort split with no omits.
+2145:            # This mostly happens to multiline strings that are by definition
+2146:            # reported as not fitting a single line.
+2147:            yield from right_hand_split(line, py36)
+2148:
+2149:        if line.inside_brackets:
+2150:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2151:        else:
+2152:            split_funcs = [rhs]
+2153:    for split_func in split_funcs:
+2154:        # We are accumulating lines in `result` because we might want to abort
+2155:        # mission and return the original line in the end, or attempt a different
+2156:        # split altogether.
+2157:        result: List[Line] = []
+2158:        try:
+2159:            for l in split_func(line, py36):
+2160:                if str(l).strip("\n") == line_str:
+2161:                    raise CannotSplit("Split function returned an unchanged result")
+2162:
+2163:                result.extend(
+2164:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2165:                )
+2166:        except CannotSplit:
+2167:            continue
+2168:
+2169:        else:
+2170:            yield from result
+2171:            break
+2172:
+2173:    else:
+2174:        yield line
+2175:
+2176:
+2177:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2178:    """Split line into many lines, starting with the first matching bracket pair.
+2179:
+2180:    Note: this usually looks weird, only use this for function definitions.
+2181:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2182:    :func:`right_hand_split` which also handles optional parentheses.
+2183:    """
+2184:    tail_leaves: List[Leaf] = []
+2185:    body_leaves: List[Leaf] = []
+2186:    head_leaves: List[Leaf] = []
+2187:    current_leaves = head_leaves
+2188:    matching_bracket = None
+2189:    for leaf in line.leaves:
+2190:        if (
+2191:            current_leaves is body_leaves
+2192:            and leaf.type in CLOSING_BRACKETS
+2193:            and leaf.opening_bracket is matching_bracket
+2194:        ):
+2195:            current_leaves = tail_leaves if body_leaves else head_leaves
+2196:        current_leaves.append(leaf)
+2197:        if current_leaves is head_leaves:
+2198:            if leaf.type in OPENING_BRACKETS:
+2199:                matching_bracket = leaf
+2200:                current_leaves = body_leaves
+2201:    if not matching_bracket:
+2202:        raise CannotSplit("No brackets found")
+2203:
+2204:    head = bracket_split_build_line(head_leaves, line, matching_bracket)
+2205:    body = bracket_split_build_line(body_leaves, line, matching_bracket, is_body=True)
+2206:    tail = bracket_split_build_line(tail_leaves, line, matching_bracket)
+2207:    bracket_split_succeeded_or_raise(head, body, tail)
+
+Calling tool: grepTool
+def is_special_comment\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2476:def is_special_comment(leaf: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2468:        t == token.NAME
+2469:        and (
+2470:            (v == "import" and p and p.type == syms.import_name)
+2471:            or (v == "from" and p and p.type == syms.import_from)
+2472:        )
+2473:    )
+2474:
+2475:
+2476:def is_special_comment(leaf: Leaf) -> bool:
+2477:    """Return True if the given leaf is a special comment.
+2478:    Only returns true for type comments for now."""
+2479:    t = leaf.type
+2480:    v = leaf.value
+2481:    return bool(
+2482:        (t == token.COMMENT or t == STANDALONE_COMMENT) and (v.startswith("# type:"))
+2483:    )
+2484:
+2485:
+2486:def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+2487:    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+2488:    else.
+2489:
+2490:    Note: don't use backslashes for formatting or you'll lose your voting rights.
+2491:    """
+2492:    if not inside_brackets:
+2493:        spl = leaf.prefix.split("#")
+2494:        if "\\" not in spl[0]:
+2495:            nl_count = spl[-1].count("\n")
+2496:            if len(spl) > 1:
+2497:                nl_count -= 1
+2498:            leaf.prefix = "\n" * nl_count
+2499:            return
+2500:
+2501:    leaf.prefix = ""
+2502:
+2503:
+2504:def normalize_string_prefix(leaf: Leaf, remove_u_prefix: bool = False) -> None:
+2505:    """Make all string prefixes lowercase.
+2506:
+2507:    If remove_u_prefix is given, also removes any u prefix from the string.
+2508:
+2509:    Note: Mutates its argument.
+2510:    """
+2511:    match = re.match(r"^([furbFURB]*)(.*)$", leaf.value, re.DOTALL)
+2512:    assert match is not None, f"failed to match string {leaf.value!r}"
+2513:    orig_prefix = match.group(1)
+2514:    new_prefix = orig_prefix.lower()
+2515:    if remove_u_prefix:
+2516:        new_prefix = new_prefix.replace("u", "")
+2517:    leaf.value = f"{new_prefix}{match.group(2)}"
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:793:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:794:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1076:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1086:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1161:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1231:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1241:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1574:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1608:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2023:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2041:    type: int  # token.COMMENT or STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2067:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2416:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2714:                if comment.type != STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2744:                        STANDALONE_COMMENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:3029:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:793:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:794:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1076:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1086:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1161:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1231:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1241:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1574:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1608:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2023:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2041:    type: int  # token.COMMENT or STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2067:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2427:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2482:        (t == token.COMMENT or t == STANDALONE_COMMENT) and (v.startswith("# type:"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2735:                if comment.type != STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2765:                        STANDALONE_COMMENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:3051:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:793:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:794:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1076:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1086:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1161:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1231:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1241:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1574:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1608:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2023:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2041:    type: int  # token.COMMENT or STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2067:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2416:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2714:                if comment.type != STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2744:                        STANDALONE_COMMENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:3029:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+
+Calling tool: grepTool
+def comments_after\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1253:    def comments_after(self, leaf: Leaf) -> List[Leaf]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:1253:    def comments_after(self, leaf: Leaf) -> List[Leaf]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:1253:    def comments_after(self, leaf: Leaf) -> List[Leaf]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+1220:                    break
+1221:
+1222:        if commas > 1:
+1223:            self.remove_trailing_comma()
+1224:            return True
+1225:
+1226:        return False
+1227:
+1228:    def append_comment(self, comment: Leaf) -> bool:
+1229:        """Add an inline or standalone comment to the line."""
+1230:        if (
+1231:            comment.type == STANDALONE_COMMENT
+1232:            and self.bracket_tracker.any_open_brackets()
+1233:        ):
+1234:            comment.prefix = ""
+1235:            return False
+1236:
+1237:        if comment.type != token.COMMENT:
+1238:            return False
+1239:
+1240:        if not self.leaves:
+1241:            comment.type = STANDALONE_COMMENT
+1242:            comment.prefix = ""
+1243:            return False
+1244:
+1245:        else:
+1246:            leaf_id = id(self.leaves[-1])
+1247:            if leaf_id not in self.comments:
+1248:                self.comments[leaf_id] = [comment]
+1249:            else:
+1250:                self.comments[leaf_id].append(comment)
+1251:            return True
+1252:
+1253:    def comments_after(self, leaf: Leaf) -> List[Leaf]:
+1254:        """Generate comments that should appear directly after `leaf`."""
+1255:        return self.comments.get(id(leaf), [])
+1256:
+1257:    def remove_trailing_comma(self) -> None:
+1258:        """Remove the trailing comma and moves the comments attached to it."""
+1259:        # Remember, the LeafID keys of self.comments are ordered by the
+1260:        # corresponding leaf's index in self.leaves
+1261:        # If id(self.leaves[-2]) is in self.comments, the order doesn't change.
+1262:        # Otherwise, we insert it into self.comments, and it becomes the last entry.
+1263:        # However, since we delete id(self.leaves[-1]) from self.comments, the invariant
+1264:        # is maintained
+1265:        self.comments.setdefault(id(self.leaves[-2]), []).extend(
+1266:            self.comments.get(id(self.leaves[-1]), [])
+1267:        )
+1268:        self.comments.pop(id(self.leaves[-1]), None)
+1269:        self.leaves.pop()
+1270:
+1271:    def is_complex_subscript(self, leaf: Leaf) -> bool:
+1272:        """Return True iff `leaf` is part of a slice with non-trivial exprs."""
+1273:        open_lsqb = self.bracket_tracker.get_open_lsqb()
+1274:        if open_lsqb is None:
+1275:            return False
+1276:
+1277:        subscript_start = open_lsqb.next_sibling
+1278:
+1279:        if isinstance(subscript_start, Node):
+1280:            if subscript_start.type == syms.listmaker:
+1281:                return False
+1282:
+1283:            if subscript_start.type == syms.subscriptlist:
+1284:                subscript_start = child_towards(subscript_start, leaf)
+1285:        return subscript_start is not None and any(
+1286:            n.type in TEST_DESCENDANTS for n in subscript_start.pre_order()
+1287:        )
+1288:
+1289:    def __str__(self) -> str:
+1290:        """Render the line."""
+1291:        if not self:
+1292:            return "\n"
+1293:
+1294:        indent = "    " * self.depth
+1295:        leaves = iter(self.leaves)
+1296:        first = next(leaves)
+1297:        res = f"{first.prefix}{indent}{first.value}"
+1298:        for leaf in leaves:
+1299:            res += str(leaf)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:    if not line.should_explode and is_line_short_enough(
+2116:        line, line_length=line_length, line_str=line_str
+2117:    ):
+2118:        yield line
+2119:        return
+2120:
+2121:    split_funcs: List[SplitFunc]
+2122:    if line.is_def:
+2123:        split_funcs = [left_hand_split]
+2124:    else:
+2125:
+2126:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2127:            for omit in generate_trailers_to_omit(line, line_length):
+2128:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2129:                if is_line_short_enough(lines[0], line_length=line_length):
+2130:                    yield from lines
+2131:                    return
+2132:
+2133:            # All splits failed, best effort split with no omits.
+2134:            # This mostly happens to multiline strings that are by definition
+2135:            # reported as not fitting a single line.
+2136:            yield from right_hand_split(line, py36)
+2137:
+2138:        if line.inside_brackets:
+2139:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2140:        else:
+2141:            split_funcs = [rhs]
+2142:    for split_func in split_funcs:
+2143:        # We are accumulating lines in `result` because we might want to abort
+2144:        # mission and return the original line in the end, or attempt a different
+2145:        # split altogether.
+2146:        result: List[Line] = []
+2147:        try:
+2148:            for l in split_func(line, py36):
+2149:                if str(l).strip("\n") == line_str:
+2150:                    raise CannotSplit("Split function returned an unchanged result")
+2151:
+2152:                result.extend(
+2153:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2154:                )
+2155:        except CannotSplit:
+2156:            continue
+2157:
+2158:        else:
+2159:            yield from result
+2160:            break
+2161:
+2162:    else:
+2163:        yield line
+2164:
+2165:
+2166:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2167:    """Split line into many lines, starting with the first matching bracket pair.
+2168:
+2169:    Note: this usually looks weird, only use this for function definitions.
+2170:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2171:    :func:`right_hand_split` which also handles optional parentheses.
+2172:    """
+2173:    tail_leaves: List[Leaf] = []
+2174:    body_leaves: List[Leaf] = []
+2175:    head_leaves: List[Leaf] = []
+
+Calling tool: grepTool
+def should_explode\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2952:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2952:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2958:        return 0
+2959:
+2960:
+2961:def ensure_visible(leaf: Leaf) -> None:
+2962:    """Make sure parentheses are visible.
+2963:
+2964:    They could be invisible as part of some statements (see
+2965:    :func:`normalize_invible_parens` and :func:`visit_import_from`).
+2966:    """
+2967:    if leaf.type == token.LPAR:
+2968:        leaf.value = "("
+2969:    elif leaf.type == token.RPAR:
+2970:        leaf.value = ")"
+2971:
+2972:
+2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+2974:    """Should `line` immediately be split with `delimiter_split()` after RHS?"""
+2975:
+2976:    if not (
+2977:        opening_bracket.parent
+2978:        and opening_bracket.parent.type in {syms.atom, syms.import_from}
+2979:        and opening_bracket.value in "[{("
+2980:    ):
+2981:        return False
+2982:
+2983:    try:
+2984:        last_leaf = line.leaves[-1]
+2985:        exclude = {id(last_leaf)} if last_leaf.type == token.COMMA else set()
+2986:        max_priority = line.bracket_tracker.max_delimiter_priority(exclude=exclude)
+2987:    except (IndexError, ValueError):
+2988:        return False
+2989:
+2990:    return max_priority == COMMA_PRIORITY
+2991:
+2992:
+2993:def is_python36(node: Node) -> bool:
+2994:    """Return True if the current file is using Python 3.6+ features.
+2995:
+2996:    Currently looking for:
+2997:    - f-strings;
+2998:    - underscores in numeric literals; and
+2999:    - trailing commas after * or ** in function signatures and calls.
+3000:    """
+3001:    for n in node.pre_order():
+3002:        if n.type == token.STRING:
+3003:            value_head = n.value[:2]  # type: ignore
+3004:            if value_head in {'f"', 'F"', "f'", "F'", "rf", "fr", "RF", "FR"}:
+3005:                return True
+3006:
+3007:        elif n.type == token.NUMBER:
+3008:            if "_" in n.value:  # type: ignore
+3009:                return True
+3010:
+3011:        elif (
+3012:            n.type in {syms.typedargslist, syms.arglist}
+3013:            and n.children
+3014:            and n.children[-1].type == token.COMMA
+3015:        ):
+3016:            for ch in n.children:
+3017:                if ch.type in STARS:
+3018:                    return True
+3019:
+3020:                if ch.type == syms.argument:
+3021:                    for argch in ch.children:
+3022:                        if argch.type in STARS:
+3023:                            return True
+3024:
+3025:    return False
+3026:
+3027:
+3028:def generate_trailers_to_omit(line: Line, line_length: int) -> Iterator[Set[LeafID]]:
+3029:    """Generate sets of closing bracket IDs that should be omitted in a RHS.
+3030:
+3031:    Brackets can be omitted if the entire trailer up to and including
+3032:    a preceding closing bracket fits in one line.
+3033:
+3034:    Yielded sets are cumulative (contain results of previous yields, too).  First
+3035:    set is empty.
+3036:    """
+3037:
+3038:    omit: Set[LeafID] = set()
+3039:    yield omit
+3040:
+3041:    length = 4 * line.depth
+3042:    opening_bracket = None
+3043:    closing_bracket = None
+3044:    inner_brackets: Set[LeafID] = set()
+3045:    for index, leaf, leaf_length in enumerate_with_length(line, reversed=True):
+3046:        length += leaf_length
+3047:        if length > line_length:
+3048:            break
+3049:
+3050:        has_inline_comment = leaf_length > len(leaf.value) + len(leaf.prefix)
+3051:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+3052:            break
+3053:
+3054:        if opening_bracket:
+3055:            if leaf is opening_bracket:
+3056:                opening_bracket = None
+3057:            elif leaf.type in CLOSING_BRACKETS:
+3058:                inner_brackets.add(id(leaf))
+3059:        elif leaf.type in CLOSING_BRACKETS:
+3060:            if index > 0 and line.leaves[index - 1].type in OPENING_BRACKETS:
+3061:                # Empty brackets would fail a split so treat them as "inner"
+3062:                # brackets (e.g. only add them to the `omit` set if another
+3063:                # pair of brackets was good enough.
+3064:                inner_brackets.add(id(leaf))
+3065:                continue
+3066:
+3067:            if closing_bracket:
+3068:                omit.add(id(closing_bracket))
+3069:                omit.update(inner_brackets)
+3070:                inner_brackets.clear()
+3071:                yield omit
+3072:
+3073:            if leaf.value:
+3074:                opening_bracket = leaf.opening_bracket
+3075:                closing_bracket = leaf
+3076:
+3077:
+
+Calling tool: grepTool
+def is_line_short_enough\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:3442:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:3464:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:3442:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+3458:        for comment in line.comments_after(leaf):
+3459:            length += len(comment.value)
+3460:
+3461:        yield index, leaf, length
+3462:
+3463:
+3464:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+3465:    """Return True if `line` is no longer than `line_length`.
+3466:
+3467:    Uses the provided `line_str` rendering, if any, otherwise computes a new one.
+3468:    """
+3469:    if not line_str:
+3470:        line_str = str(line).strip("\n")
+3471:    return (
+3472:        len(line_str) <= line_length
+3473:        and "\n" not in line_str  # multiline strings
+3474:        and not line.contains_standalone_comments()
+3475:    )
+3476:
+3477:
+3478:def can_be_split(line: Line) -> bool:
+3479:    """Return False if the line cannot be split *for sure*.
+3480:
+3481:    This is not an exhaustive search but a cheap heuristic that we can use to
+3482:    avoid some unfortunate formattings (mostly around wrapping unsplittable code
+3483:    in unnecessary parentheses).
+3484:    """
+3485:    leaves = line.leaves
+3486:    if len(leaves) < 2:
+3487:        return False
+3488:
+3489:    if leaves[0].type == token.STRING and leaves[1].type == token.DOT:
+3490:        call_count = 0
+3491:        dot_count = 0
+3492:        next = leaves[-1]
+3493:        for leaf in leaves[-2::-1]:
+3494:            if leaf.type in OPENING_BRACKETS:
+3495:                if next.type not in CLOSING_BRACKETS:
+3496:                    return False
+3497:
+3498:                call_count += 1
+3499:            elif leaf.type == token.DOT:
+3500:                dot_count += 1
+3501:            elif leaf.type == token.NAME:
+3502:                if not (next.type == token.DOT or next.type in OPENING_BRACKETS):
+3503:                    return False
+3504:
+3505:            elif leaf.type not in CLOSING_BRACKETS:
+3506:                return False
+3507:
+3508:            if dot_count > 1 and call_count > 1:
+3509:                return False
+3510:
+3511:    return True
+3512:
+3513:
+3514:def can_omit_invisible_parens(line: Line, line_length: int) -> bool:
+3515:    """Does `line` have a shape safe to reformat without optional parens around it?
+3516:
+3517:    Returns True for only a subset of potentially nice looking formattings but
+3518:    the point is to not return false positives that end up producing lines that
+3519:    are too long.
+3520:    """
+3521:    bt = line.bracket_tracker
+3522:    if not bt.delimiters:
+3523:        # Without delimiters the optional parentheses are useless.
+3524:        return True
+3525:
+3526:    max_priority = bt.max_delimiter_priority()
+3527:    if bt.delimiter_count_with_priority(max_priority) > 1:
+3528:        # With more than one delimiter of a kind the optional parentheses read better.
+3529:        return False
+3530:
+3531:    if max_priority == DOT_PRIORITY:
+3532:        # A single stranded method call doesn't require optional parentheses.
+3533:        return True
+3534:
+3535:    assert len(line.leaves) >= 2, "Stranded delimiter"
+3536:
+3537:    first = line.leaves[0]
+
+Calling tool: grepTool
+import token\b
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/blib2to3/pytree.py:26:        # from .pgen2 import token // token.__dict__.items():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/blib2to3/pgen2/tokenize.py:36:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/blib2to3/pgen2/parse.py:14:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/blib2to3/pygram.py:10:from .pgen2 import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/blib2to3/pgen2/grammar.py:19:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/blib2to3/pytree.py:26:        # from .pgen2 import token // token.__dict__.items():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/blib2to3/pgen2/tokenize.py:36:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/blib2to3/pgen2/parse.py:14:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/blib2to3/pgen2/grammar.py:19:from . import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/blib2to3/pygram.py:10:from .pgen2 import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/lib/python3.8/site-packages/coverage/phystokens.py:10:import token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/lib/python3.8/site-packages/coverage/parser.py:10:import token
+
+Calling tool: grepTool
+\bimport token\b
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from (.|\n)* import token
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: the literal "\n" is not allowed in a regex
+
+Consider enabling multiline mode with the --multiline flag (or -U for short).
+When multiline mode is enabled, new line characters can be matched.
+
+
+Calling tool: grepTool
+token\.
+Showing first 50 results from grep. Consider using a more specific pattern or path.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:732:            name = token.tok_name[node.type]
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:760:            _type = token.tok_name.get(node.type, str(node.type))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:781:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:794:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:797:    token.LESS,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:798:    token.GREATER,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:799:    token.EQEQUAL,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:800:    token.NOTEQUAL,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:801:    token.LESSEQUAL,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:802:    token.GREATEREQUAL,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:805:    token.VBAR,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:806:    token.CIRCUMFLEX,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:807:    token.AMPER,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:808:    token.LEFTSHIFT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:809:    token.RIGHTSHIFT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:810:    token.PLUS,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:811:    token.MINUS,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:812:    token.STAR,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:813:    token.SLASH,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:814:    token.DOUBLESLASH,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:815:    token.PERCENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:816:    token.AT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:817:    token.TILDE,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:818:    token.DOUBLESTAR,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:820:STARS = {token.STAR, token.DOUBLESTAR}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:875:    token.VBAR: 9,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:876:    token.CIRCUMFLEX: 8,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:877:    token.AMPER: 7,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:878:    token.LEFTSHIFT: 6,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:879:    token.RIGHTSHIFT: 6,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:880:    token.PLUS: 5,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:881:    token.MINUS: 5,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:882:    token.STAR: 4,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:883:    token.SLASH: 4,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:884:    token.DOUBLESLASH: 4,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:885:    token.PERCENT: 4,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:886:    token.AT: 4,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:887:    token.TILDE: 3,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:888:    token.DOUBLESTAR: 2,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:919:        if leaf.type == token.COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:973:        if leaf.type == token.NAME and leaf.value == "for":
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:985:            and leaf.type == token.NAME
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1000:        if leaf.type == token.NAME and leaf.value == "lambda":
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1012:            and leaf.type == token.COLON
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1022:        return self.bracket_match.get((self.depth - 1, token.RSQB))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1052:        if token.COLON == leaf.type and self.is_class_paren_empty:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1091:        return bool(self) and self.leaves[0].type == token.AT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1103:            and self.leaves[0].type == token.NAME
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1111:            Leaf(token.DOT, ".") for _ in range(3)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:1126:        return (first_leaf.type == token.NAME and first_leaf.value == "def") or (
+
+Calling tool: grepTool
+import (.|\n)*token
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: the literal "\n" is not allowed in a regex
+
+Consider enabling multiline mode with the --multiline flag (or -U for short).
+When multiline mode is enabled, new line characters can be matched.
+
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+1:import asyncio
+2:from asyncio.base_events import BaseEventLoop
+3:from concurrent.futures import Executor, ProcessPoolExecutor
+4:from datetime import datetime
+5:from enum import Enum, Flag
+6:from functools import lru_cache, partial, wraps
+7:import io
+8:import itertools
+9:import keyword
+10:import logging
+11:from multiprocessing import Manager, freeze_support
+12:import os
+13:from pathlib import Path
+14:import pickle
+15:import re
+16:import signal
+17:import sys
+18:import tokenize
+19:from typing import (
+20:    Any,
+21:    Callable,
+22:    Collection,
+23:    Dict,
+24:    Generator,
+25:    Generic,
+26:    Iterable,
+27:    Iterator,
+28:    List,
+29:    Optional,
+30:    Pattern,
+31:    Sequence,
+32:    Set,
+33:    Tuple,
+34:    TypeVar,
+35:    Union,
+36:    cast,
+37:)
+38:
+39:from appdirs import user_cache_dir
+40:from attr import dataclass, Factory
+41:import click
+42:import toml
+43:
+44:# lib2to3 fork
+45:from blib2to3.pytree import Node, Leaf, type_repr
+46:from blib2to3 import pygram, pytree
+47:from blib2to3.pgen2 import driver, token
+48:from blib2to3.pgen2.parse import ParseError
+49:
+50:
+51:__version__ = "18.9b0"
+52:DEFAULT_LINE_LENGTH = 88
+53:DEFAULT_EXCLUDES = (
+54:    r"/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|_build|buck-out|build|dist)/"
+55:)
+56:DEFAULT_INCLUDES = r"\.pyi?$"
+57:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+58:
+59:
+60:# types
+61:FileContent = str
+62:Encoding = str
+63:NewLine = str
+64:Depth = int
+65:NodeType = int
+66:LeafID = int
+67:Priority = int
+68:Index = int
+69:LN = Union[Leaf, Node]
+70:SplitFunc = Callable[["Line", bool], Iterator["Line"]]
+71:Timestamp = float
+72:FileSize = int
+73:CacheInfo = Tuple[Timestamp, FileSize]
+74:Cache = Dict[Path, CacheInfo]
+75:out = partial(click.secho, bold=True, err=True)
+76:err = partial(click.secho, fg="red", err=True)
+77:
+78:pygram.initialize(CACHE_DIR)
+79:syms = pygram.python_symbols
+80:
+81:
+82:class NothingChanged(UserWarning):
+83:    """Raised when reformatted code is the same as source."""
+84:
+85:
+86:class CannotSplit(Exception):
+87:    """A readable split that fits the allotted line length is impossible."""
+88:
+89:
+90:class InvalidInput(ValueError):
+91:    """Raised when input source code fails all parse attempts."""
+92:
+93:
+94:class WriteBack(Enum):
+95:    NO = 0
+96:    YES = 1
+97:    DIFF = 2
+98:    CHECK = 3
+99:
+100:    @classmethod
+101:    def from_configuration(cls, *, check: bool, diff: bool) -> "WriteBack":
+102:        if check and not diff:
+103:            return cls.CHECK
+104:
+105:        return cls.DIFF if diff else cls.YES
+106:
+107:
+108:class Changed(Enum):
+109:    NO = 0
+110:    CACHED = 1
+111:    YES = 2
+112:
+113:
+114:class FileMode(Flag):
+115:    AUTO_DETECT = 0
+116:    PYTHON36 = 1
+117:    PYI = 2
+118:    NO_STRING_NORMALIZATION = 4
+119:    NO_NUMERIC_UNDERSCORE_NORMALIZATION = 8
+120:
+
+Calling tool: createTodo
+Todo List Created
+Todo List (9 items):
+- [ ] Verify that split_line’s early-return logic preserves original behavior for non-special-comment lines: the condition should allow yielding the line when not line.should_explode and is_line_short_enough(...). Check that the new has_special_comment gate does not remove this behavior (compare to black.py.original). (ID: todo-1)
+- [ ] Confirm that the new special-comment guard in split_line correctly detects per-argument type comments by iterating leaves and using line.comments_after(leaf) with leaf.type == token.COMMA and is_special_comment(comment). (ID: todo-2)
+- [ ] Validate is_special_comment(leaf: Leaf) returns True only for leaves where leaf.type is token.COMMENT or STANDALONE_COMMENT and leaf.value startswith("# type:"). Ensure other comments are not matched. (ID: todo-3)
+- [ ] Ensure split_line short-circuits standalone comment lines unchanged via `if line.is_comment: yield line; return`, covering standalone return type annotation lines (e.g., "# type: (...) -> None"). (ID: todo-4)
+- [ ] Check that append_comment attaches inline comments to the last leaf so that in patterns like "a,  # type: int" the comment is attached to the comma leaf, making line.comments_after(comma) return the comment. (ID: todo-5)
+- [ ] Verify that token and STANDALONE_COMMENT are imported and in scope within black.py so is_special_comment and split_line references compile (from blib2to3.pgen2 import token; STANDALONE_COMMENT constant defined). (ID: todo-6)
+- [ ] Confirm that should_explode logic is unchanged except for a harmless blank line; the added special-comment handling should not alter should_explode semantics used in the early-return condition. (ID: todo-7)
+- [ ] Validate that tests/data/comments6.py has no "# output" marker, so the test expects input equals output; confirm the file contains cases: per-parameter type comments (with trailing commas), a standalone return type comment, *args/**kwargs typed comments, and trailing type comments in tuple/assignments. (ID: todo-8)
+- [ ] Check that the has_special_comment computation does not miss cases in comments6.py (e.g., per-argument lines all have commas, so detection should trigger) and does not inadvertently consider unrelated inline comments that aren’t type comments. (ID: todo-9)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 9
+description: 'Verify that split_line’s early-return logic preserves original behavior for non-special-comment lines: the condition should allow yielding the line when not line.should_explode and is_line_short_enough(...). Check that the new has_special_comment gate does not remove this behavior (compare to black.py.original).'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def split_line\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black" ]
+Calling tool: grepTool
+def split_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/lib/python3.8/site-packages/flake8/processor.py:224:    def split_line(self, token):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2097:def split_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2088:        return "#"
+2089:
+2090:    if content[0] == "#":
+2091:        content = content[1:]
+2092:    if content and content[0] not in " !:#'%":
+2093:        content = " " + content
+2094:    return "#" + content
+2095:
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:
+2116:    # we don't want to split special comments like type annotations
+2117:    # https://github.com/python/typing/issues/186
+2118:    has_special_comment = False
+2119:    for leaf in line.leaves:
+2120:        for comment in line.comments_after(leaf):
+2121:            if leaf.type == token.COMMA and is_special_comment(comment):
+2122:                has_special_comment = True
+2123:
+2124:    if (
+2125:        has_special_comment
+2126:        and not line.should_explode
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2128:    ):
+2129:        yield line
+2130:        return
+2131:
+2132:    split_funcs: List[SplitFunc]
+2133:    if line.is_def:
+2134:        split_funcs = [left_hand_split]
+2135:    else:
+2136:
+2137:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2138:            for omit in generate_trailers_to_omit(line, line_length):
+2139:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2141:                    yield from lines
+2142:                    return
+2143:
+2144:            # All splits failed, best effort split with no omits.
+2145:            # This mostly happens to multiline strings that are by definition
+2146:            # reported as not fitting a single line.
+2147:            yield from right_hand_split(line, py36)
+2148:
+2149:        if line.inside_brackets:
+2150:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2151:        else:
+2152:            split_funcs = [rhs]
+2153:    for split_func in split_funcs:
+2154:        # We are accumulating lines in `result` because we might want to abort
+2155:        # mission and return the original line in the end, or attempt a different
+2156:        # split altogether.
+2157:        result: List[Line] = []
+2158:        try:
+2159:            for l in split_func(line, py36):
+2160:                if str(l).strip("\n") == line_str:
+2161:                    raise CannotSplit("Split function returned an unchanged result")
+2162:
+2163:                result.extend(
+2164:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2165:                )
+2166:        except CannotSplit:
+2167:            continue
+2168:
+2169:        else:
+2170:            yield from result
+2171:            break
+2172:
+2173:    else:
+2174:        yield line
+2175:
+2176:
+2177:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2178:    """Split line into many lines, starting with the first matching bracket pair.
+2179:
+2180:    Note: this usually looks weird, only use this for function definitions.
+2181:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2182:    :func:`right_hand_split` which also handles optional parentheses.
+2183:    """
+2184:    tail_leaves: List[Leaf] = []
+2185:    body_leaves: List[Leaf] = []
+2186:    head_leaves: List[Leaf] = []
+2187:    current_leaves = head_leaves
+2188:    matching_bracket = None
+2189:    for leaf in line.leaves:
+2190:        if (
+2191:            current_leaves is body_leaves
+2192:            and leaf.type in CLOSING_BRACKETS
+2193:            and leaf.opening_bracket is matching_bracket
+2194:        ):
+2195:            current_leaves = tail_leaves if body_leaves else head_leaves
+2196:        current_leaves.append(leaf)
+2197:        if current_leaves is head_leaves:
+2198:            if leaf.type in OPENING_BRACKETS:
+2199:                matching_bracket = leaf
+2200:                current_leaves = body_leaves
+2201:    if not matching_bracket:
+2202:        raise CannotSplit("No brackets found")
+2203:
+2204:    head = bracket_split_build_line(head_leaves, line, matching_bracket)
+2205:    body = bracket_split_build_line(body_leaves, line, matching_bracket, is_body=True)
+2206:    tail = bracket_split_build_line(tail_leaves, line, matching_bracket)
+2207:    bracket_split_succeeded_or_raise(head, body, tail)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original
+2092:    if content and content[0] not in " !:#'%":
+2093:        content = " " + content
+2094:    return "#" + content
+2095:
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:    if not line.should_explode and is_line_short_enough(
+2116:        line, line_length=line_length, line_str=line_str
+2117:    ):
+2118:        yield line
+2119:        return
+2120:
+2121:    split_funcs: List[SplitFunc]
+2122:    if line.is_def:
+2123:        split_funcs = [left_hand_split]
+2124:    else:
+2125:
+2126:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2127:            for omit in generate_trailers_to_omit(line, line_length):
+2128:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2129:                if is_line_short_enough(lines[0], line_length=line_length):
+2130:                    yield from lines
+2131:                    return
+2132:
+2133:            # All splits failed, best effort split with no omits.
+2134:            # This mostly happens to multiline strings that are by definition
+2135:            # reported as not fitting a single line.
+2136:            yield from right_hand_split(line, py36)
+2137:
+2138:        if line.inside_brackets:
+2139:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2140:        else:
+2141:            split_funcs = [rhs]
+2142:    for split_func in split_funcs:
+2143:        # We are accumulating lines in `result` because we might want to abort
+2144:        # mission and return the original line in the end, or attempt a different
+2145:        # split altogether.
+2146:        result: List[Line] = []
+2147:        try:
+2148:            for l in split_func(line, py36):
+2149:                if str(l).strip("\n") == line_str:
+2150:                    raise CannotSplit("Split function returned an unchanged result")
+2151:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py’s split_line, the original early-return `if not line.should_explode and is_line_short_enough(...)` was replaced with a gated check requiring `has_special_comment`. This removes the early return for non-special-comment lines, diverging from black.py.original and changing behavior undesirably.
+
+
+Validating todo item 1 of 9
+description: 'Verify that split_line’s early-return logic preserves original behavior for non-special-comment lines: the condition should allow yielding the line when not line.should_explode and is_line_short_enough(...). Check that the new has_special_comment gate does not remove this behavior (compare to black.py.original).'
+
+Calling tool: grepTool
+def split_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original:2097:def split_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/lib/python3.8/site-packages/flake8/processor.py:224:    def split_line(self, token):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/env/src/black/black.py:2097:def split_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2088:        return "#"
+2089:
+2090:    if content[0] == "#":
+2091:        content = content[1:]
+2092:    if content and content[0] not in " !:#'%":
+2093:        content = " " + content
+2094:    return "#" + content
+2095:
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:
+2116:    # we don't want to split special comments like type annotations
+2117:    # https://github.com/python/typing/issues/186
+2118:    has_special_comment = False
+2119:    for leaf in line.leaves:
+2120:        for comment in line.comments_after(leaf):
+2121:            if leaf.type == token.COMMA and is_special_comment(comment):
+2122:                has_special_comment = True
+2123:
+2124:    if (
+2125:        has_special_comment
+2126:        and not line.should_explode
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2128:    ):
+2129:        yield line
+2130:        return
+2131:
+2132:    split_funcs: List[SplitFunc]
+2133:    if line.is_def:
+2134:        split_funcs = [left_hand_split]
+2135:    else:
+2136:
+2137:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2138:            for omit in generate_trailers_to_omit(line, line_length):
+2139:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2141:                    yield from lines
+2142:                    return
+2143:
+2144:            # All splits failed, best effort split with no omits.
+2145:            # This mostly happens to multiline strings that are by definition
+2146:            # reported as not fitting a single line.
+2147:            yield from right_hand_split(line, py36)
+2148:
+2149:        if line.inside_brackets:
+2150:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2151:        else:
+2152:            split_funcs = [rhs]
+2153:    for split_func in split_funcs:
+2154:        # We are accumulating lines in `result` because we might want to abort
+2155:        # mission and return the original line in the end, or attempt a different
+2156:        # split altogether.
+2157:        result: List[Line] = []
+2158:        try:
+2159:            for l in split_func(line, py36):
+2160:                if str(l).strip("\n") == line_str:
+2161:                    raise CannotSplit("Split function returned an unchanged result")
+2162:
+2163:                result.extend(
+2164:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2165:                )
+2166:        except CannotSplit:
+2167:            continue
+2168:
+2169:        else:
+2170:            yield from result
+2171:            break
+2172:
+2173:    else:
+2174:        yield line
+2175:
+2176:
+2177:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2178:    """Split line into many lines, starting with the first matching bracket pair.
+2179:
+2180:    Note: this usually looks weird, only use this for function definitions.
+2181:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2182:    :func:`right_hand_split` which also handles optional parentheses.
+2183:    """
+2184:    tail_leaves: List[Leaf] = []
+2185:    body_leaves: List[Leaf] = []
+2186:    head_leaves: List[Leaf] = []
+2187:    current_leaves = head_leaves
+2188:    matching_bracket = None
+2189:    for leaf in line.leaves:
+2190:        if (
+2191:            current_leaves is body_leaves
+2192:            and leaf.type in CLOSING_BRACKETS
+2193:            and leaf.opening_bracket is matching_bracket
+2194:        ):
+2195:            current_leaves = tail_leaves if body_leaves else head_leaves
+2196:        current_leaves.append(leaf)
+2197:        if current_leaves is head_leaves:
+2198:            if leaf.type in OPENING_BRACKETS:
+2199:                matching_bracket = leaf
+2200:                current_leaves = body_leaves
+2201:    if not matching_bracket:
+2202:        raise CannotSplit("No brackets found")
+2203:
+2204:    head = bracket_split_build_line(head_leaves, line, matching_bracket)
+2205:    body = bracket_split_build_line(body_leaves, line, matching_bracket, is_body=True)
+2206:    tail = bracket_split_build_line(tail_leaves, line, matching_bracket)
+2207:    bracket_split_succeeded_or_raise(head, body, tail)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py.original
+2092:    if content and content[0] not in " !:#'%":
+2093:        content = " " + content
+2094:    return "#" + content
+2095:
+2096:
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:    if not line.should_explode and is_line_short_enough(
+2116:        line, line_length=line_length, line_str=line_str
+2117:    ):
+2118:        yield line
+2119:        return
+2120:
+2121:    split_funcs: List[SplitFunc]
+2122:    if line.is_def:
+2123:        split_funcs = [left_hand_split]
+2124:    else:
+2125:
+2126:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2127:            for omit in generate_trailers_to_omit(line, line_length):
+2128:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2129:                if is_line_short_enough(lines[0], line_length=line_length):
+2130:                    yield from lines
+2131:                    return
+2132:
+2133:            # All splits failed, best effort split with no omits.
+2134:            # This mostly happens to multiline strings that are by definition
+2135:            # reported as not fitting a single line.
+2136:            yield from right_hand_split(line, py36)
+2137:
+2138:        if line.inside_brackets:
+2139:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2140:        else:
+2141:            split_funcs = [rhs]
+2142:    for split_func in split_funcs:
+2143:        # We are accumulating lines in `result` because we might want to abort
+2144:        # mission and return the original line in the end, or attempt a different
+2145:        # split altogether.
+2146:        result: List[Line] = []
+2147:        try:
+2148:            for l in split_func(line, py36):
+2149:                if str(l).strip("\n") == line_str:
+2150:                    raise CannotSplit("Split function returned an unchanged result")
+2151:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py’s split_line, the original early-return `if not line.should_explode and is_line_short_enough(...)` was replaced with a gated check requiring `has_special_comment`. This removes the early return for non-special-comment lines, diverging from black.py.original and changing behavior undesirably.
+
+
+=== PHASE 2 COMPLETE ===
+

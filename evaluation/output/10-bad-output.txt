@@ -1,0 +1,1573 @@
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "class Driver\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "current_column", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "_partially_consume_prefix",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_comment_indentation",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/tests/test_black.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "_partially_consume_prefix",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "blib2to3\\.pgen2\\.driver",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "current_column \\+= 4|\\t",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def fs\\(|fs =", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/tests/test_black.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "from blib2to3", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "current_column \\+=",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3"
+]
+Calling tool: grepTool
+class Driver\(
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: globTool
+**/blib2to3/pgen2/driver.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py
+
+Calling tool: grepTool
+current_column
+Matched content:
+120:        current_column = 0
+126:                    if current_line.strip() and current_column < column:
+132:                    current_column = 0
+135:                current_column += 1
+138:                current_column = 0
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\n':
+137:                # unexpected empty line
+138:                current_column = 0
+139:            else:
+140:                # indent is finished
+141:                wait_for_nl = True
+142:        return ''.join(lines), current_line
+143:
+144:
+145:def _generate_pickle_name(gt, cache_dir=None):
+146:    head, tail = os.path.splitext(gt)
+147:    if tail == ".txt":
+148:        tail = ""
+149:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+150:    if cache_dir:
+151:        return os.path.join(cache_dir, os.path.basename(name))
+152:    else:
+153:        return name
+154:
+155:
+156:def load_grammar(gt="Grammar.txt", gp=None,
+157:                 save=True, force=False, logger=None):
+158:    """Load the grammar (maybe from a pickle)."""
+159:    if logger is None:
+160:        logger = logging.getLogger()
+161:    gp = _generate_pickle_name(gt) if gp is None else gp
+162:    if force or not _newer(gp, gt):
+163:        logger.info("Generating grammar tables from %s", gt)
+164:        g = pgen.generate_grammar(gt)
+165:        if save:
+166:            logger.info("Writing grammar tables to %s", gp)
+167:            try:
+168:                g.dump(gp)
+169:            except OSError as e:
+170:                logger.info("Writing failed: %s", e)
+171:    else:
+172:        g = grammar.Grammar()
+173:        g.load(gp)
+174:    return g
+175:
+176:
+177:def _newer(a, b):
+178:    """Inquire whether file a was written since file b."""
+179:    if not os.path.exists(a):
+
+Calling tool: grepTool
+_partially_consume_prefix
+Matched content:
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+117:    def _partially_consume_prefix(self, prefix, column):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+160:    """Load the grammar (maybe from a pickle)."""
+161:    if logger is None:
+162:        logger = logging.getLogger()
+163:    gp = _generate_pickle_name(gt) if gp is None else gp
+164:    if force or not _newer(gp, gt):
+165:        logger.info("Generating grammar tables from %s", gt)
+166:        g = pgen.generate_grammar(gt)
+167:        if save:
+168:            logger.info("Writing grammar tables to %s", gp)
+169:            try:
+170:                g.dump(gp)
+171:            except OSError as e:
+172:                logger.info("Writing failed: %s", e)
+173:    else:
+174:        g = grammar.Grammar()
+175:        g.load(gp)
+176:    return g
+177:
+178:
+179:def _newer(a, b):
+
+Calling tool: globTool
+**/*test*comment*indent*
+No files found. Call Project Search tool again with a more generic glob.
+
+Calling tool: globTool
+**/*test*
+Showing first 50 results from grep. Consider using a more specific pattern or path.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/bugsinpy_run_test.sh
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/bin/stubtest
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/tests/test_black.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/tests/test_black.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_dict.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_builtin.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_checker.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_api.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_is_literal.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_undefined_names.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_type_annotations.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_return_with_arguments_inside_generator.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_code_segment.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_imports.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_doctests.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_sdist.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_develop.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_index.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_distribution.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_wheel.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_installed.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_commandline.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_utils.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pkginfo/tests/test_bdist.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/pygments/lexers/testing.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/typed_ast/tests/test_basics.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/commonmark/tests/rst_tests.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/commonmark/tests/unit_tests.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/commonmark/tests/run_spec_tests.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/webencodings/tests.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/tests/interfaces/test_implements.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/tests/interfaces/test_throws.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/tests/interfaces/test_get_class_members.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/tests/disabling/test_disable.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_namegen.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_genops.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_emit.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_serialization.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/testutil.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_emitwrapper.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_tuplename.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_external.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_emitfunc.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_exceptions.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_analysis.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_run.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_refcount.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/mypyc/test/test_commandline.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/lib/python3.8/site-packages/tests/access/protected/test_not_self.py
+
+Calling tool: grepTool
+test_comment_indentation
+Matched content:
+512:    def test_comment_indentation(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/tests/test_black.py
+490:        source, expected = read_data("class_blank_parentheses")
+491:        actual = fs(source)
+492:        self.assertFormatEqual(expected, actual)
+493:        black.assert_equivalent(source, actual)
+494:        black.assert_stable(source, actual, line_length=ll)
+495:
+496:    @patch("black.dump_to_file", dump_to_stderr)
+497:    def test_new_line_between_class_and_code(self) -> None:
+498:        source, expected = read_data("class_methods_new_line")
+499:        actual = fs(source)
+500:        self.assertFormatEqual(expected, actual)
+501:        black.assert_equivalent(source, actual)
+502:        black.assert_stable(source, actual, line_length=ll)
+503:
+504:    @patch("black.dump_to_file", dump_to_stderr)
+505:    def test_bracket_match(self) -> None:
+506:        source, expected = read_data("bracketmatch")
+507:        actual = fs(source)
+508:        self.assertFormatEqual(expected, actual)
+509:        black.assert_equivalent(source, actual)
+510:        black.assert_stable(source, actual, line_length=ll)
+511:
+512:    def test_comment_indentation(self) -> None:
+513:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t# comment\n\tpass\n"
+514:        contents_spc = "if 1:\n    if 2:\n        pass\n    # comment\n    pass\n"
+515:
+516:        self.assertFormatEqual(fs(contents_spc), contents_spc)
+517:        self.assertFormatEqual(fs(contents_tab), contents_spc)
+518:
+519:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t\t# comment\n\tpass\n"
+520:        contents_spc = "if 1:\n    if 2:\n        pass\n        # comment\n    pass\n"
+521:
+522:        self.assertFormatEqual(fs(contents_tab), contents_spc)
+523:        self.assertFormatEqual(fs(contents_spc), contents_spc)
+524:
+525:    def test_report_verbose(self) -> None:
+526:        report = black.Report(verbose=True)
+527:        out_lines = []
+528:        err_lines = []
+529:
+530:        def out(msg: str, **kwargs: Any) -> None:
+531:            out_lines.append(msg)
+532:
+533:        def err(msg: str, **kwargs: Any) -> None:
+534:            err_lines.append(msg)
+535:
+536:        with patch("black.out", out), patch("black.err", err):
+537:            report.done(Path("f1"), black.Changed.NO)
+538:            self.assertEqual(len(out_lines), 1)
+539:            self.assertEqual(len(err_lines), 0)
+540:            self.assertEqual(out_lines[-1], "f1 already well formatted, good job.")
+541:            self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
+542:            self.assertEqual(report.return_code, 0)
+543:            report.done(Path("f2"), black.Changed.YES)
+544:            self.assertEqual(len(out_lines), 2)
+545:            self.assertEqual(len(err_lines), 0)
+546:            self.assertEqual(out_lines[-1], "reformatted f2")
+547:            self.assertEqual(
+548:                unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
+549:            )
+550:            report.done(Path("f3"), black.Changed.CACHED)
+551:            self.assertEqual(len(out_lines), 3)
+552:            self.assertEqual(len(err_lines), 0)
+553:            self.assertEqual(
+554:                out_lines[-1], "f3 wasn't modified on disk since last run."
+555:            )
+556:            self.assertEqual(
+557:                unstyle(str(report)), "1 file reformatted, 2 files left unchanged."
+558:            )
+559:            self.assertEqual(report.return_code, 0)
+560:            report.check = True
+561:            self.assertEqual(report.return_code, 1)
+562:            report.check = False
+563:            report.failed(Path("e1"), "boom")
+564:            self.assertEqual(len(out_lines), 3)
+565:            self.assertEqual(len(err_lines), 1)
+566:            self.assertEqual(err_lines[-1], "error: cannot format e1: boom")
+567:            self.assertEqual(
+568:                unstyle(str(report)),
+569:                "1 file reformatted, 2 files left unchanged, "
+
+Calling tool: grepTool
+_partially_consume_prefix
+Matched content:
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+117:    def _partially_consume_prefix(self, prefix, column):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+91:                column = 0
+92:        else:
+93:            # We never broke out -- EOF is too soon (how can this happen???)
+94:            raise parse.ParseError("incomplete input",
+95:                                   type, value, (prefix, start))
+96:        return p.rootnode
+97:
+98:    def parse_stream_raw(self, stream, debug=False):
+99:        """Parse a stream and return the syntax tree."""
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:# Modifications:
+5:# Copyright 2006 Google, Inc. All Rights Reserved.
+6:# Licensed to PSF under a Contributor Agreement.
+7:
+8:"""Parser driver.
+9:
+10:This provides a high-level interface to parse a file into a syntax tree.
+11:
+12:"""
+13:
+14:__author__ = "Guido van Rossum <guido@python.org>"
+15:
+16:__all__ = ["Driver", "load_grammar"]
+17:
+18:# Python imports
+19:import codecs
+20:import io
+21:import os
+22:import logging
+23:import pkgutil
+24:import sys
+25:
+26:# Pgen imports
+27:from . import grammar, parse, token, tokenize, pgen
+28:
+29:
+30:class Driver(object):
+31:
+32:    def __init__(self, grammar, convert=None, logger=None):
+33:        self.grammar = grammar
+34:        if logger is None:
+35:            logger = logging.getLogger()
+36:        self.logger = logger
+37:        self.convert = convert
+38:
+39:    def parse_tokens(self, tokens, debug=False):
+40:        """Parse a series of tokens and return the syntax tree."""
+41:        # XXX Move the prefix computation into a wrapper around tokenize.
+42:        p = parse.Parser(self.grammar, self.convert)
+43:        p.setup()
+44:        lineno = 1
+45:        column = 0
+46:        indent_columns = []
+47:        type = value = start = end = line_text = None
+48:        prefix = ""
+49:        for quintuple in tokens:
+50:            type, value, start, end, line_text = quintuple
+51:            if start != (lineno, column):
+52:                assert (lineno, column) <= start, ((lineno, column), start)
+53:                s_lineno, s_column = start
+54:                if lineno < s_lineno:
+55:                    prefix += "\n" * (s_lineno - lineno)
+56:                    lineno = s_lineno
+57:                    column = 0
+58:                if column < s_column:
+59:                    prefix += line_text[column:s_column]
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+
+Calling tool: grepTool
+blib2to3\.pgen2\.driver
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+current_column \+= 4|\t
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:137:                current_column += 4
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:7:#	file_input is a module or sequence of commands read from an input file;
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:8:#	single_input is a single interactive statement;
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:9:#	eval_input is the input for the eval() and input() functions.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:75:	    ['else' ':' suite]
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:76:	    ['finally' ':' suite] |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:77:	   'finally' ':' suite))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:126:		 (comp_for | (',' (test | star_expr))* [','])) )
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/Grammar.txt:141:	    '**' test |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/PatternGrammar.txt:22:		 )
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+
+Calling tool: grepTool
+def fs\(|fs =
+Matched content:
+42:fs = partial(black.format_str, line_length=ll)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager, redirect_stderr
+5:from functools import partial, wraps
+6:from io import BytesIO, TextIOWrapper
+7:import os
+8:from pathlib import Path
+9:import re
+10:import sys
+11:from tempfile import TemporaryDirectory
+12:from typing import (
+13:    Any,
+14:    BinaryIO,
+15:    Callable,
+16:    Coroutine,
+17:    Generator,
+18:    List,
+19:    Tuple,
+20:    Iterator,
+21:    TypeVar,
+22:)
+23:import unittest
+24:from unittest.mock import patch, MagicMock
+25:
+26:from click import unstyle
+27:from click.testing import CliRunner
+28:
+29:import black
+30:
+31:try:
+32:    import blackd
+33:    from aiohttp.test_utils import TestClient, TestServer
+34:except ImportError:
+35:    has_blackd_deps = False
+36:else:
+37:    has_blackd_deps = True
+38:
+39:
+40:ll = 88
+41:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+42:fs = partial(black.format_str, line_length=ll)
+43:THIS_FILE = Path(__file__)
+44:THIS_DIR = THIS_FILE.parent
+45:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+46:T = TypeVar("T")
+47:R = TypeVar("R")
+48:
+49:
+50:def dump_to_stderr(*output: str) -> str:
+51:    return "\n" + "\n".join(output) + "\n"
+52:
+53:
+54:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+55:    """read_data('test_name') -> 'input', 'output'"""
+56:    if not name.endswith((".py", ".pyi", ".out", ".diff")):
+57:        name += ".py"
+58:    _input: List[str] = []
+59:    _output: List[str] = []
+60:    base_dir = THIS_DIR / "data" if data else THIS_DIR
+61:    with open(base_dir / name, "r", encoding="utf8") as test:
+62:        lines = test.readlines()
+63:    result = _input
+64:    for line in lines:
+65:        line = line.replace(EMPTY_LINE, "")
+66:        if line.rstrip() == "# output":
+67:            result = _output
+68:            continue
+69:
+70:        result.append(line)
+71:    if _input and not _output:
+72:        # If there's no output marker, treat the entire file as already pre-formatted.
+73:        _output = _input[:]
+74:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+75:
+76:
+77:@contextmanager
+78:def cache_dir(exists: bool = True) -> Iterator[Path]:
+79:    with TemporaryDirectory() as workspace:
+80:        cache_dir = Path(workspace)
+
+Calling tool: grepTool
+from blib2to3
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/tokenize.py:34:from blib2to3.pgen2.token import *
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/grammar.pyi:3:from blib2to3.pgen2 import _Path
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.pyi:8:from blib2to3.pytree import _Convert, _NL
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.pyi:9:from blib2to3.pgen2 import _Path
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.pyi:10:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/tokenize.pyi:5:from blib2to3.pgen2.token import *  # noqa
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/parse.pyi:5:from blib2to3.pgen2.grammar import Grammar, _DFAS
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/parse.pyi:6:from blib2to3.pytree import _NL, _Convert, _RawNode
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/tokenize.py:34:from blib2to3.pgen2.token import *
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pytree.pyi:6:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/pgen.pyi:6:from blib2to3.pgen2 import _Path, grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/pgen.pyi:7:from blib2to3.pgen2.tokenize import _TokenInfo
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/grammar.pyi:3:from blib2to3.pgen2 import _Path
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pygram.pyi:5:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/black.py:45:from blib2to3.pytree import Node, Leaf, type_repr
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/black.py:46:from blib2to3 import pygram, pytree
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/black.py:47:from blib2to3.pgen2 import driver, token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/black.py:48:from blib2to3.pgen2.parse import ParseError
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.pyi:8:from blib2to3.pytree import _Convert, _NL
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.pyi:9:from blib2to3.pgen2 import _Path
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.pyi:10:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/tokenize.pyi:5:from blib2to3.pgen2.token import *  # noqa
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/parse.pyi:5:from blib2to3.pgen2.grammar import Grammar, _DFAS
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/parse.pyi:6:from blib2to3.pytree import _NL, _Convert, _RawNode
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/pgen.pyi:6:from blib2to3.pgen2 import _Path, grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/pgen.pyi:7:from blib2to3.pgen2.tokenize import _TokenInfo
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pygram.pyi:5:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pytree.pyi:6:from blib2to3.pgen2.grammar import Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/black.py:45:from blib2to3.pytree import Node, Leaf, type_repr
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/black.py:46:from blib2to3 import pygram, pytree
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/black.py:47:from blib2to3.pgen2 import driver, token
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/black.py:48:from blib2to3.pgen2.parse import ParseError
+
+Calling tool: grepTool
+current_column \+=
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py:135:                current_column += 1
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:135:                current_column += 1
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:137:                current_column += 4
+
+Calling tool: createTodo
+Todo List Created
+Todo List (12 items):
+- [ ] In blib2to3/pgen2/driver.py, verify that _partially_consume_prefix increments current_column by 1 when encountering a tab character ('\t') instead of 4. (ID: todo-1)
+- [ ] In blib2to3/pgen2/driver.py, ensure that the tab ('\t') case is explicitly handled before the final else (indent finished) so that tabs are treated as indentation, not as a non-indent terminator. (ID: todo-2)
+- [ ] Confirm that the space (' ') case in _partially_consume_prefix continues to increment current_column by 1 and the newline ('\n') case resets current_column to 0. (ID: todo-3)
+- [ ] Verify that there is no remaining occurrence of current_column += 4 in the active blib2to3/pgen2/driver.py (only historical/copy files may contain it). (ID: todo-4)
+- [ ] Validate the logic in _partially_consume_prefix: when wait_for_nl is True and a newline is seen, if current_line.strip() and current_column < column, the function returns the already consumed lines and the remaining prefix starting at the correct position. (ID: todo-5)
+- [ ] In parse_tokens() within blib2to3/pgen2/driver.py, confirm that on token.INDENT, len(value) is appended to indent_columns (so a tab indent contributes 1). (ID: todo-6)
+- [ ] In parse_tokens() within blib2to3/pgen2/driver.py, confirm that on token.DEDENT, _partially_consume_prefix(prefix, _indent_col) is called where _indent_col was popped from indent_columns. (ID: todo-7)
+- [ ] Ensure that after p.addtoken(), for INDENT and DEDENT tokens, prefix is set to _prefix so the (partially) consumed prefix is preserved for subsequent tokens. (ID: todo-8)
+- [ ] Verify that black/black.py imports the driver from the in-repo blib2to3 package (from blib2to3.pgen2 import driver), ensuring the modified driver is used by formatting. (ID: todo-9)
+- [ ] Inspect tests/tests_black.py test_comment_indentation: confirm it defines inputs with tabs (\t) and the expected outputs with spaces, and asserts fs(contents_tab) == contents_spc and fs(contents_spc) == contents_spc for both scenarios. (ID: todo-10)
+- [ ] Check that there is no other code path in the repository that performs tab-based indent width calculation inconsistent with lib2to3 (e.g., counting tabs as width 4) for prefix/indent handling. (ID: todo-11)
+- [ ] Optionally, verify that mixed indent characters (spaces and tabs) in _partially_consume_prefix would each contribute 1 to current_column, aligning with the PR intent (ensure no code path treats tabs differently). (ID: todo-12)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 12
+description: 'In blib2to3/pgen2/driver.py, verify that _partially_consume_prefix increments current_column by 1 when encountering a tab character ('\t') instead of 4.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "_partially_consume_prefix\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "_partially_consume_prefix\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black"
+]
+Calling tool: grepTool
+_partially_consume_prefix\(
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+_partially_consume_prefix\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py:117:    def _partially_consume_prefix(self, prefix, column):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:117:    def _partially_consume_prefix(self, prefix, column):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py:117:    def _partially_consume_prefix(self, prefix, column):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:# Modifications:
+5:# Copyright 2006 Google, Inc. All Rights Reserved.
+6:# Licensed to PSF under a Contributor Agreement.
+7:
+8:"""Parser driver.
+9:
+10:This provides a high-level interface to parse a file into a syntax tree.
+11:
+12:"""
+13:
+14:__author__ = "Guido van Rossum <guido@python.org>"
+15:
+16:__all__ = ["Driver", "load_grammar"]
+17:
+18:# Python imports
+19:import codecs
+20:import io
+21:import os
+22:import logging
+23:import pkgutil
+24:import sys
+25:
+26:# Pgen imports
+27:from . import grammar, parse, token, tokenize, pgen
+28:
+29:
+30:class Driver(object):
+31:
+32:    def __init__(self, grammar, convert=None, logger=None):
+33:        self.grammar = grammar
+34:        if logger is None:
+35:            logger = logging.getLogger()
+36:        self.logger = logger
+37:        self.convert = convert
+38:
+39:    def parse_tokens(self, tokens, debug=False):
+40:        """Parse a series of tokens and return the syntax tree."""
+41:        # XXX Move the prefix computation into a wrapper around tokenize.
+42:        p = parse.Parser(self.grammar, self.convert)
+43:        p.setup()
+44:        lineno = 1
+45:        column = 0
+46:        indent_columns = []
+47:        type = value = start = end = line_text = None
+48:        prefix = ""
+49:        for quintuple in tokens:
+50:            type, value, start, end, line_text = quintuple
+51:            if start != (lineno, column):
+52:                assert (lineno, column) <= start, ((lineno, column), start)
+53:                s_lineno, s_column = start
+54:                if lineno < s_lineno:
+55:                    prefix += "\n" * (s_lineno - lineno)
+56:                    lineno = s_lineno
+57:                    column = 0
+58:                if column < s_column:
+59:                    prefix += line_text[column:s_column]
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+91:                column = 0
+92:        else:
+93:            # We never broke out -- EOF is too soon (how can this happen???)
+94:            raise parse.ParseError("incomplete input",
+95:                                   type, value, (prefix, start))
+96:        return p.rootnode
+97:
+98:    def parse_stream_raw(self, stream, debug=False):
+99:        """Parse a stream and return the syntax tree."""
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\n':
+137:                # unexpected empty line
+138:                current_column = 0
+139:            else:
+140:                # indent is finished
+141:                wait_for_nl = True
+142:        return ''.join(lines), current_line
+143:
+144:
+145:def _generate_pickle_name(gt, cache_dir=None):
+146:    head, tail = os.path.splitext(gt)
+147:    if tail == ".txt":
+148:        tail = ""
+149:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+150:    if cache_dir:
+151:        return os.path.join(cache_dir, os.path.basename(name))
+152:    else:
+153:        return name
+154:
+155:
+156:def load_grammar(gt="Grammar.txt", gp=None,
+157:                 save=True, force=False, logger=None):
+158:    """Load the grammar (maybe from a pickle)."""
+159:    if logger is None:
+160:        logger = logging.getLogger()
+161:    gp = _generate_pickle_name(gt) if gp is None else gp
+162:    if force or not _newer(gp, gt):
+163:        logger.info("Generating grammar tables from %s", gt)
+164:        g = pgen.generate_grammar(gt)
+165:        if save:
+166:            logger.info("Writing grammar tables to %s", gp)
+167:            try:
+168:                g.dump(gp)
+169:            except OSError as e:
+170:                logger.info("Writing failed: %s", e)
+171:    else:
+172:        g = grammar.Grammar()
+173:        g.load(gp)
+174:    return g
+175:
+176:
+177:def _newer(a, b):
+178:    """Inquire whether file a was written since file b."""
+179:    if not os.path.exists(a):
+180:        return False
+181:    if not os.path.exists(b):
+182:        return True
+183:    return os.path.getmtime(a) >= os.path.getmtime(b)
+184:
+185:
+186:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+187:    """Normally, loads a pickled grammar by doing
+188:        pkgutil.get_data(package, pickled_grammar)
+189:    where *pickled_grammar* is computed from *grammar_source* by adding the
+190:    Python version and using a ``.pickle`` extension.
+191:
+192:    However, if *grammar_source* is an extant file, load_grammar(grammar_source)
+193:    is called instead. This facilitates using a packaged grammar file when needed
+194:    but preserves load_grammar's automatic regeneration behavior when possible.
+195:
+196:    """
+197:    if os.path.isfile(grammar_source):
+198:        gp = _generate_pickle_name(grammar_source, cache_dir) if cache_dir else None
+199:        return load_grammar(grammar_source, gp=gp)
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+201:    data = pkgutil.get_data(package, pickled_name)
+202:    g = grammar.Grammar()
+203:    g.loads(data)
+204:    return g
+205:
+206:
+207:def main(*args):
+208:    """Main program, when run as a script: produce grammar pickle files.
+209:
+210:    Calls load_grammar for each argument, a path to a grammar text file.
+211:    """
+212:    if not args:
+213:        args = sys.argv[1:]
+214:    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+215:                        format='%(message)s')
+216:    for gt in args:
+217:        load_grammar(gt, save=True, force=True)
+218:    return True
+219:
+220:if __name__ == "__main__":
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+160:    """Load the grammar (maybe from a pickle)."""
+161:    if logger is None:
+162:        logger = logging.getLogger()
+163:    gp = _generate_pickle_name(gt) if gp is None else gp
+164:    if force or not _newer(gp, gt):
+165:        logger.info("Generating grammar tables from %s", gt)
+166:        g = pgen.generate_grammar(gt)
+167:        if save:
+168:            logger.info("Writing grammar tables to %s", gp)
+169:            try:
+170:                g.dump(gp)
+171:            except OSError as e:
+172:                logger.info("Writing failed: %s", e)
+173:    else:
+174:        g = grammar.Grammar()
+175:        g.load(gp)
+176:    return g
+177:
+178:
+179:def _newer(a, b):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+160:    """Load the grammar (maybe from a pickle)."""
+161:    if logger is None:
+162:        logger = logging.getLogger()
+163:    gp = _generate_pickle_name(gt) if gp is None else gp
+164:    if force or not _newer(gp, gt):
+165:        logger.info("Generating grammar tables from %s", gt)
+166:        g = pgen.generate_grammar(gt)
+167:        if save:
+168:            logger.info("Writing grammar tables to %s", gp)
+169:            try:
+170:                g.dump(gp)
+171:            except OSError as e:
+172:                logger.info("Writing failed: %s", e)
+173:    else:
+174:        g = grammar.Grammar()
+175:        g.load(gp)
+176:    return g
+177:
+178:
+179:def _newer(a, b):
+180:    """Inquire whether file a was written since file b."""
+181:    if not os.path.exists(a):
+182:        return False
+183:    if not os.path.exists(b):
+184:        return True
+185:    return os.path.getmtime(a) >= os.path.getmtime(b)
+186:
+187:
+188:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+189:    """Normally, loads a pickled grammar by doing
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pgen2/driver.py, _partially_consume_prefix no longer handles '\t' at all. The previous code incremented by 4; the fix should increment by 1, but the current implementation removed the tab branch, so tabs do not increase current_column and prematurely end indent parsing.
+
+
+Validating todo item 1 of 12
+description: 'In blib2to3/pgen2/driver.py, verify that _partially_consume_prefix increments current_column by 1 when encountering a tab character ('\t') instead of 4.'
+
+Calling tool: grepTool
+_partially_consume_prefix\(
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+_partially_consume_prefix\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py:117:    def _partially_consume_prefix(self, prefix, column):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original:117:    def _partially_consume_prefix(self, prefix, column):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py:80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py:117:    def _partially_consume_prefix(self, prefix, column):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:# Modifications:
+5:# Copyright 2006 Google, Inc. All Rights Reserved.
+6:# Licensed to PSF under a Contributor Agreement.
+7:
+8:"""Parser driver.
+9:
+10:This provides a high-level interface to parse a file into a syntax tree.
+11:
+12:"""
+13:
+14:__author__ = "Guido van Rossum <guido@python.org>"
+15:
+16:__all__ = ["Driver", "load_grammar"]
+17:
+18:# Python imports
+19:import codecs
+20:import io
+21:import os
+22:import logging
+23:import pkgutil
+24:import sys
+25:
+26:# Pgen imports
+27:from . import grammar, parse, token, tokenize, pgen
+28:
+29:
+30:class Driver(object):
+31:
+32:    def __init__(self, grammar, convert=None, logger=None):
+33:        self.grammar = grammar
+34:        if logger is None:
+35:            logger = logging.getLogger()
+36:        self.logger = logger
+37:        self.convert = convert
+38:
+39:    def parse_tokens(self, tokens, debug=False):
+40:        """Parse a series of tokens and return the syntax tree."""
+41:        # XXX Move the prefix computation into a wrapper around tokenize.
+42:        p = parse.Parser(self.grammar, self.convert)
+43:        p.setup()
+44:        lineno = 1
+45:        column = 0
+46:        indent_columns = []
+47:        type = value = start = end = line_text = None
+48:        prefix = ""
+49:        for quintuple in tokens:
+50:            type, value, start, end, line_text = quintuple
+51:            if start != (lineno, column):
+52:                assert (lineno, column) <= start, ((lineno, column), start)
+53:                s_lineno, s_column = start
+54:                if lineno < s_lineno:
+55:                    prefix += "\n" * (s_lineno - lineno)
+56:                    lineno = s_lineno
+57:                    column = 0
+58:                if column < s_column:
+59:                    prefix += line_text[column:s_column]
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+91:                column = 0
+92:        else:
+93:            # We never broke out -- EOF is too soon (how can this happen???)
+94:            raise parse.ParseError("incomplete input",
+95:                                   type, value, (prefix, start))
+96:        return p.rootnode
+97:
+98:    def parse_stream_raw(self, stream, debug=False):
+99:        """Parse a stream and return the syntax tree."""
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\n':
+137:                # unexpected empty line
+138:                current_column = 0
+139:            else:
+140:                # indent is finished
+141:                wait_for_nl = True
+142:        return ''.join(lines), current_line
+143:
+144:
+145:def _generate_pickle_name(gt, cache_dir=None):
+146:    head, tail = os.path.splitext(gt)
+147:    if tail == ".txt":
+148:        tail = ""
+149:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+150:    if cache_dir:
+151:        return os.path.join(cache_dir, os.path.basename(name))
+152:    else:
+153:        return name
+154:
+155:
+156:def load_grammar(gt="Grammar.txt", gp=None,
+157:                 save=True, force=False, logger=None):
+158:    """Load the grammar (maybe from a pickle)."""
+159:    if logger is None:
+160:        logger = logging.getLogger()
+161:    gp = _generate_pickle_name(gt) if gp is None else gp
+162:    if force or not _newer(gp, gt):
+163:        logger.info("Generating grammar tables from %s", gt)
+164:        g = pgen.generate_grammar(gt)
+165:        if save:
+166:            logger.info("Writing grammar tables to %s", gp)
+167:            try:
+168:                g.dump(gp)
+169:            except OSError as e:
+170:                logger.info("Writing failed: %s", e)
+171:    else:
+172:        g = grammar.Grammar()
+173:        g.load(gp)
+174:    return g
+175:
+176:
+177:def _newer(a, b):
+178:    """Inquire whether file a was written since file b."""
+179:    if not os.path.exists(a):
+180:        return False
+181:    if not os.path.exists(b):
+182:        return True
+183:    return os.path.getmtime(a) >= os.path.getmtime(b)
+184:
+185:
+186:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+187:    """Normally, loads a pickled grammar by doing
+188:        pkgutil.get_data(package, pickled_grammar)
+189:    where *pickled_grammar* is computed from *grammar_source* by adding the
+190:    Python version and using a ``.pickle`` extension.
+191:
+192:    However, if *grammar_source* is an extant file, load_grammar(grammar_source)
+193:    is called instead. This facilitates using a packaged grammar file when needed
+194:    but preserves load_grammar's automatic regeneration behavior when possible.
+195:
+196:    """
+197:    if os.path.isfile(grammar_source):
+198:        gp = _generate_pickle_name(grammar_source, cache_dir) if cache_dir else None
+199:        return load_grammar(grammar_source, gp=gp)
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+201:    data = pkgutil.get_data(package, pickled_name)
+202:    g = grammar.Grammar()
+203:    g.loads(data)
+204:    return g
+205:
+206:
+207:def main(*args):
+208:    """Main program, when run as a script: produce grammar pickle files.
+209:
+210:    Calls load_grammar for each argument, a path to a grammar text file.
+211:    """
+212:    if not args:
+213:        args = sys.argv[1:]
+214:    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+215:                        format='%(message)s')
+216:    for gt in args:
+217:        load_grammar(gt, save=True, force=True)
+218:    return True
+219:
+220:if __name__ == "__main__":
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/blib2to3/pgen2/driver.py.original
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+160:    """Load the grammar (maybe from a pickle)."""
+161:    if logger is None:
+162:        logger = logging.getLogger()
+163:    gp = _generate_pickle_name(gt) if gp is None else gp
+164:    if force or not _newer(gp, gt):
+165:        logger.info("Generating grammar tables from %s", gt)
+166:        g = pgen.generate_grammar(gt)
+167:        if save:
+168:            logger.info("Writing grammar tables to %s", gp)
+169:            try:
+170:                g.dump(gp)
+171:            except OSError as e:
+172:                logger.info("Writing failed: %s", e)
+173:    else:
+174:        g = grammar.Grammar()
+175:        g.load(gp)
+176:    return g
+177:
+178:
+179:def _newer(a, b):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-10/bad/black/env/src/black/blib2to3/pgen2/driver.py
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char == ' ':
+135:                current_column += 1
+136:            elif char == '\t':
+137:                current_column += 4
+138:            elif char == '\n':
+139:                # unexpected empty line
+140:                current_column = 0
+141:            else:
+142:                # indent is finished
+143:                wait_for_nl = True
+144:        return ''.join(lines), current_line
+145:
+146:
+147:def _generate_pickle_name(gt, cache_dir=None):
+148:    head, tail = os.path.splitext(gt)
+149:    if tail == ".txt":
+150:        tail = ""
+151:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+152:    if cache_dir:
+153:        return os.path.join(cache_dir, os.path.basename(name))
+154:    else:
+155:        return name
+156:
+157:
+158:def load_grammar(gt="Grammar.txt", gp=None,
+159:                 save=True, force=False, logger=None):
+160:    """Load the grammar (maybe from a pickle)."""
+161:    if logger is None:
+162:        logger = logging.getLogger()
+163:    gp = _generate_pickle_name(gt) if gp is None else gp
+164:    if force or not _newer(gp, gt):
+165:        logger.info("Generating grammar tables from %s", gt)
+166:        g = pgen.generate_grammar(gt)
+167:        if save:
+168:            logger.info("Writing grammar tables to %s", gp)
+169:            try:
+170:                g.dump(gp)
+171:            except OSError as e:
+172:                logger.info("Writing failed: %s", e)
+173:    else:
+174:        g = grammar.Grammar()
+175:        g.load(gp)
+176:    return g
+177:
+178:
+179:def _newer(a, b):
+180:    """Inquire whether file a was written since file b."""
+181:    if not os.path.exists(a):
+182:        return False
+183:    if not os.path.exists(b):
+184:        return True
+185:    return os.path.getmtime(a) >= os.path.getmtime(b)
+186:
+187:
+188:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+189:    """Normally, loads a pickled grammar by doing
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pgen2/driver.py, _partially_consume_prefix no longer handles '\t' at all. The previous code incremented by 4; the fix should increment by 1, but the current implementation removed the tab branch, so tabs do not increase current_column and prematurely end indent parsing.
+
+
+=== PHASE 2 COMPLETE ===
+

@@ -1,0 +1,2207 @@
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def dump_to_file\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def test_expression_ff\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "expression\\.py", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "NamedTemporaryFile\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "dump_to_file\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black" ]
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: grepTool
+def test_expression_ff\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+130:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+131:
+132:    @patch("black.dump_to_file", dump_to_stderr)
+133:    def test_function(self) -> None:
+134:        source, expected = read_data("function")
+135:        actual = fs(source)
+136:        self.assertFormatEqual(expected, actual)
+137:        black.assert_equivalent(source, actual)
+138:        black.assert_stable(source, actual, line_length=ll)
+139:
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file, encoding="utf8") as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:from functools import partial
+3:from io import StringIO
+4:import os
+5:from pathlib import Path
+6:import sys
+7:from typing import Any, List, Tuple
+8:import unittest
+9:from unittest.mock import patch
+10:
+11:from click import unstyle
+12:
+13:import black
+14:
+15:ll = 88
+16:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+17:fs = partial(black.format_str, line_length=ll)
+18:THIS_FILE = Path(__file__)
+19:THIS_DIR = THIS_FILE.parent
+20:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+21:
+22:
+23:def dump_to_stderr(*output: str) -> str:
+24:    return "\n" + "\n".join(output) + "\n"
+25:
+26:
+27:def read_data(name: str) -> Tuple[str, str]:
+28:    """read_data('test_name') -> 'input', 'output'"""
+29:    if not name.endswith((".py", ".out", ".diff")):
+30:        name += ".py"
+31:    _input: List[str] = []
+32:    _output: List[str] = []
+33:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+34:        lines = test.readlines()
+35:    result = _input
+36:    for line in lines:
+37:        line = line.replace(EMPTY_LINE, "")
+38:        if line.rstrip() == "# output":
+39:            result = _output
+40:            continue
+41:
+42:        result.append(line)
+43:    if _input and not _output:
+44:        # If there's no output marker, treat the entire file as already pre-formatted.
+45:        _output = _input[:]
+46:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+47:
+48:
+49:class BlackTestCase(unittest.TestCase):
+50:    maxDiff = None
+51:
+52:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+53:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+54:            bdv: black.DebugVisitor[Any]
+55:            black.out("Expected tree:", fg="green")
+56:            try:
+57:                exp_node = black.lib2to3_parse(expected)
+58:                bdv = black.DebugVisitor()
+59:                list(bdv.visit(exp_node))
+60:            except Exception as ve:
+61:                black.err(str(ve))
+62:            black.out("Actual tree:", fg="red")
+63:            try:
+64:                exp_node = black.lib2to3_parse(actual)
+65:                bdv = black.DebugVisitor()
+66:                list(bdv.visit(exp_node))
+67:            except Exception as ve:
+68:                black.err(str(ve))
+69:        self.assertEqual(expected, actual)
+70:
+71:    @patch("black.dump_to_file", dump_to_stderr)
+72:    def test_self(self) -> None:
+73:        source, expected = read_data("test_black")
+74:        actual = fs(source)
+75:        self.assertFormatEqual(expected, actual)
+76:        black.assert_equivalent(source, actual)
+77:        black.assert_stable(source, actual, line_length=ll)
+78:        self.assertFalse(ff(THIS_FILE))
+79:
+80:    @patch("black.dump_to_file", dump_to_stderr)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py
+130:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+131:
+132:    @patch("black.dump_to_file", dump_to_stderr)
+133:    def test_function(self) -> None:
+134:        source, expected = read_data("function")
+135:        actual = fs(source)
+136:        self.assertFormatEqual(expected, actual)
+137:        black.assert_equivalent(source, actual)
+138:        black.assert_stable(source, actual, line_length=ll)
+139:
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file) as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+
+Calling tool: grepTool
+expression\.py
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:107:        source, _ = read_data("expression.py")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:163:        source, _ = read_data("expression.py")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:181:                f"to expression.py and this is an anticipated difference, "
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.egg-info/SOURCES.txt:82:tests/expression.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:107:        source, _ = read_data("expression.py")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:163:        source, _ = read_data("expression.py")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:181:                f"to expression.py and this is an anticipated difference, "
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/expression.py
+130:{"id": "1","type": "type","started_at": now(),"ended_at": now() + timedelta(days=10),"priority": 1,"import_session_id": 1,**kwargs}  # no trailing comma, this file is not 3.6+
+131:a = (1,)
+132:b = 1,
+133:c = 1
+134:d = (1,) + a + (2,)
+135:e = (1,).count(1)
+136:what_is_up_with_those_new_coord_names = (coord_names + set(vars_to_create)) + set(vars_to_remove)
+137:what_is_up_with_those_new_coord_names = (coord_names | set(vars_to_create)) - set(vars_to_remove)
+138:result = session.query(models.Customer.id).filter(models.Customer.account_id == account_id, models.Customer.email == email_address).order_by(models.Customer.id.asc(),).all()
+139:Ø = set()
+140:authors.łukasz.say_thanks()
+141:
+142:def gen():
+143:    yield from outside_of_generator
+144:    a = (yield)
+145:
+146:async def f():
+147:    await some.complicated[0].call(with_args=(True or (1 is not 1)))
+148:for x, in (1,), (2,), (3,): ...
+149:for y in (): ...
+
+Calling tool: grepTool
+NamedTemporaryFile\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/flake8_mypy.py:187:            with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/network/lazy_wheel.py:57:        self._file = NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/utils/filesystem.py:53:    with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_vendor/cachecontrol/filewrapper.py:29:        self.__buf = NamedTemporaryFile("rb+", delete=True)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:609:        f = tempfile.NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:2274:                    imgfile2 = tempfile.NamedTemporaryFile('wb', delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:26:        with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:39:                with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/test/teststubtest.py:613:        whitelist = tempfile.NamedTemporaryFile(mode="w", delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/2/tempfile.pyi:63:def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:99:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:112:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:125:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:139:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:150:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:161:    def NamedTemporaryFile(
+
+Calling tool: grepTool
+dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2268:                yield from _v(value, depth + 2)
+2269:
+2270:            else:
+2271:                yield f"{'  ' * (depth+2)}{value!r},  # {value.__class__.__name__}"
+2272:
+2273:        yield f"{'  ' * depth})  # /{node.__class__.__name__}"
+2274:
+2275:    try:
+2276:        src_ast = ast.parse(src)
+2277:    except Exception as exc:
+2278:        major, minor = sys.version_info[:2]
+2279:        raise AssertionError(
+2280:            f"cannot use --safe with this file; failed to parse source file "
+2281:            f"with Python {major}.{minor}'s builtin AST. Re-run with --fast "
+2282:            f"or stop using deprecated Python 2 syntax. AST error message: {exc}"
+2283:        )
+2284:
+2285:    try:
+2286:        dst_ast = ast.parse(dst)
+2287:    except Exception as exc:
+2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+2289:        raise AssertionError(
+2290:            f"INTERNAL ERROR: Black produced invalid code: {exc}. "
+2291:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2292:            f"This invalid output might be helpful: {log}"
+2293:        ) from None
+2294:
+2295:    src_ast_str = "\n".join(_v(src_ast))
+2296:    dst_ast_str = "\n".join(_v(dst_ast))
+2297:    if src_ast_str != dst_ast_str:
+2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+2299:        raise AssertionError(
+2300:            f"INTERNAL ERROR: Black produced code that is not equivalent to "
+2301:            f"the source.  "
+2302:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2303:            f"This diff might be helpful: {log}"
+2304:        ) from None
+2305:
+2306:
+2307:def assert_stable(src: str, dst: str, line_length: int) -> None:
+2308:    """Raise AssertionError if `dst` reformats differently the second time."""
+2309:    newdst = format_str(dst, line_length=line_length)
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+
+Calling tool: createTodo
+Todo List Created
+Todo List (7 items):
+- [ ] In black/black.py, verify that dump_to_file uses tempfile.NamedTemporaryFile with encoding="utf8" in text mode (mode="w"), delete=False, and retains the original prefix/suffix ("blk_"/".log"). (ID: todo-1)
+- [ ] Confirm dump_to_file in black/black.py still writes each provided string and appends a trailing newline when missing, and returns f.name (a str path), preserving the original behavior aside from the encoding change. (ID: todo-2)
+- [ ] Verify that all direct call sites of dump_to_file pass str arguments (no bytes), e.g., at black/black.py lines ~2288, ~2298, and ~2311, and in tests/test_black.py (lines ~150, ~165, ~178, ~393). (ID: todo-3)
+- [ ] Confirm tests/test_black.py:test_expression_ff reads the temporary file using UTF-8 (with open(tmp_file, encoding="utf8")) to match the new write encoding. (ID: todo-4)
+- [ ] Verify that tests/expression.py contains non-ASCII characters (e.g., 'Ø' and 'ł') around lines 139–141, establishing the necessity of UTF-8 when writing the temp file. (ID: todo-5)
+- [ ] Ensure there are no other temporary text files created in the project’s main code (excluding vendored/virtualenv content) without an explicit UTF-8 encoding; search for other NamedTemporaryFile usages in the top-level project code and confirm none write text without encoding. (ID: todo-6)
+- [ ] If multiple definitions of dump_to_file exist within the project tree, ensure they are consistent and all use encoding="utf8" when opening temporary files for writing text (focus on the active code under test, not vendored packages). (ID: todo-7)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 7
+description: 'In black/black.py, verify that dump_to_file uses tempfile.NamedTemporaryFile with encoding="utf8" in text mode (mode="w"), delete=False, and retains the original prefix/suffix ("blk_"/".log").'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def dump_to_file\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Located dump_to_file in black/black.py and verified NamedTemporaryFile is opened with mode="w", prefix="blk_", suffix=".log", delete=False, and encoding="utf8" exactly as required.
+
+
+Todo item 1 of 7 is correct
+description: 'In black/black.py, verify that dump_to_file uses tempfile.NamedTemporaryFile with encoding="utf8" in text mode (mode="w"), delete=False, and retains the original prefix/suffix ("blk_"/".log").'
+Validating todo item 2 of 7
+description: 'Confirm dump_to_file in black/black.py still writes each provided string and appends a trailing newline when missing, and returns f.name (a str path), preserving the original behavior aside from the encoding change.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def dump_to_file\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black/black.py lines 2327-2334, dump_to_file writes each provided string and appends a newline if missing (checks last char != "\n"), then returns f.name after the with block. The only change is adding encoding="utf8" to NamedTemporaryFile; the write/newline logic and return value are preserved.
+
+
+Todo item 2 of 7 is correct
+description: 'Confirm dump_to_file in black/black.py still writes each provided string and appends a trailing newline when missing, and returns f.name (a str path), preserving the original behavior aside from the encoding change.'
+Validating todo item 3 of 7
+description: 'Verify that all direct call sites of dump_to_file pass str arguments (no bytes), e.g., at black/black.py lines ~2288, ~2298, and ~2311, and in tests/test_black.py (lines ~150, ~165, ~178, ~393).'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "dump_to_file\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def read_data\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests" ]
+Calling tool: grepTool
+dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2280:            f"cannot use --safe with this file; failed to parse source file "
+2281:            f"with Python {major}.{minor}'s builtin AST. Re-run with --fast "
+2282:            f"or stop using deprecated Python 2 syntax. AST error message: {exc}"
+2283:        )
+2284:
+2285:    try:
+2286:        dst_ast = ast.parse(dst)
+2287:    except Exception as exc:
+2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+2289:        raise AssertionError(
+2290:            f"INTERNAL ERROR: Black produced invalid code: {exc}. "
+2291:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2292:            f"This invalid output might be helpful: {log}"
+2293:        ) from None
+2294:
+2295:    src_ast_str = "\n".join(_v(src_ast))
+2296:    dst_ast_str = "\n".join(_v(dst_ast))
+2297:    if src_ast_str != dst_ast_str:
+2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+2299:        raise AssertionError(
+2300:            f"INTERNAL ERROR: Black produced code that is not equivalent to "
+2301:            f"the source.  "
+2302:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2303:            f"This diff might be helpful: {log}"
+2304:        ) from None
+2305:
+2306:
+2307:def assert_stable(src: str, dst: str, line_length: int) -> None:
+2308:    """Raise AssertionError if `dst` reformats differently the second time."""
+2309:    newdst = format_str(dst, line_length=line_length)
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file, encoding="utf8") as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+190:        self.assertFormatEqual(expected, actual)
+191:        black.assert_equivalent(source, actual)
+192:        black.assert_stable(source, actual, line_length=ll)
+193:
+194:    @patch("black.dump_to_file", dump_to_stderr)
+195:    def test_string_quotes(self) -> None:
+196:        source, expected = read_data("string_quotes")
+197:        actual = fs(source)
+198:        self.assertFormatEqual(expected, actual)
+199:        black.assert_equivalent(source, actual)
+200:        black.assert_stable(source, actual, line_length=ll)
+201:
+202:    @patch("black.dump_to_file", dump_to_stderr)
+203:    def test_comments(self) -> None:
+204:        source, expected = read_data("comments")
+205:        actual = fs(source)
+206:        self.assertFormatEqual(expected, actual)
+207:        black.assert_equivalent(source, actual)
+208:        black.assert_stable(source, actual, line_length=ll)
+209:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+380:        err_lines = []
+381:
+382:        def out(msg: str, **kwargs: Any) -> None:
+383:            out_lines.append(msg)
+384:
+385:        def err(msg: str, **kwargs: Any) -> None:
+386:            err_lines.append(msg)
+387:
+388:        with patch("black.out", out), patch("black.err", err):
+389:            black.DebugVisitor.show(source)
+390:        actual = "\n".join(out_lines) + "\n"
+391:        log_name = ""
+392:        if expected != actual:
+393:            log_name = black.dump_to_file(*out_lines)
+394:        self.assertEqual(
+395:            expected,
+396:            actual,
+397:            f"AST print out is different. Actual version dumped to {log_name}",
+398:        )
+399:
+400:    def test_format_file_contents(self) -> None:
+401:        empty = ""
+402:        with self.assertRaises(black.NothingChanged):
+403:            black.format_file_contents(empty, line_length=ll, fast=False)
+404:        just_nl = "\n"
+405:        with self.assertRaises(black.NothingChanged):
+406:            black.format_file_contents(just_nl, line_length=ll, fast=False)
+407:        same = "l = [1, 2, 3]\n"
+408:        with self.assertRaises(black.NothingChanged):
+409:            black.format_file_contents(same, line_length=ll, fast=False)
+410:        different = "l = [1,2,3]"
+411:        expected = same
+412:        actual = black.format_file_contents(different, line_length=ll, fast=False)
+413:        self.assertEqual(expected, actual)
+414:        invalid = "return if you can"
+415:        with self.assertRaises(ValueError) as e:
+416:            black.format_file_contents(invalid, line_length=ll, fast=False)
+417:        self.assertEqual(str(e.exception), "Cannot parse: 1:7: return if you can")
+418:
+419:    def test_endmarker(self) -> None:
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:27:def read_data(name: str) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:from functools import partial
+3:from io import StringIO
+4:import os
+5:from pathlib import Path
+6:import sys
+7:from typing import Any, List, Tuple
+8:import unittest
+9:from unittest.mock import patch
+10:
+11:from click import unstyle
+12:
+13:import black
+14:
+15:ll = 88
+16:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+17:fs = partial(black.format_str, line_length=ll)
+18:THIS_FILE = Path(__file__)
+19:THIS_DIR = THIS_FILE.parent
+20:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+21:
+22:
+23:def dump_to_stderr(*output: str) -> str:
+24:    return "\n" + "\n".join(output) + "\n"
+25:
+26:
+27:def read_data(name: str) -> Tuple[str, str]:
+28:    """read_data('test_name') -> 'input', 'output'"""
+29:    if not name.endswith((".py", ".out", ".diff")):
+30:        name += ".py"
+31:    _input: List[str] = []
+32:    _output: List[str] = []
+33:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+34:        lines = test.readlines()
+35:    result = _input
+36:    for line in lines:
+37:        line = line.replace(EMPTY_LINE, "")
+38:        if line.rstrip() == "# output":
+39:            result = _output
+40:            continue
+41:
+42:        result.append(line)
+43:    if _input and not _output:
+44:        # If there's no output marker, treat the entire file as already pre-formatted.
+45:        _output = _input[:]
+46:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+47:
+48:
+49:class BlackTestCase(unittest.TestCase):
+50:    maxDiff = None
+51:
+52:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+53:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+54:            bdv: black.DebugVisitor[Any]
+55:            black.out("Expected tree:", fg="green")
+56:            try:
+57:                exp_node = black.lib2to3_parse(expected)
+58:                bdv = black.DebugVisitor()
+59:                list(bdv.visit(exp_node))
+60:            except Exception as ve:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for all direct dump_to_file calls and inspected each site. In black/black.py (lines 2288, 2298, 2311), arguments are strings: join(traceback.format_tb(...)) returns str, dst is str, and diff(...) returns str. In tests/test_black.py (lines 150, 165, 178, 393), source and actual come from read_data (returns str), and out_lines is a list of str. No bytes are passed at any call site.
+
+
+Todo item 3 of 7 is correct
+description: 'Verify that all direct call sites of dump_to_file pass str arguments (no bytes), e.g., at black/black.py lines ~2288, ~2298, and ~2311, and in tests/test_black.py (lines ~150, ~165, ~178, ~393).'
+Validating todo item 4 of 7
+description: 'Confirm tests/test_black.py:test_expression_ff reads the temporary file using UTF-8 (with open(tmp_file, encoding="utf8")) to match the new write encoding.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_expression_ff\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: grepTool
+test_expression_ff\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+120:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+121:        self.assertEqual(expected, actual)
+122:
+123:    @patch("black.dump_to_file", dump_to_stderr)
+124:    def test_setup(self) -> None:
+125:        source, expected = read_data("../setup")
+126:        actual = fs(source)
+127:        self.assertFormatEqual(expected, actual)
+128:        black.assert_equivalent(source, actual)
+129:        black.assert_stable(source, actual, line_length=ll)
+130:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+131:
+132:    @patch("black.dump_to_file", dump_to_stderr)
+133:    def test_function(self) -> None:
+134:        source, expected = read_data("function")
+135:        actual = fs(source)
+136:        self.assertFormatEqual(expected, actual)
+137:        black.assert_equivalent(source, actual)
+138:        black.assert_stable(source, actual, line_length=ll)
+139:
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file, encoding="utf8") as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+190:        self.assertFormatEqual(expected, actual)
+191:        black.assert_equivalent(source, actual)
+192:        black.assert_stable(source, actual, line_length=ll)
+193:
+194:    @patch("black.dump_to_file", dump_to_stderr)
+195:    def test_string_quotes(self) -> None:
+196:        source, expected = read_data("string_quotes")
+197:        actual = fs(source)
+198:        self.assertFormatEqual(expected, actual)
+199:        black.assert_equivalent(source, actual)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In tests/test_black.py at lines 153-154, test_expression_ff opens the temporary file with open(tmp_file, encoding="utf8") and reads it. This matches the new write encoding added in black.dump_to_file (encoding="utf8").
+
+
+Todo item 4 of 7 is correct
+description: 'Confirm tests/test_black.py:test_expression_ff reads the temporary file using UTF-8 (with open(tmp_file, encoding="utf8")) to match the new write encoding.'
+Validating todo item 5 of 7
+description: 'Verify that tests/expression.py contains non-ASCII characters (e.g., 'Ø' and 'ł') around lines 139–141, establishing the necessity of UTF-8 when writing the temp file.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "(?i)tests/expression\\.py",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: grepTool
+(?i)tests/expression\.py
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.egg-info/SOURCES.txt:82:tests/expression.py
+
+Calling tool: globTool
+**/tests/expression.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/expression.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/expression.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/expression.py
+130:{"id": "1","type": "type","started_at": now(),"ended_at": now() + timedelta(days=10),"priority": 1,"import_session_id": 1,**kwargs}  # no trailing comma, this file is not 3.6+
+131:a = (1,)
+132:b = 1,
+133:c = 1
+134:d = (1,) + a + (2,)
+135:e = (1,).count(1)
+136:what_is_up_with_those_new_coord_names = (coord_names + set(vars_to_create)) + set(vars_to_remove)
+137:what_is_up_with_those_new_coord_names = (coord_names | set(vars_to_create)) - set(vars_to_remove)
+138:result = session.query(models.Customer.id).filter(models.Customer.account_id == account_id, models.Customer.email == email_address).order_by(models.Customer.id.asc(),).all()
+139:Ø = set()
+140:authors.łukasz.say_thanks()
+141:
+142:def gen():
+143:    yield from outside_of_generator
+144:    a = (yield)
+145:
+146:async def f():
+147:    await some.complicated[0].call(with_args=(True or (1 is not 1)))
+148:for x, in (1,), (2,), (3,): ...
+149:for y in (): ...
+150:for z in (i for i in (1, 2, 3)): ...
+151:for i in (call()): ...
+152:for j in (1 + (2 + 3)): ...
+153:while(this and that): ...
+154:if (
+155:    threading.current_thread() != threading.main_thread() and
+156:    threading.current_thread() != threading.main_thread() or
+157:    signal.getsignal(signal.SIGINT) != signal.default_int_handler
+158:):
+159:    return True
+160:if (
+161:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa |
+162:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+163:):
+164:    return True
+165:if (
+166:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa &
+167:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+168:):
+169:    return True
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Confirmed non-ASCII characters in tests/expression.py around lines 139–141: line 139 contains ‘Ø = set()’ and line 140 contains ‘authors.łukasz.say_thanks()’, justifying the need for UTF-8 when writing the temp file.
+
+
+Todo item 5 of 7 is correct
+description: 'Verify that tests/expression.py contains non-ASCII characters (e.g., 'Ø' and 'ł') around lines 139–141, establishing the necessity of UTF-8 when writing the temp file.'
+Validating todo item 6 of 7
+description: 'Ensure there are no other temporary text files created in the project’s main code (excluding vendored/virtualenv content) without an explicit UTF-8 encoding; search for other NamedTemporaryFile usages in the top-level project code and confirm none write text without encoding.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "NamedTemporaryFile\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: grepTool
+NamedTemporaryFile\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/flake8_mypy.py:187:            with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:609:        f = tempfile.NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:2274:                    imgfile2 = tempfile.NamedTemporaryFile('wb', delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_vendor/cachecontrol/filewrapper.py:29:        self.__buf = NamedTemporaryFile("rb+", delete=True)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/utils/filesystem.py:53:    with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/network/lazy_wheel.py:57:        self._file = NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:26:        with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:39:                with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/2/tempfile.pyi:63:def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/test/teststubtest.py:613:        whitelist = tempfile.NamedTemporaryFile(mode="w", delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:99:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:112:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:125:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:139:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:150:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:161:    def NamedTemporaryFile(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched the codebase for NamedTemporaryFile usages. Only main-code occurrence is in black.py at dump_to_file, which now opens with mode="w" and encoding="utf8". All other matches are in env/vendor paths and excluded by the requirement.
+
+
+Todo item 6 of 7 is correct
+description: 'Ensure there are no other temporary text files created in the project’s main code (excluding vendored/virtualenv content) without an explicit UTF-8 encoding; search for other NamedTemporaryFile usages in the top-level project code and confirm none write text without encoding.'
+Validating todo item 7 of 7
+description: 'If multiple definitions of dump_to_file exist within the project tree, ensure they are consistent and all use encoding="utf8" when opening temporary files for writing text (focus on the active code under test, not vendored packages).'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def dump_to_file\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black"
+]
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for dump_to_file definitions and found two: in black/black.py and env/src/black/black.py. The active file under test (black/black.py) now opens NamedTemporaryFile with encoding="utf8" exactly as required. The other copy appears to be vendored (env/src) and lacks the change, but per the instruction we focus on the active code under test, which is correct.
+
+
+Todo item 7 of 7 is correct
+description: 'If multiple definitions of dump_to_file exist within the project tree, ensure they are consistent and all use encoding="utf8" when opening temporary files for writing text (focus on the active code under test, not vendored packages).'
+Validating todo item 1 of 7
+description: 'In black/black.py, verify that dump_to_file uses tempfile.NamedTemporaryFile with encoding="utf8" in text mode (mode="w"), delete=False, and retains the original prefix/suffix ("blk_"/".log").'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Located dump_to_file in black/black.py and verified NamedTemporaryFile is opened with mode="w", prefix="blk_", suffix=".log", delete=False, and encoding="utf8" exactly as required.
+
+Todo item 1 of 7 is correct
+description: 'In black/black.py, verify that dump_to_file uses tempfile.NamedTemporaryFile with encoding="utf8" in text mode (mode="w"), delete=False, and retains the original prefix/suffix ("blk_"/".log").'
+
+Validating todo item 2 of 7
+description: 'Confirm dump_to_file in black/black.py still writes each provided string and appends a trailing newline when missing, and returns f.name (a str path), preserving the original behavior aside from the encoding change.'
+
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+2350:    err("Aborted!")
+2351:    for task in tasks:
+2352:        task.cancel()
+2353:
+2354:
+2355:def shutdown(loop: BaseEventLoop) -> None:
+2356:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+2357:    try:
+2358:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+2359:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+2360:        if not to_cancel:
+2361:            return
+2362:
+2363:        for task in to_cancel:
+2364:            task.cancel()
+2365:        loop.run_until_complete(
+2366:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+2367:        )
+2368:    finally:
+2369:        # `concurrent.futures.Future` objects cannot be cancelled once they
+2370:        # are already running. There might be some when the `shutdown()` happened.
+2371:        # Silence their logger's spew about the event loop being closed.
+2372:        cf_logger = logging.getLogger("concurrent.futures")
+2373:        cf_logger.setLevel(logging.CRITICAL)
+2374:        loop.close()
+2375:
+2376:
+2377:if __name__ == "__main__":
+2378:    main()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black/black.py lines 2327-2334, dump_to_file writes each provided string and appends a newline if missing (checks last char != "\n"), then returns f.name after the with block. The only change is adding encoding="utf8" to NamedTemporaryFile; the write/newline logic and return value are preserved.
+
+Todo item 2 of 7 is correct
+description: 'Confirm dump_to_file in black/black.py still writes each provided string and appends a trailing newline when missing, and returns f.name (a str path), preserving the original behavior aside from the encoding change.'
+
+Validating todo item 3 of 7
+description: 'Verify that all direct call sites of dump_to_file pass str arguments (no bytes), e.g., at black/black.py lines ~2288, ~2298, and ~2311, and in tests/test_black.py (lines ~150, ~165, ~178, ~393).'
+
+Calling tool: grepTool
+dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2311:        log = dump_to_file(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:150:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:165:        tmp_file = Path(black.dump_to_file(source))
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:178:            dump = black.dump_to_file(actual)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:393:            log_name = black.dump_to_file(*out_lines)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2280:            f"cannot use --safe with this file; failed to parse source file "
+2281:            f"with Python {major}.{minor}'s builtin AST. Re-run with --fast "
+2282:            f"or stop using deprecated Python 2 syntax. AST error message: {exc}"
+2283:        )
+2284:
+2285:    try:
+2286:        dst_ast = ast.parse(dst)
+2287:    except Exception as exc:
+2288:        log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
+2289:        raise AssertionError(
+2290:            f"INTERNAL ERROR: Black produced invalid code: {exc}. "
+2291:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2292:            f"This invalid output might be helpful: {log}"
+2293:        ) from None
+2294:
+2295:    src_ast_str = "\n".join(_v(src_ast))
+2296:    dst_ast_str = "\n".join(_v(dst_ast))
+2297:    if src_ast_str != dst_ast_str:
+2298:        log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
+2299:        raise AssertionError(
+2300:            f"INTERNAL ERROR: Black produced code that is not equivalent to "
+2301:            f"the source.  "
+2302:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2303:            f"This diff might be helpful: {log}"
+2304:        ) from None
+2305:
+2306:
+2307:def assert_stable(src: str, dst: str, line_length: int) -> None:
+2308:    """Raise AssertionError if `dst` reformats differently the second time."""
+2309:    newdst = format_str(dst, line_length=line_length)
+2310:    if dst != newdst:
+2311:        log = dump_to_file(
+2312:            diff(src, dst, "source", "first pass"),
+2313:            diff(dst, newdst, "first pass", "second pass"),
+2314:        )
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+2348:def cancel(tasks: List[asyncio.Task]) -> None:
+2349:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file, encoding="utf8") as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+190:        self.assertFormatEqual(expected, actual)
+191:        black.assert_equivalent(source, actual)
+192:        black.assert_stable(source, actual, line_length=ll)
+193:
+194:    @patch("black.dump_to_file", dump_to_stderr)
+195:    def test_string_quotes(self) -> None:
+196:        source, expected = read_data("string_quotes")
+197:        actual = fs(source)
+198:        self.assertFormatEqual(expected, actual)
+199:        black.assert_equivalent(source, actual)
+200:        black.assert_stable(source, actual, line_length=ll)
+201:
+202:    @patch("black.dump_to_file", dump_to_stderr)
+203:    def test_comments(self) -> None:
+204:        source, expected = read_data("comments")
+205:        actual = fs(source)
+206:        self.assertFormatEqual(expected, actual)
+207:        black.assert_equivalent(source, actual)
+208:        black.assert_stable(source, actual, line_length=ll)
+209:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+380:        err_lines = []
+381:
+382:        def out(msg: str, **kwargs: Any) -> None:
+383:            out_lines.append(msg)
+384:
+385:        def err(msg: str, **kwargs: Any) -> None:
+386:            err_lines.append(msg)
+387:
+388:        with patch("black.out", out), patch("black.err", err):
+389:            black.DebugVisitor.show(source)
+390:        actual = "\n".join(out_lines) + "\n"
+391:        log_name = ""
+392:        if expected != actual:
+393:            log_name = black.dump_to_file(*out_lines)
+394:        self.assertEqual(
+395:            expected,
+396:            actual,
+397:            f"AST print out is different. Actual version dumped to {log_name}",
+398:        )
+399:
+400:    def test_format_file_contents(self) -> None:
+401:        empty = ""
+402:        with self.assertRaises(black.NothingChanged):
+403:            black.format_file_contents(empty, line_length=ll, fast=False)
+404:        just_nl = "\n"
+405:        with self.assertRaises(black.NothingChanged):
+406:            black.format_file_contents(just_nl, line_length=ll, fast=False)
+407:        same = "l = [1, 2, 3]\n"
+408:        with self.assertRaises(black.NothingChanged):
+409:            black.format_file_contents(same, line_length=ll, fast=False)
+410:        different = "l = [1,2,3]"
+411:        expected = same
+412:        actual = black.format_file_contents(different, line_length=ll, fast=False)
+413:        self.assertEqual(expected, actual)
+414:        invalid = "return if you can"
+415:        with self.assertRaises(ValueError) as e:
+416:            black.format_file_contents(invalid, line_length=ll, fast=False)
+417:        self.assertEqual(str(e.exception), "Cannot parse: 1:7: return if you can")
+418:
+419:    def test_endmarker(self) -> None:
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:27:def read_data(name: str) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:from functools import partial
+3:from io import StringIO
+4:import os
+5:from pathlib import Path
+6:import sys
+7:from typing import Any, List, Tuple
+8:import unittest
+9:from unittest.mock import patch
+10:
+11:from click import unstyle
+12:
+13:import black
+14:
+15:ll = 88
+16:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+17:fs = partial(black.format_str, line_length=ll)
+18:THIS_FILE = Path(__file__)
+19:THIS_DIR = THIS_FILE.parent
+20:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+21:
+22:
+23:def dump_to_stderr(*output: str) -> str:
+24:    return "\n" + "\n".join(output) + "\n"
+25:
+26:
+27:def read_data(name: str) -> Tuple[str, str]:
+28:    """read_data('test_name') -> 'input', 'output'"""
+29:    if not name.endswith((".py", ".out", ".diff")):
+30:        name += ".py"
+31:    _input: List[str] = []
+32:    _output: List[str] = []
+33:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+34:        lines = test.readlines()
+35:    result = _input
+36:    for line in lines:
+37:        line = line.replace(EMPTY_LINE, "")
+38:        if line.rstrip() == "# output":
+39:            result = _output
+40:            continue
+41:
+42:        result.append(line)
+43:    if _input and not _output:
+44:        # If there's no output marker, treat the entire file as already pre-formatted.
+45:        _output = _input[:]
+46:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+47:
+48:
+49:class BlackTestCase(unittest.TestCase):
+50:    maxDiff = None
+51:
+52:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+53:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+54:            bdv: black.DebugVisitor[Any]
+55:            black.out("Expected tree:", fg="green")
+56:            try:
+57:                exp_node = black.lib2to3_parse(expected)
+58:                bdv = black.DebugVisitor()
+59:                list(bdv.visit(exp_node))
+60:            except Exception as ve:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for all direct dump_to_file calls and inspected each site. In black/black.py (lines 2288, 2298, 2311), arguments are strings: join(traceback.format_tb(...)) returns str, dst is str, and diff(...) returns str. In tests/test_black.py (lines 150, 165, 178, 393), source and actual come from read_data (returns str), and out_lines is a list of str. No bytes are passed at any call site.
+
+Todo item 3 of 7 is correct
+description: 'Verify that all direct call sites of dump_to_file pass str arguments (no bytes), e.g., at black/black.py lines ~2288, ~2298, and ~2311, and in tests/test_black.py (lines ~150, ~165, ~178, ~393).'
+
+Validating todo item 4 of 7
+description: 'Confirm tests/test_black.py:test_expression_ff reads the temporary file using UTF-8 (with open(tmp_file, encoding="utf8")) to match the new write encoding.'
+
+Calling tool: grepTool
+test_expression_ff\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/test_black.py:148:    def test_expression_ff(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/test_black.py
+120:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+121:        self.assertEqual(expected, actual)
+122:
+123:    @patch("black.dump_to_file", dump_to_stderr)
+124:    def test_setup(self) -> None:
+125:        source, expected = read_data("../setup")
+126:        actual = fs(source)
+127:        self.assertFormatEqual(expected, actual)
+128:        black.assert_equivalent(source, actual)
+129:        black.assert_stable(source, actual, line_length=ll)
+130:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+131:
+132:    @patch("black.dump_to_file", dump_to_stderr)
+133:    def test_function(self) -> None:
+134:        source, expected = read_data("function")
+135:        actual = fs(source)
+136:        self.assertFormatEqual(expected, actual)
+137:        black.assert_equivalent(source, actual)
+138:        black.assert_stable(source, actual, line_length=ll)
+139:
+140:    @patch("black.dump_to_file", dump_to_stderr)
+141:    def test_expression(self) -> None:
+142:        source, expected = read_data("expression")
+143:        actual = fs(source)
+144:        self.assertFormatEqual(expected, actual)
+145:        black.assert_equivalent(source, actual)
+146:        black.assert_stable(source, actual, line_length=ll)
+147:
+148:    def test_expression_ff(self) -> None:
+149:        source, expected = read_data("expression")
+150:        tmp_file = Path(black.dump_to_file(source))
+151:        try:
+152:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+153:            with open(tmp_file, encoding="utf8") as f:
+154:                actual = f.read()
+155:        finally:
+156:            os.unlink(tmp_file)
+157:        self.assertFormatEqual(expected, actual)
+158:        with patch("black.dump_to_file", dump_to_stderr):
+159:            black.assert_equivalent(source, actual)
+160:            black.assert_stable(source, actual, line_length=ll)
+161:
+162:    def test_expression_diff(self) -> None:
+163:        source, _ = read_data("expression.py")
+164:        expected, _ = read_data("expression.diff")
+165:        tmp_file = Path(black.dump_to_file(source))
+166:        hold_stdout = sys.stdout
+167:        try:
+168:            sys.stdout = StringIO()
+169:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+170:            sys.stdout.seek(0)
+171:            actual = sys.stdout.read()
+172:            actual = actual.replace(tmp_file.name, "<stdin>")
+173:        finally:
+174:            sys.stdout = hold_stdout
+175:            os.unlink(tmp_file)
+176:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+177:        if expected != actual:
+178:            dump = black.dump_to_file(actual)
+179:            msg = (
+180:                f"Expected diff isn't equal to the actual. If you made changes "
+181:                f"to expression.py and this is an anticipated difference, "
+182:                f"overwrite tests/expression.diff with {dump}."
+183:            )
+184:            self.assertEqual(expected, actual, msg)
+185:
+186:    @patch("black.dump_to_file", dump_to_stderr)
+187:    def test_fstring(self) -> None:
+188:        source, expected = read_data("fstring")
+189:        actual = fs(source)
+190:        self.assertFormatEqual(expected, actual)
+191:        black.assert_equivalent(source, actual)
+192:        black.assert_stable(source, actual, line_length=ll)
+193:
+194:    @patch("black.dump_to_file", dump_to_stderr)
+195:    def test_string_quotes(self) -> None:
+196:        source, expected = read_data("string_quotes")
+197:        actual = fs(source)
+198:        self.assertFormatEqual(expected, actual)
+199:        black.assert_equivalent(source, actual)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In tests/test_black.py at lines 153-154, test_expression_ff opens the temporary file with open(tmp_file, encoding="utf8") and reads it. This matches the new write encoding added in black.dump_to_file (encoding="utf8").
+
+Todo item 4 of 7 is correct
+description: 'Confirm tests/test_black.py:test_expression_ff reads the temporary file using UTF-8 (with open(tmp_file, encoding="utf8")) to match the new write encoding.'
+
+Validating todo item 5 of 7
+description: 'Verify that tests/expression.py contains non-ASCII characters (e.g., 'Ø' and 'ł') around lines 139–141, establishing the necessity of UTF-8 when writing the temp file.'
+
+Calling tool: grepTool
+(?i)tests/expression\.py
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.egg-info/SOURCES.txt:82:tests/expression.py
+
+Calling tool: globTool
+**/tests/expression.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/tests/expression.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/expression.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/tests/expression.py
+130:{"id": "1","type": "type","started_at": now(),"ended_at": now() + timedelta(days=10),"priority": 1,"import_session_id": 1,**kwargs}  # no trailing comma, this file is not 3.6+
+131:a = (1,)
+132:b = 1,
+133:c = 1
+134:d = (1,) + a + (2,)
+135:e = (1,).count(1)
+136:what_is_up_with_those_new_coord_names = (coord_names + set(vars_to_create)) + set(vars_to_remove)
+137:what_is_up_with_those_new_coord_names = (coord_names | set(vars_to_create)) - set(vars_to_remove)
+138:result = session.query(models.Customer.id).filter(models.Customer.account_id == account_id, models.Customer.email == email_address).order_by(models.Customer.id.asc(),).all()
+139:Ø = set()
+140:authors.łukasz.say_thanks()
+141:
+142:def gen():
+143:    yield from outside_of_generator
+144:    a = (yield)
+145:
+146:async def f():
+147:    await some.complicated[0].call(with_args=(True or (1 is not 1)))
+148:for x, in (1,), (2,), (3,): ...
+149:for y in (): ...
+150:for z in (i for i in (1, 2, 3)): ...
+151:for i in (call()): ...
+152:for j in (1 + (2 + 3)): ...
+153:while(this and that): ...
+154:if (
+155:    threading.current_thread() != threading.main_thread() and
+156:    threading.current_thread() != threading.main_thread() or
+157:    signal.getsignal(signal.SIGINT) != signal.default_int_handler
+158:):
+159:    return True
+160:if (
+161:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa |
+162:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+163:):
+164:    return True
+165:if (
+166:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa &
+167:    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+168:):
+169:    return True
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Confirmed non-ASCII characters in tests/expression.py around lines 139–141: line 139 contains ‘Ø = set()’ and line 140 contains ‘authors.łukasz.say_thanks()’, justifying the need for UTF-8 when writing the temp file.
+
+Todo item 5 of 7 is correct
+description: 'Verify that tests/expression.py contains non-ASCII characters (e.g., 'Ø' and 'ł') around lines 139–141, establishing the necessity of UTF-8 when writing the temp file.'
+
+Validating todo item 6 of 7
+description: 'Ensure there are no other temporary text files created in the project’s main code (excluding vendored/virtualenv content) without an explicit UTF-8 encoding; search for other NamedTemporaryFile usages in the top-level project code and confirm none write text without encoding.'
+
+Calling tool: grepTool
+NamedTemporaryFile\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2327:    with tempfile.NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/flake8_mypy.py:187:            with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:609:        f = tempfile.NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/docutils/writers/odf_odt/__init__.py:2274:                    imgfile2 = tempfile.NamedTemporaryFile('wb', delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_vendor/cachecontrol/filewrapper.py:29:        self.__buf = NamedTemporaryFile("rb+", delete=True)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/utils/filesystem.py:53:    with NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/pip/_internal/network/lazy_wheel.py:57:        self._file = NamedTemporaryFile()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:26:        with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/virtualenv/info.py:39:                with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/2/tempfile.pyi:63:def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/test/teststubtest.py:613:        whitelist = tempfile.NamedTemporaryFile(mode="w", delete=False)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:99:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:112:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:125:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:139:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:150:    def NamedTemporaryFile(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/3/tempfile.pyi:161:    def NamedTemporaryFile(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+2345:    )
+2346:
+2347:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched the codebase for NamedTemporaryFile usages. Only main-code occurrence is in black.py at dump_to_file, which now opens with mode="w" and encoding="utf8". All other matches are in env/vendor paths and excluded by the requirement.
+
+Todo item 6 of 7 is correct
+description: 'Ensure there are no other temporary text files created in the project’s main code (excluding vendored/virtualenv content) without an explicit UTF-8 encoding; search for other NamedTemporaryFile usages in the top-level project code and confirm none write text without encoding.'
+
+Validating todo item 7 of 7
+description: 'If multiple definitions of dump_to_file exist within the project tree, ensure they are consistent and all use encoding="utf8" when opening temporary files for writing text (focus on the active code under test, not vendored packages).'
+
+Calling tool: grepTool
+def dump_to_file\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py:2323:def dump_to_file(*output: str) -> str:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py:2323:def dump_to_file(*output: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/black.py
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-21/good/black/env/src/black/black.py
+2315:        raise AssertionError(
+2316:            f"INTERNAL ERROR: Black produced different code on the second pass "
+2317:            f"of the formatter.  "
+2318:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+2319:            f"This diff might be helpful: {log}"
+2320:        ) from None
+2321:
+2322:
+2323:def dump_to_file(*output: str) -> str:
+2324:    """Dump `output` to a temporary file. Return path to the file."""
+2325:    import tempfile
+2326:
+2327:    with tempfile.NamedTemporaryFile(
+2328:        mode="w", prefix="blk_", suffix=".log", delete=False
+2329:    ) as f:
+2330:        for lines in output:
+2331:            f.write(lines)
+2332:            if lines and lines[-1] != "\n":
+2333:                f.write("\n")
+2334:    return f.name
+2335:
+2336:
+2337:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+2338:    """Return a unified diff string between strings `a` and `b`."""
+2339:    import difflib
+2340:
+2341:    a_lines = [line + "\n" for line in a.split("\n")]
+2342:    b_lines = [line + "\n" for line in b.split("\n")]
+2343:    return "".join(
+2344:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for dump_to_file definitions and found two: in black/black.py and env/src/black/black.py. The active file under test (black/black.py) now opens NamedTemporaryFile with encoding="utf8" exactly as required. The other copy appears to be vendored (env/src) and lacks the change, but per the instruction we focus on the active code under test, which is correct.
+
+Todo item 7 of 7 is correct
+description: 'If multiple definitions of dump_to_file exist within the project tree, ensure they are consistent and all use encoding="utf8" when opening temporary files for writing text (focus on the active code under test, not vendored packages).'
+
+
+=== PHASE 2 COMPLETE ===
+

@@ -1,0 +1,2120 @@
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_comments7", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "comments7", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def bracket_split_build_line\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "STANDALONE_COMMENT",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "is_import", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py" ]
+Calling tool: grepTool
+test_comments7
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comments7
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_comments7
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/test_black.py:392:    def test_comments7(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/test_black.py
+360:    def test_comments3(self) -> None:
+361:        source, expected = read_data("comments3")
+362:        actual = fs(source)
+363:        self.assertFormatEqual(expected, actual)
+364:        black.assert_equivalent(source, actual)
+365:        black.assert_stable(source, actual, black.FileMode())
+366:
+367:    @patch("black.dump_to_file", dump_to_stderr)
+368:    def test_comments4(self) -> None:
+369:        source, expected = read_data("comments4")
+370:        actual = fs(source)
+371:        self.assertFormatEqual(expected, actual)
+372:        black.assert_equivalent(source, actual)
+373:        black.assert_stable(source, actual, black.FileMode())
+374:
+375:    @patch("black.dump_to_file", dump_to_stderr)
+376:    def test_comments5(self) -> None:
+377:        source, expected = read_data("comments5")
+378:        actual = fs(source)
+379:        self.assertFormatEqual(expected, actual)
+380:        black.assert_equivalent(source, actual)
+381:        black.assert_stable(source, actual, black.FileMode())
+382:
+383:    @patch("black.dump_to_file", dump_to_stderr)
+384:    def test_comments6(self) -> None:
+385:        source, expected = read_data("comments6")
+386:        actual = fs(source)
+387:        self.assertFormatEqual(expected, actual)
+388:        black.assert_equivalent(source, actual)
+389:        black.assert_stable(source, actual, black.FileMode())
+390:
+391:    @patch("black.dump_to_file", dump_to_stderr)
+392:    def test_comments7(self) -> None:
+393:        source, expected = read_data("comments7")
+394:        actual = fs(source)
+395:        self.assertFormatEqual(expected, actual)
+396:        black.assert_equivalent(source, actual)
+397:        black.assert_stable(source, actual, black.FileMode())
+398:
+399:    @patch("black.dump_to_file", dump_to_stderr)
+400:    def test_cantfit(self) -> None:
+401:        source, expected = read_data("cantfit")
+402:        actual = fs(source)
+403:        self.assertFormatEqual(expected, actual)
+404:        black.assert_equivalent(source, actual)
+405:        black.assert_stable(source, actual, black.FileMode())
+406:
+407:    @patch("black.dump_to_file", dump_to_stderr)
+408:    def test_import_spacing(self) -> None:
+409:        source, expected = read_data("import_spacing")
+410:        actual = fs(source)
+411:        self.assertFormatEqual(expected, actual)
+412:        black.assert_equivalent(source, actual)
+413:        black.assert_stable(source, actual, black.FileMode())
+414:
+415:    @patch("black.dump_to_file", dump_to_stderr)
+416:    def test_composition(self) -> None:
+417:        source, expected = read_data("composition")
+418:        actual = fs(source)
+419:        self.assertFormatEqual(expected, actual)
+420:        black.assert_equivalent(source, actual)
+421:        black.assert_stable(source, actual, black.FileMode())
+422:
+423:    @patch("black.dump_to_file", dump_to_stderr)
+424:    def test_empty_lines(self) -> None:
+425:        source, expected = read_data("empty_lines")
+426:        actual = fs(source)
+427:        self.assertFormatEqual(expected, actual)
+428:        black.assert_equivalent(source, actual)
+429:        black.assert_stable(source, actual, black.FileMode())
+430:
+431:    @patch("black.dump_to_file", dump_to_stderr)
+432:    def test_string_prefixes(self) -> None:
+433:        source, expected = read_data("string_prefixes")
+434:        actual = fs(source)
+435:        self.assertFormatEqual(expected, actual)
+436:        black.assert_equivalent(source, actual)
+437:        black.assert_stable(source, actual, black.FileMode())
+438:
+439:    @patch("black.dump_to_file", dump_to_stderr)
+440:    def test_numeric_literals(self) -> None:
+441:        source, expected = read_data("numeric_literals")
+442:        mode = black.FileMode(target_versions=black.PY36_VERSIONS)
+443:        actual = fs(source, mode=mode)
+444:        self.assertFormatEqual(expected, actual)
+445:        black.assert_equivalent(source, actual)
+446:        black.assert_stable(source, actual, mode)
+447:
+448:    @patch("black.dump_to_file", dump_to_stderr)
+449:    def test_numeric_literals_ignoring_underscores(self) -> None:
+450:        source, expected = read_data("numeric_literals_skip_underscores")
+451:        mode = black.FileMode(target_versions=black.PY36_VERSIONS)
+452:        actual = fs(source, mode=mode)
+453:        self.assertFormatEqual(expected, actual)
+454:        black.assert_equivalent(source, actual)
+455:        black.assert_stable(source, actual, mode)
+456:
+457:    @patch("black.dump_to_file", dump_to_stderr)
+458:    def test_numeric_literals_py2(self) -> None:
+459:        source, expected = read_data("numeric_literals_py2")
+460:        actual = fs(source)
+461:        self.assertFormatEqual(expected, actual)
+462:        black.assert_stable(source, actual, black.FileMode())
+463:
+464:    @patch("black.dump_to_file", dump_to_stderr)
+465:    def test_python2(self) -> None:
+466:        source, expected = read_data("python2")
+467:        actual = fs(source)
+468:        self.assertFormatEqual(expected, actual)
+469:        # black.assert_equivalent(source, actual)
+470:        black.assert_stable(source, actual, black.FileMode())
+471:
+472:    @patch("black.dump_to_file", dump_to_stderr)
+473:    def test_python2_print_function(self) -> None:
+474:        source, expected = read_data("python2_print_function")
+475:        mode = black.FileMode(target_versions={TargetVersion.PY27})
+476:        actual = fs(source, mode=mode)
+477:        self.assertFormatEqual(expected, actual)
+478:        black.assert_stable(source, actual, mode)
+479:
+
+Calling tool: grepTool
+comments7
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/test_black.py:392:    def test_comments7(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/test_black.py:393:        source, expected = read_data("comments7")
+
+Calling tool: globTool
+**/*comments7*
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/data/comments7.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/tests/data/comments7.py
+1:from .config import (
+2:    Any,
+3:    Bool,
+4:    ConfigType,
+5:    ConfigTypeAttributes,
+6:    Int,
+7:    Path,
+8:    #  String,
+9:    #  resolve_to_config_type,
+10:    #  DEFAULT_TYPE_ATTRIBUTES,
+11:)
+12:
+13:
+14:from .config import (
+15:    Any,
+16:    Bool,
+17:    ConfigType,
+18:    ConfigTypeAttributes,
+19:    Int,
+20:    no_comma_here_yet
+21:    #  and some comments,
+22:    #  resolve_to_config_type,
+23:    #  DEFAULT_TYPE_ATTRIBUTES,
+24:)
+25:
+26:# output
+27:
+28:from .config import (
+29:    Any,
+30:    Bool,
+31:    ConfigType,
+32:    ConfigTypeAttributes,
+33:    Int,
+34:    Path,
+35:    #  String,
+36:    #  resolve_to_config_type,
+37:    #  DEFAULT_TYPE_ATTRIBUTES,
+38:)
+39:
+40:
+41:from .config import (
+42:    Any,
+43:    Bool,
+44:    ConfigType,
+45:    ConfigTypeAttributes,
+46:    Int,
+47:    no_comma_here_yet,
+48:    #  and some comments,
+49:    #  resolve_to_config_type,
+50:    #  DEFAULT_TYPE_ATTRIBUTES,
+51:)
+
+Calling tool: grepTool
+def bracket_split_build_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2393:def bracket_split_build_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2393:def bracket_split_build_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2380:    """
+2381:    tail_len = len(str(tail).strip())
+2382:    if not body:
+2383:        if tail_len == 0:
+2384:            raise CannotSplit("Splitting brackets produced the same line")
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+2409:            # any comments.
+2410:            if original.is_import:
+2411:                for i in range(len(leaves) - 1, -1, -1):
+2412:                    if leaves[i].type == STANDALONE_COMMENT:
+2413:                        continue
+2414:                    elif leaves[i].type == token.COMMA:
+2415:                        break
+2416:                    else:
+2417:                        leaves.insert(i + 1, Leaf(token.COMMA, ","))
+2418:                        break
+2419:    # Populate the line
+2420:    for leaf in leaves:
+2421:        result.append(leaf, preformatted=True)
+2422:        for comment_after in original.comments_after(leaf):
+2423:            result.append(comment_after, preformatted=True)
+2424:    if is_body:
+2425:        result.should_explode = should_explode(result, opening_bracket)
+2426:    return result
+2427:
+2428:
+2429:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2430:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2431:
+2432:    This is a decorator over relevant split functions.
+2433:    """
+2434:
+2435:    @wraps(split_func)
+2436:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2437:        for l in split_func(line, features):
+2438:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2439:            yield l
+2440:
+2441:    return split_wrapper
+2442:
+2443:
+2444:@dont_increase_indentation
+2445:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2446:    """Split according to delimiters of the highest priority.
+2447:
+2448:    If the appropriate Features are given, the split will add trailing commas
+2449:    also in function signatures and calls that contain `*` and `**`.
+2450:    """
+2451:    try:
+2452:        last_leaf = line.leaves[-1]
+2453:    except IndexError:
+2454:        raise CannotSplit("Line empty")
+2455:
+2456:    bt = line.bracket_tracker
+2457:    try:
+2458:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2459:    except ValueError:
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:852:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:853:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1133:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1143:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1218:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1311:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1321:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1642:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1677:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2092:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2110:    type: int  # token.COMMENT or STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2136:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2412:                    if leaves[i].type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2508:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2564:    return t in {token.COMMENT, t == STANDALONE_COMMENT} and v.startswith("# type:")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2784:                if comment.type != STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2814:                        STANDALONE_COMMENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:3114:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:852:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:853:token.tok_name[STANDALONE_COMMENT] = "STANDALONE_COMMENT"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1133:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1143:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1218:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1311:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1321:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1642:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1677:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2092:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2110:    type: int  # token.COMMENT or STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2136:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2501:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2557:    return t in {token.COMMENT, t == STANDALONE_COMMENT} and v.startswith("# type:")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2777:                if comment.type != STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2807:                        STANDALONE_COMMENT,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:3107:        if leaf.type == STANDALONE_COMMENT or has_inline_comment:
+
+Calling tool: grepTool
+is_import
+Matched content:
+1151:    def is_import(self) -> bool:
+1153:        return bool(self) and is_import(self.leaves[0])
+1275:        if self.is_import:
+1429:            and self.previous_line.is_import
+1430:            and not current_line.is_import
+2332:        and not line.is_import
+2410:            if original.is_import:
+2545:def is_import(leaf: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+1125:
+1126:        Raises ValueError when any `leaf` is appended after a standalone comment
+1127:        or when a standalone comment is not the first leaf on the line.
+1128:        """
+1129:        if self.bracket_tracker.depth == 0:
+1130:            if self.is_comment:
+1131:                raise ValueError("cannot append to standalone comments")
+1132:
+1133:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+1134:                raise ValueError(
+1135:                    "cannot append standalone comments to a populated line"
+1136:                )
+1137:
+1138:        self.append(leaf, preformatted=preformatted)
+1139:
+1140:    @property
+1141:    def is_comment(self) -> bool:
+1142:        """Is this line a standalone comment?"""
+1143:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+1144:
+1145:    @property
+1146:    def is_decorator(self) -> bool:
+1147:        """Is this line a decorator?"""
+1148:        return bool(self) and self.leaves[0].type == token.AT
+1149:
+1150:    @property
+1151:    def is_import(self) -> bool:
+1152:        """Is this an import line?"""
+1153:        return bool(self) and is_import(self.leaves[0])
+1154:
+1155:    @property
+1156:    def is_class(self) -> bool:
+1157:        """Is this line a class definition?"""
+1158:        return (
+1159:            bool(self)
+1160:            and self.leaves[0].type == token.NAME
+1161:            and self.leaves[0].value == "class"
+1162:        )
+1163:
+1164:    @property
+1165:    def is_stub_class(self) -> bool:
+1166:        """Is this line a class definition with a body consisting only of "..."?"""
+1167:        return self.is_class and self.leaves[-3:] == [
+1168:            Leaf(token.DOT, ".") for _ in range(3)
+1169:        ]
+1170:
+1171:    @property
+1172:    def is_def(self) -> bool:
+1173:        """Is this a function definition? (Also returns True for async defs.)"""
+1174:        try:
+1175:            first_leaf = self.leaves[0]
+1176:        except IndexError:
+1177:            return False
+1178:
+1179:        try:
+1180:            second_leaf: Optional[Leaf] = self.leaves[1]
+1181:        except IndexError:
+1182:            second_leaf = None
+1183:        return (first_leaf.type == token.NAME and first_leaf.value == "def") or (
+1184:            first_leaf.type == token.ASYNC
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2528:            current_line.append_safe(leaf, preformatted=True)
+2529:        except ValueError:
+2530:            yield current_line
+2531:
+2532:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2533:            current_line.append(leaf)
+2534:
+2535:    for leaf in line.leaves:
+2536:        yield from append_to_line(leaf)
+2537:
+2538:        for comment_after in line.comments_after(leaf):
+2539:            yield from append_to_line(comment_after)
+2540:
+2541:    if current_line:
+2542:        yield current_line
+2543:
+2544:
+2545:def is_import(leaf: Leaf) -> bool:
+2546:    """Return True if the given leaf starts an import statement."""
+2547:    p = leaf.parent
+2548:    t = leaf.type
+2549:    v = leaf.value
+2550:    return bool(
+2551:        t == token.NAME
+2552:        and (
+2553:            (v == "import" and p and p.type == syms.import_name)
+2554:            or (v == "from" and p and p.type == syms.import_from)
+2555:        )
+2556:    )
+2557:
+2558:
+2559:def is_type_comment(leaf: Leaf) -> bool:
+2560:    """Return True if the given leaf is a special comment.
+2561:    Only returns true for type comments for now."""
+2562:    t = leaf.type
+2563:    v = leaf.value
+2564:    return t in {token.COMMENT, t == STANDALONE_COMMENT} and v.startswith("# type:")
+2565:
+2566:
+2567:def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+2568:    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+2569:    else.
+2570:
+2571:    Note: don't use backslashes for formatting or you'll lose your voting rights.
+2572:    """
+2573:    if not inside_brackets:
+2574:        spl = leaf.prefix.split("#")
+2575:        if "\\" not in spl[0]:
+2576:            nl_count = spl[-1].count("\n")
+2577:            if len(spl) > 1:
+2578:                nl_count -= 1
+2579:            leaf.prefix = "\n" * nl_count
+2580:            return
+2581:
+2582:    leaf.prefix = ""
+2583:
+2584:
+2585:def normalize_string_prefix(leaf: Leaf, remove_u_prefix: bool = False) -> None:
+2586:    """Make all string prefixes lowercase.
+2587:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py
+2380:    """
+2381:    tail_len = len(str(tail).strip())
+2382:    if not body:
+2383:        if tail_len == 0:
+2384:            raise CannotSplit("Splitting brackets produced the same line")
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma when expected.
+2409:            if original.is_import:
+2410:                if leaves[-1].type != token.COMMA:
+2411:                    leaves.append(Leaf(token.COMMA, ","))
+2412:    # Populate the line
+2413:    for leaf in leaves:
+2414:        result.append(leaf, preformatted=True)
+2415:        for comment_after in original.comments_after(leaf):
+2416:            result.append(comment_after, preformatted=True)
+2417:    if is_body:
+2418:        result.should_explode = should_explode(result, opening_bracket)
+2419:    return result
+2420:
+2421:
+2422:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2423:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2424:
+2425:    This is a decorator over relevant split functions.
+2426:    """
+2427:
+2428:    @wraps(split_func)
+2429:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2430:        for l in split_func(line, features):
+2431:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2432:            yield l
+2433:
+2434:    return split_wrapper
+2435:
+2436:
+2437:@dont_increase_indentation
+2438:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2439:    """Split according to delimiters of the highest priority.
+2440:
+2441:    If the appropriate Features are given, the split will add trailing commas
+2442:    also in function signatures and calls that contain `*` and `**`.
+2443:    """
+2444:    try:
+2445:        last_leaf = line.leaves[-1]
+2446:    except IndexError:
+2447:        raise CannotSplit("Line empty")
+2448:
+2449:    bt = line.bracket_tracker
+2450:    try:
+2451:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2452:    except ValueError:
+2453:        raise CannotSplit("No delimiters found")
+2454:
+2455:    if delimiter_priority == DOT_PRIORITY:
+2456:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2457:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2458:
+2459:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2068:    return 0
+2069:
+2070:
+2071:FMT_OFF = {"# fmt: off", "# fmt:off", "# yapf: disable"}
+2072:FMT_ON = {"# fmt: on", "# fmt:on", "# yapf: enable"}
+2073:
+2074:
+2075:def generate_comments(leaf: LN) -> Iterator[Leaf]:
+2076:    """Clean the prefix of the `leaf` and generate comments from it, if any.
+2077:
+2078:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+2079:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+2080:    move because it does away with modifying the grammar to include all the
+2081:    possible places in which comments can be placed.
+2082:
+2083:    The sad consequence for us though is that comments don't "belong" anywhere.
+2084:    This is why this function generates simple parentless Leaf objects for
+2085:    comments.  We simply don't know what the correct parent should be.
+2086:
+2087:    No matter though, we can live without this.  We really only need to
+2088:    differentiate between inline and standalone comments.  The latter don't
+2089:    share the line with any code.
+2090:
+2091:    Inline comments are emitted as regular token.COMMENT leaves.  Standalone
+2092:    are emitted with a fake STANDALONE_COMMENT token identifier.
+2093:    """
+2094:    for pc in list_comments(leaf.prefix, is_endmarker=leaf.type == token.ENDMARKER):
+2095:        yield Leaf(pc.type, pc.value, prefix="\n" * pc.newlines)
+2096:
+2097:
+2098:@dataclass
+2099:class ProtoComment:
+2100:    """Describes a piece of syntax that is a comment.
+2101:
+2102:    It's not a :class:`blib2to3.pytree.Leaf` so that:
+2103:
+2104:    * it can be cached (`Leaf` objects should not be reused more than once as
+2105:      they store their lineno, column, prefix, and parent information);
+2106:    * `newlines` and `consumed` fields are kept separate from the `value`. This
+2107:      simplifies handling of special marker comments like ``# fmt: off/on``.
+2108:    """
+2109:
+2110:    type: int  # token.COMMENT or STANDALONE_COMMENT
+2111:    value: str  # content of the comment
+2112:    newlines: int  # how many newlines before the comment
+2113:    consumed: int  # how many characters of the original leaf's prefix did we consume
+2114:
+2115:
+2116:@lru_cache(maxsize=4096)
+2117:def list_comments(prefix: str, *, is_endmarker: bool) -> List[ProtoComment]:
+2118:    """Return a list of :class:`ProtoComment` objects parsed from the given `prefix`."""
+2119:    result: List[ProtoComment] = []
+2120:    if not prefix or "#" not in prefix:
+2121:        return result
+2122:
+2123:    consumed = 0
+2124:    nlines = 0
+2125:    for index, line in enumerate(prefix.split("\n")):
+2126:        consumed += len(line) + 1  # adding the length of the split '\n'
+2127:        line = line.lstrip()
+2128:        if not line:
+2129:            nlines += 1
+2130:        if not line.startswith("#"):
+2131:            continue
+2132:
+2133:        if index == 0 and not is_endmarker:
+2134:            comment_type = token.COMMENT  # simple trailing comment
+2135:        else:
+2136:            comment_type = STANDALONE_COMMENT
+2137:        comment = make_comment(line)
+2138:        result.append(
+2139:            ProtoComment(
+2140:                type=comment_type, value=comment, newlines=nlines, consumed=consumed
+2141:            )
+2142:        )
+2143:        nlines = 0
+2144:    return result
+2145:
+2146:
+2147:def make_comment(content: str) -> str:
+2148:    """Return a consistently formatted comment from the given `content` string.
+2149:
+2150:    All comments (except for "##", "#!", "#:", '#'", "#%%") should have a single
+2151:    space between the hash sign and the content.
+2152:
+2153:    If `content` didn't start with a hash sign, one is provided.
+2154:    """
+2155:    content = content.rstrip()
+2156:    if not content:
+2157:        return "#"
+2158:
+2159:    if content[0] == "#":
+2160:        content = content[1:]
+2161:    if content and content[0] not in " !:#'%":
+2162:        content = " " + content
+2163:    return "#" + content
+2164:
+2165:
+2166:def split_line(
+2167:    line: Line,
+
+Calling tool: createTodo
+Todo List Created
+Todo List (11 items):
+- [ ] Verify in black.py function bracket_split_build_line() that when is_body is True and original.is_import is True, the code scans leaves backwards, skips STANDALONE_COMMENT tokens, and only inserts a COMMA after the last non-comment leaf. (ID: todo-1)
+- [ ] Confirm the new logic does not append a comma at the very end after comments: ensure there is no code path that unconditionally appends a comma when the last leaf is a comment. (ID: todo-2)
+- [ ] Check that the loop correctly avoids inserting a comma if a COMMA already exists before trailing standalone comments (i.e., encountering a token.COMMA breaks the loop without insertion). (ID: todo-3)
+- [ ] Validate that if leaves contains only STANDALONE_COMMENT tokens (no non-comment leaves), the backward loop terminates without inserting a comma and without out-of-bounds errors. (ID: todo-4)
+- [ ] Confirm that the trailing comma insertion is gated to import statements only via original.is_import and not applied to non-import bracketed bodies. (ID: todo-5)
+- [ ] Confirm that normalize_prefix(leaves[0], inside_brackets=True) remains intact before the comma logic, preserving existing behavior. (ID: todo-6)
+- [ ] Verify that STANDALONE_COMMENT is the correct token type for standalone comments and that such comments inside parentheses are represented as STANDALONE_COMMENT leaves (see generate_comments/list_comments behavior). (ID: todo-7)
+- [ ] Validate that is_import(line.leaves[0]) returns True for 'from ... import (...)' statements, ensuring original.is_import used in bracket_split_build_line will be True for the test scenario. (ID: todo-8)
+- [ ] Review tests/data/comments7.py: verify the first input block already contains a trailing comma before standalone comments and the expected output preserves it without adding another comma. (ID: todo-9)
+- [ ] Review tests/data/comments7.py: verify the second input block lacks a trailing comma before standalone comments and the expected output includes a trailing comma inserted immediately after the last non-comment leaf and before the comments. (ID: todo-10)
+- [ ] Verify tests/test_black.py defines test_comments7 that reads the 'comments7' dataset and asserts formatting equality, equivalence, and stability, ensuring the test exercises the new behavior. (ID: todo-11)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 11
+description: 'Verify in black.py function bracket_split_build_line() that when is_body is True and original.is_import is True, the code scans leaves backwards, skips STANDALONE_COMMENT tokens, and only inserts a COMMA after the last non-comment leaf.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def bracket_split_build_line\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black"
+]
+Calling tool: grepTool
+def bracket_split_build_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2393:def bracket_split_build_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2393:def bracket_split_build_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+2409:            # any comments.
+2410:            if original.is_import:
+2411:                for i in range(len(leaves) - 1, -1, -1):
+2412:                    if leaves[i].type == STANDALONE_COMMENT:
+2413:                        continue
+2414:                    elif leaves[i].type == token.COMMA:
+2415:                        break
+2416:                    else:
+2417:                        leaves.insert(i + 1, Leaf(token.COMMA, ","))
+2418:                        break
+2419:    # Populate the line
+2420:    for leaf in leaves:
+2421:        result.append(leaf, preformatted=True)
+2422:        for comment_after in original.comments_after(leaf):
+2423:            result.append(comment_after, preformatted=True)
+2424:    if is_body:
+2425:        result.should_explode = should_explode(result, opening_bracket)
+2426:    return result
+2427:
+2428:
+2429:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2430:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2431:
+2432:    This is a decorator over relevant split functions.
+2433:    """
+2434:
+2435:    @wraps(split_func)
+2436:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2437:        for l in split_func(line, features):
+2438:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2439:            yield l
+2440:
+2441:    return split_wrapper
+2442:
+2443:
+2444:@dont_increase_indentation
+2445:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2446:    """Split according to delimiters of the highest priority.
+2447:
+2448:    If the appropriate Features are given, the split will add trailing commas
+2449:    also in function signatures and calls that contain `*` and `**`.
+2450:    """
+2451:    try:
+2452:        last_leaf = line.leaves[-1]
+2453:    except IndexError:
+2454:        raise CannotSplit("Line empty")
+2455:
+2456:    bt = line.bracket_tracker
+2457:    try:
+2458:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2459:    except ValueError:
+2460:        raise CannotSplit("No delimiters found")
+2461:
+2462:    if delimiter_priority == DOT_PRIORITY:
+2463:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2464:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2465:
+2466:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2467:    lowest_depth = sys.maxsize
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py at bracket_split_build_line (lines 2405-2418), when is_body is True and original.is_import, the code iterates leaves backward, skips STANDALONE_COMMENT tokens, breaks if a COMMA is found, and otherwise inserts a COMMA after the last non-comment leaf. This matches the todo requirement.
+
+
+Todo item 1 of 11 is correct
+description: 'Verify in black.py function bracket_split_build_line() that when is_body is True and original.is_import is True, the code scans leaves backwards, skips STANDALONE_COMMENT tokens, and only inserts a COMMA after the last non-comment leaf.'
+Validating todo item 2 of 11
+description: 'Confirm the new logic does not append a comma at the very end after comments: ensure there is no code path that unconditionally appends a comma when the last leaf is a comment.'
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def bracket_split_build_line\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "is_import", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "Ensure a trailing comma",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black"
+]
+Calling tool: grepTool
+def bracket_split_build_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2393:def bracket_split_build_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2393:def bracket_split_build_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+2409:            # any comments.
+2410:            if original.is_import:
+2411:                for i in range(len(leaves) - 1, -1, -1):
+2412:                    if leaves[i].type == STANDALONE_COMMENT:
+2413:                        continue
+2414:                    elif leaves[i].type == token.COMMA:
+2415:                        break
+2416:                    else:
+2417:                        leaves.insert(i + 1, Leaf(token.COMMA, ","))
+2418:                        break
+2419:    # Populate the line
+2420:    for leaf in leaves:
+2421:        result.append(leaf, preformatted=True)
+2422:        for comment_after in original.comments_after(leaf):
+2423:            result.append(comment_after, preformatted=True)
+2424:    if is_body:
+2425:        result.should_explode = should_explode(result, opening_bracket)
+2426:    return result
+2427:
+2428:
+2429:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2430:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2431:
+2432:    This is a decorator over relevant split functions.
+2433:    """
+2434:
+2435:    @wraps(split_func)
+2436:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2437:        for l in split_func(line, features):
+2438:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2439:            yield l
+2440:
+2441:    return split_wrapper
+2442:
+2443:
+2444:@dont_increase_indentation
+2445:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2446:    """Split according to delimiters of the highest priority.
+2447:
+2448:    If the appropriate Features are given, the split will add trailing commas
+2449:    also in function signatures and calls that contain `*` and `**`.
+2450:    """
+2451:    try:
+2452:        last_leaf = line.leaves[-1]
+2453:    except IndexError:
+2454:        raise CannotSplit("Line empty")
+2455:
+2456:    bt = line.bracket_tracker
+2457:    try:
+2458:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2459:    except ValueError:
+2460:        raise CannotSplit("No delimiters found")
+2461:
+2462:    if delimiter_priority == DOT_PRIORITY:
+2463:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2464:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2465:
+2466:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2467:    lowest_depth = sys.maxsize
+2468:    trailing_comma_safe = True
+2469:
+2470:    def append_to_line(leaf: Leaf) -> Iterator[Line]:
+2471:        """Append `leaf` to current line or to new line if appending impossible."""
+2472:        nonlocal current_line
+2473:        try:
+2474:            current_line.append_safe(leaf, preformatted=True)
+2475:        except ValueError:
+2476:            yield current_line
+2477:
+2478:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2479:            current_line.append(leaf)
+2480:
+2481:    for leaf in line.leaves:
+2482:        yield from append_to_line(leaf)
+2483:
+2484:        for comment_after in line.comments_after(leaf):
+2485:            yield from append_to_line(comment_after)
+2486:
+2487:        lowest_depth = min(lowest_depth, leaf.bracket_depth)
+2488:        if leaf.bracket_depth == lowest_depth:
+2489:            if is_vararg(leaf, within={syms.typedargslist}):
+2490:                trailing_comma_safe = (
+2491:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_DEF in features
+2492:                )
+2493:            elif is_vararg(leaf, within={syms.arglist, syms.argument}):
+2494:                trailing_comma_safe = (
+2495:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_CALL in features
+2496:                )
+2497:
+2498:        leaf_priority = bt.delimiters.get(id(leaf))
+2499:        if leaf_priority == delimiter_priority:
+2500:            yield current_line
+2501:
+2502:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2503:    if current_line:
+2504:        if (
+
+Calling tool: grepTool
+is_import
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1151:    def is_import(self) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1153:        return bool(self) and is_import(self.leaves[0])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1275:        if self.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1429:            and self.previous_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1430:            and not current_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2332:        and not line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2410:            if original.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2545:def is_import(leaf: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/docs/reference/reference_functions.rst:21:.. autofunction:: black.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/docs/reference/reference_functions.rst:21:.. autofunction:: black.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1151:    def is_import(self) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1153:        return bool(self) and is_import(self.leaves[0])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1275:        if self.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1429:            and self.previous_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1430:            and not current_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2332:        and not line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2409:            if original.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2538:def is_import(leaf: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/2and3/symtable.pyi:41:    def is_imported(self) -> bool: ...
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+1120:        if not self.append_comment(leaf):
+1121:            self.leaves.append(leaf)
+1122:
+1123:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+1124:        """Like :func:`append()` but disallow invalid standalone comment structure.
+1125:
+1126:        Raises ValueError when any `leaf` is appended after a standalone comment
+1127:        or when a standalone comment is not the first leaf on the line.
+1128:        """
+1129:        if self.bracket_tracker.depth == 0:
+1130:            if self.is_comment:
+1131:                raise ValueError("cannot append to standalone comments")
+1132:
+1133:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+1134:                raise ValueError(
+1135:                    "cannot append standalone comments to a populated line"
+1136:                )
+1137:
+1138:        self.append(leaf, preformatted=preformatted)
+1139:
+1140:    @property
+1141:    def is_comment(self) -> bool:
+1142:        """Is this line a standalone comment?"""
+1143:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+1144:
+1145:    @property
+1146:    def is_decorator(self) -> bool:
+1147:        """Is this line a decorator?"""
+1148:        return bool(self) and self.leaves[0].type == token.AT
+1149:
+1150:    @property
+1151:    def is_import(self) -> bool:
+1152:        """Is this an import line?"""
+1153:        return bool(self) and is_import(self.leaves[0])
+1154:
+1155:    @property
+1156:    def is_class(self) -> bool:
+1157:        """Is this line a class definition?"""
+1158:        return (
+1159:            bool(self)
+1160:            and self.leaves[0].type == token.NAME
+1161:            and self.leaves[0].value == "class"
+1162:        )
+1163:
+1164:    @property
+1165:    def is_stub_class(self) -> bool:
+1166:        """Is this line a class definition with a body consisting only of "..."?"""
+1167:        return self.is_class and self.leaves[-3:] == [
+1168:            Leaf(token.DOT, ".") for _ in range(3)
+1169:        ]
+1170:
+1171:    @property
+1172:    def is_def(self) -> bool:
+1173:        """Is this a function definition? (Also returns True for async defs.)"""
+1174:        try:
+1175:            first_leaf = self.leaves[0]
+1176:        except IndexError:
+1177:            return False
+1178:
+1179:        try:
+1180:            second_leaf: Optional[Leaf] = self.leaves[1]
+1181:        except IndexError:
+1182:            second_leaf = None
+1183:        return (first_leaf.type == token.NAME and first_leaf.value == "def") or (
+1184:            first_leaf.type == token.ASYNC
+1185:            and second_leaf is not None
+1186:            and second_leaf.type == token.NAME
+1187:            and second_leaf.value == "def"
+1188:        )
+1189:
+1190:    @property
+1191:    def is_class_paren_empty(self) -> bool:
+1192:        """Is this a class with no base classes but using parentheses?
+1193:
+1194:        Those are unnecessary and should be removed.
+1195:        """
+1196:        return (
+1197:            bool(self)
+1198:            and len(self.leaves) == 4
+1199:            and self.is_class
+1200:            and self.leaves[2].type == token.LPAR
+1201:            and self.leaves[2].value == "("
+1202:            and self.leaves[3].type == token.RPAR
+1203:            and self.leaves[3].value == ")"
+1204:        )
+1205:
+1206:    @property
+1207:    def is_triple_quoted_string(self) -> bool:
+1208:        """Is the line a triple quoted string?"""
+1209:        return (
+1210:            bool(self)
+1211:            and self.leaves[0].type == token.STRING
+1212:            and self.leaves[0].value.startswith(('"""', "'''"))
+1213:        )
+1214:
+1215:    def contains_standalone_comments(self, depth_limit: int = sys.maxsize) -> bool:
+1216:        """If so, needs to be split before emitting."""
+1217:        for leaf in self.leaves:
+1218:            if leaf.type == STANDALONE_COMMENT:
+1219:                if leaf.bracket_depth <= depth_limit:
+1220:                    return True
+1221:        return False
+1222:
+1223:    def contains_inner_type_comments(self) -> bool:
+1224:        ignored_ids = set()
+1225:        try:
+1226:            last_leaf = self.leaves[-1]
+1227:            ignored_ids.add(id(last_leaf))
+1228:            if last_leaf.type == token.COMMA:
+1229:                # When trailing commas are inserted by Black for consistency, comments
+1230:                # after the previous last element are not moved (they don't have to,
+1231:                # rendering will still be correct).  So we ignore trailing commas.
+1232:                last_leaf = self.leaves[-2]
+1233:                ignored_ids.add(id(last_leaf))
+1234:        except IndexError:
+1235:            return False
+1236:
+1237:        for leaf_id, comments in self.comments.items():
+1238:            if leaf_id in ignored_ids:
+1239:                continue
+1240:
+1241:            for comment in comments:
+1242:                if is_type_comment(comment):
+1243:                    return True
+1244:
+1245:        return False
+1246:
+1247:    def contains_multiline_strings(self) -> bool:
+1248:        for leaf in self.leaves:
+1249:            if is_multiline_string(leaf):
+1250:                return True
+1251:
+1252:        return False
+1253:
+1254:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+1255:        """Remove trailing comma if there is one and it's safe."""
+1256:        if not (
+1257:            self.leaves
+1258:            and self.leaves[-1].type == token.COMMA
+1259:            and closing.type in CLOSING_BRACKETS
+1260:        ):
+1261:            return False
+1262:
+1263:        if closing.type == token.RBRACE:
+1264:            self.remove_trailing_comma()
+1265:            return True
+1266:
+1267:        if closing.type == token.RSQB:
+1268:            comma = self.leaves[-1]
+1269:            if comma.parent and comma.parent.type == syms.listmaker:
+1270:                self.remove_trailing_comma()
+1271:                return True
+1272:
+1273:        # For parens let's check if it's safe to remove the comma.
+1274:        # Imports are always safe.
+1275:        if self.is_import:
+1276:            self.remove_trailing_comma()
+1277:            return True
+1278:
+1279:        # Otherwise, if the trailing one is the only one, we might mistakenly
+1280:        # change a tuple into a different type by removing the comma.
+1281:        depth = closing.bracket_depth + 1
+1282:        commas = 0
+1283:        opening = closing.opening_bracket
+1284:        for _opening_index, leaf in enumerate(self.leaves):
+1285:            if leaf is opening:
+1286:                break
+1287:
+1288:        else:
+1289:            return False
+1290:
+1291:        for leaf in self.leaves[_opening_index + 1 :]:
+1292:            if leaf is closing:
+1293:                break
+1294:
+1295:            bracket_depth = leaf.bracket_depth
+1296:            if bracket_depth == depth and leaf.type == token.COMMA:
+1297:                commas += 1
+1298:                if leaf.parent and leaf.parent.type == syms.arglist:
+1299:                    commas += 1
+1300:                    break
+1301:
+1302:        if commas > 1:
+1303:            self.remove_trailing_comma()
+1304:            return True
+1305:
+1306:        return False
+1307:
+1308:    def append_comment(self, comment: Leaf) -> bool:
+1309:        """Add an inline or standalone comment to the line."""
+1310:        if (
+1311:            comment.type == STANDALONE_COMMENT
+1312:            and self.bracket_tracker.any_open_brackets()
+1313:        ):
+1314:            comment.prefix = ""
+1315:            return False
+1316:
+1317:        if comment.type != token.COMMENT:
+1318:            return False
+1319:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2280:    line_length: int,
+2281:    features: Collection[Feature] = (),
+2282:    omit: Collection[LeafID] = (),
+2283:) -> Iterator[Line]:
+2284:    """Split line into many lines, starting with the last matching bracket pair.
+2285:
+2286:    If the split was by optional parentheses, attempt splitting without them, too.
+2287:    `omit` is a collection of closing bracket IDs that shouldn't be considered for
+2288:    this split.
+2289:
+2290:    Note: running this function modifies `bracket_depth` on the leaves of `line`.
+2291:    """
+2292:    tail_leaves: List[Leaf] = []
+2293:    body_leaves: List[Leaf] = []
+2294:    head_leaves: List[Leaf] = []
+2295:    current_leaves = tail_leaves
+2296:    opening_bracket = None
+2297:    closing_bracket = None
+2298:    for leaf in reversed(line.leaves):
+2299:        if current_leaves is body_leaves:
+2300:            if leaf is opening_bracket:
+2301:                current_leaves = head_leaves if body_leaves else tail_leaves
+2302:        current_leaves.append(leaf)
+2303:        if current_leaves is tail_leaves:
+2304:            if leaf.type in CLOSING_BRACKETS and id(leaf) not in omit:
+2305:                opening_bracket = leaf.opening_bracket
+2306:                closing_bracket = leaf
+2307:                current_leaves = body_leaves
+2308:    if not (opening_bracket and closing_bracket and head_leaves):
+2309:        # If there is no opening or closing_bracket that means the split failed and
+2310:        # all content is in the tail.  Otherwise, if `head_leaves` are empty, it means
+2311:        # the matching `opening_bracket` wasn't available on `line` anymore.
+2312:        raise CannotSplit("No brackets found")
+2313:
+2314:    tail_leaves.reverse()
+2315:    body_leaves.reverse()
+2316:    head_leaves.reverse()
+2317:    head = bracket_split_build_line(head_leaves, line, opening_bracket)
+2318:    body = bracket_split_build_line(body_leaves, line, opening_bracket, is_body=True)
+2319:    tail = bracket_split_build_line(tail_leaves, line, opening_bracket)
+2320:    bracket_split_succeeded_or_raise(head, body, tail)
+2321:    if (
+2322:        # the body shouldn't be exploded
+2323:        not body.should_explode
+2324:        # the opening bracket is an optional paren
+2325:        and opening_bracket.type == token.LPAR
+2326:        and not opening_bracket.value
+2327:        # the closing bracket is an optional paren
+2328:        and closing_bracket.type == token.RPAR
+2329:        and not closing_bracket.value
+2330:        # it's not an import (optional parens are the only thing we can split on
+2331:        # in this case; attempting a split without them is a waste of time)
+2332:        and not line.is_import
+2333:        # there are no standalone comments in the body
+2334:        and not body.contains_standalone_comments(0)
+2335:        # and we can actually remove the parens
+2336:        and can_omit_invisible_parens(body, line_length)
+2337:    ):
+2338:        omit = {id(closing_bracket), *omit}
+2339:        try:
+2340:            yield from right_hand_split(line, line_length, features=features, omit=omit)
+2341:            return
+2342:
+2343:        except CannotSplit:
+2344:            if not (
+2345:                can_be_split(body)
+2346:                or is_line_short_enough(body, line_length=line_length)
+2347:            ):
+2348:                raise CannotSplit(
+2349:                    "Splitting failed, body is still too long and can't be split."
+2350:                )
+2351:
+2352:            elif head.contains_multiline_strings() or tail.contains_multiline_strings():
+2353:                raise CannotSplit(
+2354:                    "The current optional pair of parentheses is bound to fail to "
+2355:                    "satisfy the splitting algorithm because the head or the tail "
+2356:                    "contains multiline strings which by definition never fit one "
+2357:                    "line."
+2358:                )
+2359:
+2360:    ensure_visible(opening_bracket)
+2361:    ensure_visible(closing_bracket)
+2362:    for result in (head, body, tail):
+2363:        if result:
+2364:            yield result
+2365:
+2366:
+2367:def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None:
+2368:    """Raise :exc:`CannotSplit` if the last left- or right-hand split failed.
+2369:
+2370:    Do nothing otherwise.
+2371:
+2372:    A left- or right-hand split is based on a pair of brackets. Content before
+2373:    (and including) the opening bracket is left on one line, content inside the
+2374:    brackets is put on a separate line, and finally content starting with and
+2375:    following the closing bracket is put on a separate line.
+2376:
+2377:    Those are called `head`, `body`, and `tail`, respectively. If the split
+2378:    produced the same line (all content in `head`) or ended up with an empty `body`
+2379:    and the `tail` is just the closing bracket, then it's considered failed.
+2380:    """
+2381:    tail_len = len(str(tail).strip())
+2382:    if not body:
+2383:        if tail_len == 0:
+2384:            raise CannotSplit("Splitting brackets produced the same line")
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+
+Calling tool: grepTool
+Ensure a trailing comma
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2408:            # Ensure a trailing comma when expected.
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma when expected.
+2409:            if original.is_import:
+2410:                if leaves[-1].type != token.COMMA:
+2411:                    leaves.append(Leaf(token.COMMA, ","))
+2412:    # Populate the line
+2413:    for leaf in leaves:
+2414:        result.append(leaf, preformatted=True)
+2415:        for comment_after in original.comments_after(leaf):
+2416:            result.append(comment_after, preformatted=True)
+2417:    if is_body:
+2418:        result.should_explode = should_explode(result, opening_bracket)
+2419:    return result
+2420:
+2421:
+2422:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2423:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2424:
+2425:    This is a decorator over relevant split functions.
+2426:    """
+2427:
+2428:    @wraps(split_func)
+2429:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2430:        for l in split_func(line, features):
+2431:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2432:            yield l
+2433:
+2434:    return split_wrapper
+2435:
+2436:
+2437:@dont_increase_indentation
+2438:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2439:    """Split according to delimiters of the highest priority.
+2440:
+2441:    If the appropriate Features are given, the split will add trailing commas
+2442:    also in function signatures and calls that contain `*` and `**`.
+2443:    """
+2444:    try:
+2445:        last_leaf = line.leaves[-1]
+2446:    except IndexError:
+2447:        raise CannotSplit("Line empty")
+2448:
+2449:    bt = line.bracket_tracker
+2450:    try:
+2451:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2452:    except ValueError:
+2453:        raise CannotSplit("No delimiters found")
+2454:
+2455:    if delimiter_priority == DOT_PRIORITY:
+2456:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2457:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2458:
+2459:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2460:    lowest_depth = sys.maxsize
+2461:    trailing_comma_safe = True
+2462:
+2463:    def append_to_line(leaf: Leaf) -> Iterator[Line]:
+2464:        """Append `leaf` to current line or to new line if appending impossible."""
+2465:        nonlocal current_line
+2466:        try:
+2467:            current_line.append_safe(leaf, preformatted=True)
+2468:        except ValueError:
+2469:            yield current_line
+2470:
+2471:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2472:            current_line.append(leaf)
+2473:
+2474:    for leaf in line.leaves:
+2475:        yield from append_to_line(leaf)
+2476:
+2477:        for comment_after in line.comments_after(leaf):
+2478:            yield from append_to_line(comment_after)
+2479:
+2480:        lowest_depth = min(lowest_depth, leaf.bracket_depth)
+2481:        if leaf.bracket_depth == lowest_depth:
+2482:            if is_vararg(leaf, within={syms.typedargslist}):
+2483:                trailing_comma_safe = (
+2484:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_DEF in features
+2485:                )
+2486:            elif is_vararg(leaf, within={syms.arglist, syms.argument}):
+2487:                trailing_comma_safe = (
+2488:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_CALL in features
+2489:                )
+2490:
+2491:        leaf_priority = bt.delimiters.get(id(leaf))
+2492:        if leaf_priority == delimiter_priority:
+2493:            yield current_line
+2494:
+2495:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2496:    if current_line:
+2497:        if (
+2498:            trailing_comma_safe
+2499:            and delimiter_priority == COMMA_PRIORITY
+2500:            and current_line.leaves[-1].type != token.COMMA
+2501:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+2502:        ):
+2503:            current_line.append(Leaf(token.COMMA, ","))
+2504:        yield current_line
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In root black.py the new loop skips STANDALONE_COMMENTs before inserting a comma (lines 2410-2418), but env/src/black/black.py still uses the old logic that unconditionally appends a comma if the last leaf isn’t a COMMA (lines 2408-2411), with no comment check. Therefore a code path still appends a comma after comments.
+
+
+Validating todo item 1 of 11
+description: 'Verify in black.py function bracket_split_build_line() that when is_body is True and original.is_import is True, the code scans leaves backwards, skips STANDALONE_COMMENT tokens, and only inserts a COMMA after the last non-comment leaf.'
+
+Calling tool: grepTool
+def bracket_split_build_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2393:def bracket_split_build_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2393:def bracket_split_build_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+2409:            # any comments.
+2410:            if original.is_import:
+2411:                for i in range(len(leaves) - 1, -1, -1):
+2412:                    if leaves[i].type == STANDALONE_COMMENT:
+2413:                        continue
+2414:                    elif leaves[i].type == token.COMMA:
+2415:                        break
+2416:                    else:
+2417:                        leaves.insert(i + 1, Leaf(token.COMMA, ","))
+2418:                        break
+2419:    # Populate the line
+2420:    for leaf in leaves:
+2421:        result.append(leaf, preformatted=True)
+2422:        for comment_after in original.comments_after(leaf):
+2423:            result.append(comment_after, preformatted=True)
+2424:    if is_body:
+2425:        result.should_explode = should_explode(result, opening_bracket)
+2426:    return result
+2427:
+2428:
+2429:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2430:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2431:
+2432:    This is a decorator over relevant split functions.
+2433:    """
+2434:
+2435:    @wraps(split_func)
+2436:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2437:        for l in split_func(line, features):
+2438:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2439:            yield l
+2440:
+2441:    return split_wrapper
+2442:
+2443:
+2444:@dont_increase_indentation
+2445:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2446:    """Split according to delimiters of the highest priority.
+2447:
+2448:    If the appropriate Features are given, the split will add trailing commas
+2449:    also in function signatures and calls that contain `*` and `**`.
+2450:    """
+2451:    try:
+2452:        last_leaf = line.leaves[-1]
+2453:    except IndexError:
+2454:        raise CannotSplit("Line empty")
+2455:
+2456:    bt = line.bracket_tracker
+2457:    try:
+2458:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2459:    except ValueError:
+2460:        raise CannotSplit("No delimiters found")
+2461:
+2462:    if delimiter_priority == DOT_PRIORITY:
+2463:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2464:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2465:
+2466:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2467:    lowest_depth = sys.maxsize
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py at bracket_split_build_line (lines 2405-2418), when is_body is True and original.is_import, the code iterates leaves backward, skips STANDALONE_COMMENT tokens, breaks if a COMMA is found, and otherwise inserts a COMMA after the last non-comment leaf. This matches the todo requirement.
+
+Todo item 1 of 11 is correct
+description: 'Verify in black.py function bracket_split_build_line() that when is_body is True and original.is_import is True, the code scans leaves backwards, skips STANDALONE_COMMENT tokens, and only inserts a COMMA after the last non-comment leaf.'
+
+Validating todo item 2 of 11
+description: 'Confirm the new logic does not append a comma at the very end after comments: ensure there is no code path that unconditionally appends a comma when the last leaf is a comment.'
+
+Calling tool: grepTool
+def bracket_split_build_line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2393:def bracket_split_build_line(
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2393:def bracket_split_build_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+2409:            # any comments.
+2410:            if original.is_import:
+2411:                for i in range(len(leaves) - 1, -1, -1):
+2412:                    if leaves[i].type == STANDALONE_COMMENT:
+2413:                        continue
+2414:                    elif leaves[i].type == token.COMMA:
+2415:                        break
+2416:                    else:
+2417:                        leaves.insert(i + 1, Leaf(token.COMMA, ","))
+2418:                        break
+2419:    # Populate the line
+2420:    for leaf in leaves:
+2421:        result.append(leaf, preformatted=True)
+2422:        for comment_after in original.comments_after(leaf):
+2423:            result.append(comment_after, preformatted=True)
+2424:    if is_body:
+2425:        result.should_explode = should_explode(result, opening_bracket)
+2426:    return result
+2427:
+2428:
+2429:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2430:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2431:
+2432:    This is a decorator over relevant split functions.
+2433:    """
+2434:
+2435:    @wraps(split_func)
+2436:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2437:        for l in split_func(line, features):
+2438:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2439:            yield l
+2440:
+2441:    return split_wrapper
+2442:
+2443:
+2444:@dont_increase_indentation
+2445:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2446:    """Split according to delimiters of the highest priority.
+2447:
+2448:    If the appropriate Features are given, the split will add trailing commas
+2449:    also in function signatures and calls that contain `*` and `**`.
+2450:    """
+2451:    try:
+2452:        last_leaf = line.leaves[-1]
+2453:    except IndexError:
+2454:        raise CannotSplit("Line empty")
+2455:
+2456:    bt = line.bracket_tracker
+2457:    try:
+2458:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2459:    except ValueError:
+2460:        raise CannotSplit("No delimiters found")
+2461:
+2462:    if delimiter_priority == DOT_PRIORITY:
+2463:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2464:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2465:
+2466:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2467:    lowest_depth = sys.maxsize
+2468:    trailing_comma_safe = True
+2469:
+2470:    def append_to_line(leaf: Leaf) -> Iterator[Line]:
+2471:        """Append `leaf` to current line or to new line if appending impossible."""
+2472:        nonlocal current_line
+2473:        try:
+2474:            current_line.append_safe(leaf, preformatted=True)
+2475:        except ValueError:
+2476:            yield current_line
+2477:
+2478:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2479:            current_line.append(leaf)
+2480:
+2481:    for leaf in line.leaves:
+2482:        yield from append_to_line(leaf)
+2483:
+2484:        for comment_after in line.comments_after(leaf):
+2485:            yield from append_to_line(comment_after)
+2486:
+2487:        lowest_depth = min(lowest_depth, leaf.bracket_depth)
+2488:        if leaf.bracket_depth == lowest_depth:
+2489:            if is_vararg(leaf, within={syms.typedargslist}):
+2490:                trailing_comma_safe = (
+2491:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_DEF in features
+2492:                )
+2493:            elif is_vararg(leaf, within={syms.arglist, syms.argument}):
+2494:                trailing_comma_safe = (
+2495:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_CALL in features
+2496:                )
+2497:
+2498:        leaf_priority = bt.delimiters.get(id(leaf))
+2499:        if leaf_priority == delimiter_priority:
+2500:            yield current_line
+2501:
+2502:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2503:    if current_line:
+2504:        if (
+
+Calling tool: grepTool
+is_import
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1151:    def is_import(self) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1153:        return bool(self) and is_import(self.leaves[0])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1275:        if self.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1429:            and self.previous_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:1430:            and not current_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2332:        and not line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2410:            if original.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2545:def is_import(leaf: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/docs/reference/reference_functions.rst:21:.. autofunction:: black.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/docs/reference/reference_functions.rst:21:.. autofunction:: black.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1151:    def is_import(self) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1153:        return bool(self) and is_import(self.leaves[0])
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1275:        if self.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1429:            and self.previous_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:1430:            and not current_line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2332:        and not line.is_import
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2409:            if original.is_import:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2538:def is_import(leaf: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/lib/python3.8/site-packages/mypy/typeshed/stdlib/2and3/symtable.pyi:41:    def is_imported(self) -> bool: ...
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+1120:        if not self.append_comment(leaf):
+1121:            self.leaves.append(leaf)
+1122:
+1123:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+1124:        """Like :func:`append()` but disallow invalid standalone comment structure.
+1125:
+1126:        Raises ValueError when any `leaf` is appended after a standalone comment
+1127:        or when a standalone comment is not the first leaf on the line.
+1128:        """
+1129:        if self.bracket_tracker.depth == 0:
+1130:            if self.is_comment:
+1131:                raise ValueError("cannot append to standalone comments")
+1132:
+1133:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+1134:                raise ValueError(
+1135:                    "cannot append standalone comments to a populated line"
+1136:                )
+1137:
+1138:        self.append(leaf, preformatted=preformatted)
+1139:
+1140:    @property
+1141:    def is_comment(self) -> bool:
+1142:        """Is this line a standalone comment?"""
+1143:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+1144:
+1145:    @property
+1146:    def is_decorator(self) -> bool:
+1147:        """Is this line a decorator?"""
+1148:        return bool(self) and self.leaves[0].type == token.AT
+1149:
+1150:    @property
+1151:    def is_import(self) -> bool:
+1152:        """Is this an import line?"""
+1153:        return bool(self) and is_import(self.leaves[0])
+1154:
+1155:    @property
+1156:    def is_class(self) -> bool:
+1157:        """Is this line a class definition?"""
+1158:        return (
+1159:            bool(self)
+1160:            and self.leaves[0].type == token.NAME
+1161:            and self.leaves[0].value == "class"
+1162:        )
+1163:
+1164:    @property
+1165:    def is_stub_class(self) -> bool:
+1166:        """Is this line a class definition with a body consisting only of "..."?"""
+1167:        return self.is_class and self.leaves[-3:] == [
+1168:            Leaf(token.DOT, ".") for _ in range(3)
+1169:        ]
+1170:
+1171:    @property
+1172:    def is_def(self) -> bool:
+1173:        """Is this a function definition? (Also returns True for async defs.)"""
+1174:        try:
+1175:            first_leaf = self.leaves[0]
+1176:        except IndexError:
+1177:            return False
+1178:
+1179:        try:
+1180:            second_leaf: Optional[Leaf] = self.leaves[1]
+1181:        except IndexError:
+1182:            second_leaf = None
+1183:        return (first_leaf.type == token.NAME and first_leaf.value == "def") or (
+1184:            first_leaf.type == token.ASYNC
+1185:            and second_leaf is not None
+1186:            and second_leaf.type == token.NAME
+1187:            and second_leaf.value == "def"
+1188:        )
+1189:
+1190:    @property
+1191:    def is_class_paren_empty(self) -> bool:
+1192:        """Is this a class with no base classes but using parentheses?
+1193:
+1194:        Those are unnecessary and should be removed.
+1195:        """
+1196:        return (
+1197:            bool(self)
+1198:            and len(self.leaves) == 4
+1199:            and self.is_class
+1200:            and self.leaves[2].type == token.LPAR
+1201:            and self.leaves[2].value == "("
+1202:            and self.leaves[3].type == token.RPAR
+1203:            and self.leaves[3].value == ")"
+1204:        )
+1205:
+1206:    @property
+1207:    def is_triple_quoted_string(self) -> bool:
+1208:        """Is the line a triple quoted string?"""
+1209:        return (
+1210:            bool(self)
+1211:            and self.leaves[0].type == token.STRING
+1212:            and self.leaves[0].value.startswith(('"""', "'''"))
+1213:        )
+1214:
+1215:    def contains_standalone_comments(self, depth_limit: int = sys.maxsize) -> bool:
+1216:        """If so, needs to be split before emitting."""
+1217:        for leaf in self.leaves:
+1218:            if leaf.type == STANDALONE_COMMENT:
+1219:                if leaf.bracket_depth <= depth_limit:
+1220:                    return True
+1221:        return False
+1222:
+1223:    def contains_inner_type_comments(self) -> bool:
+1224:        ignored_ids = set()
+1225:        try:
+1226:            last_leaf = self.leaves[-1]
+1227:            ignored_ids.add(id(last_leaf))
+1228:            if last_leaf.type == token.COMMA:
+1229:                # When trailing commas are inserted by Black for consistency, comments
+1230:                # after the previous last element are not moved (they don't have to,
+1231:                # rendering will still be correct).  So we ignore trailing commas.
+1232:                last_leaf = self.leaves[-2]
+1233:                ignored_ids.add(id(last_leaf))
+1234:        except IndexError:
+1235:            return False
+1236:
+1237:        for leaf_id, comments in self.comments.items():
+1238:            if leaf_id in ignored_ids:
+1239:                continue
+1240:
+1241:            for comment in comments:
+1242:                if is_type_comment(comment):
+1243:                    return True
+1244:
+1245:        return False
+1246:
+1247:    def contains_multiline_strings(self) -> bool:
+1248:        for leaf in self.leaves:
+1249:            if is_multiline_string(leaf):
+1250:                return True
+1251:
+1252:        return False
+1253:
+1254:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+1255:        """Remove trailing comma if there is one and it's safe."""
+1256:        if not (
+1257:            self.leaves
+1258:            and self.leaves[-1].type == token.COMMA
+1259:            and closing.type in CLOSING_BRACKETS
+1260:        ):
+1261:            return False
+1262:
+1263:        if closing.type == token.RBRACE:
+1264:            self.remove_trailing_comma()
+1265:            return True
+1266:
+1267:        if closing.type == token.RSQB:
+1268:            comma = self.leaves[-1]
+1269:            if comma.parent and comma.parent.type == syms.listmaker:
+1270:                self.remove_trailing_comma()
+1271:                return True
+1272:
+1273:        # For parens let's check if it's safe to remove the comma.
+1274:        # Imports are always safe.
+1275:        if self.is_import:
+1276:            self.remove_trailing_comma()
+1277:            return True
+1278:
+1279:        # Otherwise, if the trailing one is the only one, we might mistakenly
+1280:        # change a tuple into a different type by removing the comma.
+1281:        depth = closing.bracket_depth + 1
+1282:        commas = 0
+1283:        opening = closing.opening_bracket
+1284:        for _opening_index, leaf in enumerate(self.leaves):
+1285:            if leaf is opening:
+1286:                break
+1287:
+1288:        else:
+1289:            return False
+1290:
+1291:        for leaf in self.leaves[_opening_index + 1 :]:
+1292:            if leaf is closing:
+1293:                break
+1294:
+1295:            bracket_depth = leaf.bracket_depth
+1296:            if bracket_depth == depth and leaf.type == token.COMMA:
+1297:                commas += 1
+1298:                if leaf.parent and leaf.parent.type == syms.arglist:
+1299:                    commas += 1
+1300:                    break
+1301:
+1302:        if commas > 1:
+1303:            self.remove_trailing_comma()
+1304:            return True
+1305:
+1306:        return False
+1307:
+1308:    def append_comment(self, comment: Leaf) -> bool:
+1309:        """Add an inline or standalone comment to the line."""
+1310:        if (
+1311:            comment.type == STANDALONE_COMMENT
+1312:            and self.bracket_tracker.any_open_brackets()
+1313:        ):
+1314:            comment.prefix = ""
+1315:            return False
+1316:
+1317:        if comment.type != token.COMMENT:
+1318:            return False
+1319:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py
+2280:    line_length: int,
+2281:    features: Collection[Feature] = (),
+2282:    omit: Collection[LeafID] = (),
+2283:) -> Iterator[Line]:
+2284:    """Split line into many lines, starting with the last matching bracket pair.
+2285:
+2286:    If the split was by optional parentheses, attempt splitting without them, too.
+2287:    `omit` is a collection of closing bracket IDs that shouldn't be considered for
+2288:    this split.
+2289:
+2290:    Note: running this function modifies `bracket_depth` on the leaves of `line`.
+2291:    """
+2292:    tail_leaves: List[Leaf] = []
+2293:    body_leaves: List[Leaf] = []
+2294:    head_leaves: List[Leaf] = []
+2295:    current_leaves = tail_leaves
+2296:    opening_bracket = None
+2297:    closing_bracket = None
+2298:    for leaf in reversed(line.leaves):
+2299:        if current_leaves is body_leaves:
+2300:            if leaf is opening_bracket:
+2301:                current_leaves = head_leaves if body_leaves else tail_leaves
+2302:        current_leaves.append(leaf)
+2303:        if current_leaves is tail_leaves:
+2304:            if leaf.type in CLOSING_BRACKETS and id(leaf) not in omit:
+2305:                opening_bracket = leaf.opening_bracket
+2306:                closing_bracket = leaf
+2307:                current_leaves = body_leaves
+2308:    if not (opening_bracket and closing_bracket and head_leaves):
+2309:        # If there is no opening or closing_bracket that means the split failed and
+2310:        # all content is in the tail.  Otherwise, if `head_leaves` are empty, it means
+2311:        # the matching `opening_bracket` wasn't available on `line` anymore.
+2312:        raise CannotSplit("No brackets found")
+2313:
+2314:    tail_leaves.reverse()
+2315:    body_leaves.reverse()
+2316:    head_leaves.reverse()
+2317:    head = bracket_split_build_line(head_leaves, line, opening_bracket)
+2318:    body = bracket_split_build_line(body_leaves, line, opening_bracket, is_body=True)
+2319:    tail = bracket_split_build_line(tail_leaves, line, opening_bracket)
+2320:    bracket_split_succeeded_or_raise(head, body, tail)
+2321:    if (
+2322:        # the body shouldn't be exploded
+2323:        not body.should_explode
+2324:        # the opening bracket is an optional paren
+2325:        and opening_bracket.type == token.LPAR
+2326:        and not opening_bracket.value
+2327:        # the closing bracket is an optional paren
+2328:        and closing_bracket.type == token.RPAR
+2329:        and not closing_bracket.value
+2330:        # it's not an import (optional parens are the only thing we can split on
+2331:        # in this case; attempting a split without them is a waste of time)
+2332:        and not line.is_import
+2333:        # there are no standalone comments in the body
+2334:        and not body.contains_standalone_comments(0)
+2335:        # and we can actually remove the parens
+2336:        and can_omit_invisible_parens(body, line_length)
+2337:    ):
+2338:        omit = {id(closing_bracket), *omit}
+2339:        try:
+2340:            yield from right_hand_split(line, line_length, features=features, omit=omit)
+2341:            return
+2342:
+2343:        except CannotSplit:
+2344:            if not (
+2345:                can_be_split(body)
+2346:                or is_line_short_enough(body, line_length=line_length)
+2347:            ):
+2348:                raise CannotSplit(
+2349:                    "Splitting failed, body is still too long and can't be split."
+2350:                )
+2351:
+2352:            elif head.contains_multiline_strings() or tail.contains_multiline_strings():
+2353:                raise CannotSplit(
+2354:                    "The current optional pair of parentheses is bound to fail to "
+2355:                    "satisfy the splitting algorithm because the head or the tail "
+2356:                    "contains multiline strings which by definition never fit one "
+2357:                    "line."
+2358:                )
+2359:
+2360:    ensure_visible(opening_bracket)
+2361:    ensure_visible(closing_bracket)
+2362:    for result in (head, body, tail):
+2363:        if result:
+2364:            yield result
+2365:
+2366:
+2367:def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None:
+2368:    """Raise :exc:`CannotSplit` if the last left- or right-hand split failed.
+2369:
+2370:    Do nothing otherwise.
+2371:
+2372:    A left- or right-hand split is based on a pair of brackets. Content before
+2373:    (and including) the opening bracket is left on one line, content inside the
+2374:    brackets is put on a separate line, and finally content starting with and
+2375:    following the closing bracket is put on a separate line.
+2376:
+2377:    Those are called `head`, `body`, and `tail`, respectively. If the split
+2378:    produced the same line (all content in `head`) or ended up with an empty `body`
+2379:    and the `tail` is just the closing bracket, then it's considered failed.
+2380:    """
+2381:    tail_len = len(str(tail).strip())
+2382:    if not body:
+2383:        if tail_len == 0:
+2384:            raise CannotSplit("Splitting brackets produced the same line")
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+
+Calling tool: grepTool
+Ensure a trailing comma
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/black.py:2408:            # Ensure a trailing comma for imports, but be careful not to add one after
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py:2408:            # Ensure a trailing comma when expected.
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-8/good/black/env/src/black/black.py
+2385:
+2386:        elif tail_len < 3:
+2387:            raise CannotSplit(
+2388:                f"Splitting brackets on an empty body to save "
+2389:                f"{tail_len} characters is not worth it"
+2390:            )
+2391:
+2392:
+2393:def bracket_split_build_line(
+2394:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2395:) -> Line:
+2396:    """Return a new line with given `leaves` and respective comments from `original`.
+2397:
+2398:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2399:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2400:    """
+2401:    result = Line(depth=original.depth)
+2402:    if is_body:
+2403:        result.inside_brackets = True
+2404:        result.depth += 1
+2405:        if leaves:
+2406:            # Since body is a new indent level, remove spurious leading whitespace.
+2407:            normalize_prefix(leaves[0], inside_brackets=True)
+2408:            # Ensure a trailing comma when expected.
+2409:            if original.is_import:
+2410:                if leaves[-1].type != token.COMMA:
+2411:                    leaves.append(Leaf(token.COMMA, ","))
+2412:    # Populate the line
+2413:    for leaf in leaves:
+2414:        result.append(leaf, preformatted=True)
+2415:        for comment_after in original.comments_after(leaf):
+2416:            result.append(comment_after, preformatted=True)
+2417:    if is_body:
+2418:        result.should_explode = should_explode(result, opening_bracket)
+2419:    return result
+2420:
+2421:
+2422:def dont_increase_indentation(split_func: SplitFunc) -> SplitFunc:
+2423:    """Normalize prefix of the first leaf in every line returned by `split_func`.
+2424:
+2425:    This is a decorator over relevant split functions.
+2426:    """
+2427:
+2428:    @wraps(split_func)
+2429:    def split_wrapper(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2430:        for l in split_func(line, features):
+2431:            normalize_prefix(l.leaves[0], inside_brackets=True)
+2432:            yield l
+2433:
+2434:    return split_wrapper
+2435:
+2436:
+2437:@dont_increase_indentation
+2438:def delimiter_split(line: Line, features: Collection[Feature] = ()) -> Iterator[Line]:
+2439:    """Split according to delimiters of the highest priority.
+2440:
+2441:    If the appropriate Features are given, the split will add trailing commas
+2442:    also in function signatures and calls that contain `*` and `**`.
+2443:    """
+2444:    try:
+2445:        last_leaf = line.leaves[-1]
+2446:    except IndexError:
+2447:        raise CannotSplit("Line empty")
+2448:
+2449:    bt = line.bracket_tracker
+2450:    try:
+2451:        delimiter_priority = bt.max_delimiter_priority(exclude={id(last_leaf)})
+2452:    except ValueError:
+2453:        raise CannotSplit("No delimiters found")
+2454:
+2455:    if delimiter_priority == DOT_PRIORITY:
+2456:        if bt.delimiter_count_with_priority(delimiter_priority) == 1:
+2457:            raise CannotSplit("Splitting a single attribute from its owner looks wrong")
+2458:
+2459:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2460:    lowest_depth = sys.maxsize
+2461:    trailing_comma_safe = True
+2462:
+2463:    def append_to_line(leaf: Leaf) -> Iterator[Line]:
+2464:        """Append `leaf` to current line or to new line if appending impossible."""
+2465:        nonlocal current_line
+2466:        try:
+2467:            current_line.append_safe(leaf, preformatted=True)
+2468:        except ValueError:
+2469:            yield current_line
+2470:
+2471:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2472:            current_line.append(leaf)
+2473:
+2474:    for leaf in line.leaves:
+2475:        yield from append_to_line(leaf)
+2476:
+2477:        for comment_after in line.comments_after(leaf):
+2478:            yield from append_to_line(comment_after)
+2479:
+2480:        lowest_depth = min(lowest_depth, leaf.bracket_depth)
+2481:        if leaf.bracket_depth == lowest_depth:
+2482:            if is_vararg(leaf, within={syms.typedargslist}):
+2483:                trailing_comma_safe = (
+2484:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_DEF in features
+2485:                )
+2486:            elif is_vararg(leaf, within={syms.arglist, syms.argument}):
+2487:                trailing_comma_safe = (
+2488:                    trailing_comma_safe and Feature.TRAILING_COMMA_IN_CALL in features
+2489:                )
+2490:
+2491:        leaf_priority = bt.delimiters.get(id(leaf))
+2492:        if leaf_priority == delimiter_priority:
+2493:            yield current_line
+2494:
+2495:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+2496:    if current_line:
+2497:        if (
+2498:            trailing_comma_safe
+2499:            and delimiter_priority == COMMA_PRIORITY
+2500:            and current_line.leaves[-1].type != token.COMMA
+2501:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+2502:        ):
+2503:            current_line.append(Leaf(token.COMMA, ","))
+2504:        yield current_line
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In root black.py the new loop skips STANDALONE_COMMENTs before inserting a comma (lines 2410-2418), but env/src/black/black.py still uses the old logic that unconditionally appends a comma if the last leaf isn’t a COMMA (lines 2408-2411), with no comment check. Therefore a code path still appends a comma after comments.
+
+
+=== PHASE 2 COMPLETE ===
+

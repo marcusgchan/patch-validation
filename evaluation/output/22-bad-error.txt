@@ -1,0 +1,1255 @@
+Error: The operation timed out.
+
+=== PHASE 1: ANALYSIS ===
+
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "test_comments3", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def read_data\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "STANDALONE_COMMENT",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def comments_after\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "comments_after\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "SplitFunc", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "class Line\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "^class Line", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "class Line\\b", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black/black.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "^class Line\\b", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def dont_increase_indentation\\(|@dont_increase_indentation",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "comments_after", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "from typing import .*List",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "from typing import",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py"
+]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "append_safe\\(", "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black" ]
+[ "rg", "--no-heading", "--line-number", "--ignore-file", ".rgignore", "def comments_after\\(",
+  "/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py"
+]
+Calling tool: grepTool
+test_comments3
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/coverage_bugsinpy.txt:1:coverage run -m unittest -q tests.test_black.BlackTestCase.test_comments3
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/coverage_bugsinpy.txt:528:FAIL: test_comments3 (tests.test_black.BlackTestCase)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/coverage_bugsinpy.txt:533:  File "/workspace/BugsInPy/framework/bin/temp/black-22/bad/black/tests/test_black.py", line 157, in test_comments3
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comments3
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/test_black.py:154:    def test_comments3(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/test_black.py
+140:        actual = fs(source)
+141:        self.assertFormatEqual(expected, actual)
+142:        black.assert_equivalent(source, actual)
+143:        black.assert_stable(source, actual, line_length=ll)
+144:
+145:    @patch("black.dump_to_file", dump_to_stderr)
+146:    def test_comments2(self) -> None:
+147:        source, expected = read_data('comments2')
+148:        actual = fs(source)
+149:        self.assertFormatEqual(expected, actual)
+150:        black.assert_equivalent(source, actual)
+151:        black.assert_stable(source, actual, line_length=ll)
+152:
+153:    @patch("black.dump_to_file", dump_to_stderr)
+154:    def test_comments3(self) -> None:
+155:        source, expected = read_data('comments3')
+156:        actual = fs(source)
+157:        self.assertFormatEqual(expected, actual)
+158:        black.assert_equivalent(source, actual)
+159:        black.assert_stable(source, actual, line_length=ll)
+160:
+161:    @patch("black.dump_to_file", dump_to_stderr)
+162:    def test_cantfit(self) -> None:
+163:        source, expected = read_data('cantfit')
+164:        actual = fs(source)
+165:        self.assertFormatEqual(expected, actual)
+166:        black.assert_equivalent(source, actual)
+167:        black.assert_stable(source, actual, line_length=ll)
+168:
+169:    @patch("black.dump_to_file", dump_to_stderr)
+170:    def test_import_spacing(self) -> None:
+171:        source, expected = read_data('import_spacing')
+172:        actual = fs(source)
+173:        self.assertFormatEqual(expected, actual)
+174:        black.assert_equivalent(source, actual)
+175:        black.assert_stable(source, actual, line_length=ll)
+176:
+177:    @patch("black.dump_to_file", dump_to_stderr)
+178:    def test_composition(self) -> None:
+179:        source, expected = read_data('composition')
+
+Calling tool: globTool
+**/tests/data/*comments3*
+No files found. Call Project Search tool again with a more generic glob.
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/tests/test_black.py:27:def read_data(name: str) -> Tuple[str, str]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/test_black.py:27:def read_data(name: str) -> Tuple[str, str]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1770:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1784:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1802:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1812:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1824:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1834:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/pyflakes/test/test_other.py:1846:        async def read_data(db):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/coverage/html.py:63:def read_data(fname):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/virtualenv/create/via_global_ref/builtin/cpython/mac_os.py:235:    def read_data(file, endian, num=1):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:from functools import partial
+3:from io import StringIO
+4:import os
+5:from pathlib import Path
+6:import sys
+7:from typing import Any, List, Tuple
+8:import unittest
+9:from unittest.mock import patch
+10:
+11:from click import unstyle
+12:
+13:import black
+14:
+15:ll = 88
+16:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+17:fs = partial(black.format_str, line_length=ll)
+18:THIS_FILE = Path(__file__)
+19:THIS_DIR = THIS_FILE.parent
+20:EMPTY_LINE = '# EMPTY LINE WITH WHITESPACE' + ' (this comment will be removed)'
+21:
+22:
+23:def dump_to_stderr(*output: str) -> str:
+24:    return '\n' + '\n'.join(output) + '\n'
+25:
+26:
+27:def read_data(name: str) -> Tuple[str, str]:
+28:    """read_data('test_name') -> 'input', 'output'"""
+29:    if not name.endswith(('.py', '.out')):
+30:        name += '.py'
+31:    _input: List[str] = []
+32:    _output: List[str] = []
+33:    with open(THIS_DIR / name, 'r', encoding='utf8') as test:
+34:        lines = test.readlines()
+35:    result = _input
+36:    for line in lines:
+37:        line = line.replace(EMPTY_LINE, '')
+38:        if line.rstrip() == '# output':
+39:            result = _output
+40:            continue
+41:
+42:        result.append(line)
+43:    if _input and not _output:
+44:        # If there's no output marker, treat the entire file as already pre-formatted.
+45:        _output = _input[:]
+46:    return ''.join(_input).strip() + '\n', ''.join(_output).strip() + '\n'
+47:
+48:
+49:class BlackTestCase(unittest.TestCase):
+50:    maxDiff = None
+51:
+52:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+53:        if actual != expected and not os.environ.get('SKIP_AST_PRINT'):
+54:            bdv: black.DebugVisitor[Any]
+55:            black.out('Expected tree:', fg='green')
+56:            try:
+57:                exp_node = black.lib2to3_parse(expected)
+58:                bdv = black.DebugVisitor()
+59:                list(bdv.visit(exp_node))
+60:            except Exception as ve:
+61:                black.err(str(ve))
+62:            black.out('Actual tree:', fg='red')
+63:            try:
+64:                exp_node = black.lib2to3_parse(actual)
+65:                bdv = black.DebugVisitor()
+66:                list(bdv.visit(exp_node))
+67:            except Exception as ve:
+68:                black.err(str(ve))
+69:        self.assertEqual(expected, actual)
+70:
+71:    @patch("black.dump_to_file", dump_to_stderr)
+72:    def test_self(self) -> None:
+73:        source, expected = read_data('test_black')
+74:        actual = fs(source)
+75:        self.assertFormatEqual(expected, actual)
+76:        black.assert_equivalent(source, actual)
+77:        black.assert_stable(source, actual, line_length=ll)
+78:        self.assertFalse(ff(THIS_FILE))
+79:
+80:    @patch("black.dump_to_file", dump_to_stderr)
+
+Calling tool: globTool
+**/tests/comments3.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/comments3.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/tests/comments3.py
+1:def func():
+2:    lcomp3 = [
+3:        # This one is actually too long to fit in a single line.
+4:        element.split('\n', 1)[0]
+5:        # yup
+6:        for element in collection.select_elements()
+7:        # right
+8:        if element is not None
+9:    ]
+10:    # Capture each of the exceptions in the MultiError along with each of their causes and contexts
+11:    if isinstance(exc_value, MultiError):
+12:        embedded = []
+13:        for exc in exc_value.exceptions:
+14:            if exc not in _seen:
+15:                embedded.append(
+16:                    # This should be left alone (before)
+17:                    traceback.TracebackException.from_exception(
+18:                        exc,
+19:                        limit=limit,
+20:                        lookup_lines=lookup_lines,
+21:                        capture_locals=capture_locals,
+22:                        # copy the set of _seen exceptions so that duplicates
+23:                        # shared between sub-exceptions are not omitted
+24:                        _seen=set(_seen),
+25:                    )
+26:                    # This should be left alone (after)
+27:                )
+28:
+29:    # everything is fine if the expression isn't nested
+30:    traceback.TracebackException.from_exception(
+31:        exc,
+32:        limit=limit,
+33:        lookup_lines=lookup_lines,
+34:        capture_locals=capture_locals,
+35:        # copy the set of _seen exceptions so that duplicates
+36:        # shared between sub-exceptions are not omitted
+37:        _seen=set(_seen),
+38:    )
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:408:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:561:        return bool(self) and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:707:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:724:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:1079:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:1375:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py.original:1397:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:408:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:561:        return bool(self) and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:707:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:724:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:1079:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:1375:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py:1397:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:408:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:561:        return bool(self) and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:707:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:724:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:1079:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:1375:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/src/black/black.py:1397:            comment_type = STANDALONE_COMMENT
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py
+1300:
+1301:    elif p.type == syms.import_from:
+1302:        if t == token.DOT:
+1303:            if prev and prev.type == token.DOT:
+1304:                return NO
+1305:
+1306:        elif t == token.NAME:
+1307:            if v == 'import':
+1308:                return SPACE
+1309:
+1310:            if prev and prev.type == token.DOT:
+1311:                return NO
+1312:
+1313:    elif p.type == syms.sliceop:
+1314:        return NO
+1315:
+1316:    return SPACE
+1317:
+1318:
+1319:def preceding_leaf(node: Optional[LN]) -> Optional[Leaf]:
+1320:    """Return the first leaf that precedes `node`, if any."""
+1321:    while node:
+1322:        res = node.prev_sibling
+1323:        if res:
+1324:            if isinstance(res, Leaf):
+1325:                return res
+1326:
+1327:            try:
+1328:                return list(res.leaves())[-1]
+1329:
+1330:            except IndexError:
+1331:                return None
+1332:
+1333:        node = node.parent
+1334:    return None
+1335:
+1336:
+1337:def is_delimiter(leaf: Leaf) -> int:
+1338:    """Return the priority of the `leaf` delimiter. Return 0 if not delimiter.
+1339:
+1340:    Higher numbers are higher priority.
+1341:    """
+1342:    if leaf.type == token.COMMA:
+1343:        return COMMA_PRIORITY
+1344:
+1345:    if leaf.type in COMPARATORS:
+1346:        return COMPARATOR_PRIORITY
+1347:
+1348:    if (
+1349:        leaf.type in MATH_OPERATORS
+1350:        and leaf.parent
+1351:        and leaf.parent.type not in {syms.factor, syms.star_expr}
+1352:    ):
+1353:        return MATH_PRIORITY
+1354:
+1355:    return 0
+1356:
+1357:
+1358:def generate_comments(leaf: Leaf) -> Iterator[Leaf]:
+1359:    """Clean the prefix of the `leaf` and generate comments from it, if any.
+1360:
+1361:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+1362:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+1363:    move because it does away with modifying the grammar to include all the
+1364:    possible places in which comments can be placed.
+1365:
+1366:    The sad consequence for us though is that comments don't "belong" anywhere.
+1367:    This is why this function generates simple parentless Leaf objects for
+1368:    comments.  We simply don't know what the correct parent should be.
+1369:
+1370:    No matter though, we can live without this.  We really only need to
+1371:    differentiate between inline and standalone comments.  The latter don't
+1372:    share the line with any code.
+1373:
+1374:    Inline comments are emitted as regular token.COMMENT leaves.  Standalone
+1375:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1376:    """
+1377:    p = leaf.prefix
+1378:    if not p:
+1379:        return
+1380:
+1381:    if '#' not in p:
+1382:        return
+1383:
+1384:    consumed = 0
+1385:    nlines = 0
+1386:    for index, line in enumerate(p.split('\n')):
+1387:        consumed += len(line) + 1  # adding the length of the split '\n'
+1388:        line = line.lstrip()
+1389:        if not line:
+1390:            nlines += 1
+1391:        if not line.startswith('#'):
+1392:            continue
+1393:
+1394:        if index == 0 and leaf.type != token.ENDMARKER:
+1395:            comment_type = token.COMMENT  # simple trailing comment
+1396:        else:
+1397:            comment_type = STANDALONE_COMMENT
+1398:        comment = make_comment(line)
+1399:        yield Leaf(comment_type, comment, prefix='\n' * nlines)
+1400:
+1401:        if comment in {'# fmt: on', '# yapf: enable'}:
+1402:            raise FormatOn(consumed)
+1403:
+1404:        if comment in {'# fmt: off', '# yapf: disable'}:
+1405:            raise FormatOff(consumed)
+1406:
+1407:        nlines = 0
+1408:
+1409:
+1410:def make_comment(content: str) -> str:
+1411:    """Return a consistently formatted comment from the given `content` string.
+1412:
+1413:    All comments (except for "##", "#!", "#:") should have a single space between
+1414:    the hash sign and the content.
+1415:
+1416:    If `content` didn't start with a hash sign, one is provided.
+1417:    """
+1418:    content = content.rstrip()
+1419:    if not content:
+1420:        return '#'
+1421:
+1422:    if content[0] == '#':
+1423:        content = content[1:]
+1424:    if content and content[0] not in ' !:#':
+1425:        content = ' ' + content
+1426:    return '#' + content
+1427:
+1428:
+1429:def split_line(
+1430:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+1431:) -> Iterator[Line]:
+1432:    """Split a `line` into potentially many lines.
+1433:
+1434:    They should fit in the allotted `line_length` but might not be able to.
+1435:    `inner` signifies that there were a pair of brackets somewhere around the
+1436:    current `line`, possibly transitively. This means we can fallback to splitting
+1437:    by delimiters if the LHS/RHS don't yield any results.
+1438:
+1439:    If `py36` is True, splitting may generate syntax that is only compatible
+1440:    with Python 3.6 and later.
+1441:    """
+1442:    if isinstance(line, UnformattedLines):
+1443:        yield line
+1444:        return
+1445:
+1446:    line_str = str(line).strip('\n')
+1447:    if len(line_str) <= line_length and '\n' not in line_str:
+1448:        yield line
+1449:        return
+1450:
+1451:    if line.is_def:
+1452:        split_funcs = [left_hand_split]
+1453:    elif line.inside_brackets:
+1454:        split_funcs = [delimiter_split]
+1455:        if '\n' not in line_str:
+1456:            # Only attempt RHS if we don't have multiline strings or comments
+1457:            # on this line.
+1458:            split_funcs.append(right_hand_split)
+1459:    else:
+1460:        split_funcs = [right_hand_split]
+1461:    for split_func in split_funcs:
+1462:        # We are accumulating lines in `result` because we might want to abort
+1463:        # mission and return the original line in the end, or attempt a different
+1464:        # split altogether.
+1465:        result: List[Line] = []
+1466:        try:
+1467:            for l in split_func(line, py36=py36):
+1468:                if str(l).strip('\n') == line_str:
+1469:                    raise CannotSplit("Split function returned an unchanged result")
+1470:
+1471:                result.extend(
+1472:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+1473:                )
+1474:        except CannotSplit as cs:
+1475:            continue
+1476:
+1477:        else:
+1478:            yield from result
+1479:            break
+1480:
+1481:    else:
+1482:        yield line
+1483:
+1484:
+1485:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+1486:    """Split line into many lines, starting with the first matching bracket pair.
+1487:
+1488:    Note: this usually looks weird, only use this for function definitions.
+1489:    Prefer RHS otherwise.
+1490:    """
+1491:    head = Line(depth=line.depth)
+1492:    body = Line(depth=line.depth + 1, inside_brackets=True)
+1493:    tail = Line(depth=line.depth)
+1494:    tail_leaves: List[Leaf] = []
+1495:    body_leaves: List[Leaf] = []
+1496:    head_leaves: List[Leaf] = []
+1497:    current_leaves = head_leaves
+1498:    matching_bracket = None
+1499:    for leaf in line.leaves:
+1500:        if (
+1501:            current_leaves is body_leaves
+1502:            and leaf.type in CLOSING_BRACKETS
+1503:            and leaf.opening_bracket is matching_bracket
+1504:        ):
+1505:            current_leaves = tail_leaves if body_leaves else head_leaves
+1506:        current_leaves.append(leaf)
+1507:        if current_leaves is head_leaves:
+1508:            if leaf.type in OPENING_BRACKETS:
+1509:                matching_bracket = leaf
+1510:                current_leaves = body_leaves
+1511:    # Since body is a new indent level, remove spurious leading whitespace.
+1512:    if body_leaves:
+1513:        normalize_prefix(body_leaves[0], inside_brackets=True)
+1514:    # Build the new lines.
+1515:    for result, leaves in (
+1516:        (head, head_leaves), (body, body_leaves), (tail, tail_leaves)
+1517:    ):
+1518:        for leaf in leaves:
+1519:            result.append(leaf, preformatted=True)
+1520:            comment_after = line.comments.get(id(leaf))
+1521:            if comment_after:
+1522:                result.append(comment_after, preformatted=True)
+1523:    bracket_split_succeeded_or_raise(head, body, tail)
+1524:    for result in (head, body, tail):
+1525:        if result:
+1526:            yield result
+1527:
+1528:
+1529:def right_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+1530:    """Split line into many lines, starting with the last matching bracket pair."""
+1531:    head = Line(depth=line.depth)
+1532:    body = Line(depth=line.depth + 1, inside_brackets=True)
+1533:    tail = Line(depth=line.depth)
+1534:    tail_leaves: List[Leaf] = []
+1535:    body_leaves: List[Leaf] = []
+1536:    head_leaves: List[Leaf] = []
+1537:    current_leaves = tail_leaves
+1538:    opening_bracket = None
+1539:    for leaf in reversed(line.leaves):
+1540:        if current_leaves is body_leaves:
+1541:            if leaf is opening_bracket:
+1542:                current_leaves = head_leaves if body_leaves else tail_leaves
+1543:        current_leaves.append(leaf)
+1544:        if current_leaves is tail_leaves:
+1545:            if leaf.type in CLOSING_BRACKETS:
+1546:                opening_bracket = leaf.opening_bracket
+1547:                current_leaves = body_leaves
+1548:    tail_leaves.reverse()
+1549:    body_leaves.reverse()
+1550:    head_leaves.reverse()
+1551:    # Since body is a new indent level, remove spurious leading whitespace.
+1552:    if body_leaves:
+1553:        normalize_prefix(body_leaves[0], inside_brackets=True)
+1554:    # Build the new lines.
+1555:    for result, leaves in (
+1556:        (head, head_leaves), (body, body_leaves), (tail, tail_leaves)
+1557:    ):
+1558:        for leaf in leaves:
+1559:            result.append(leaf, preformatted=True)
+1560:            comment_after = line.comments.get(id(leaf))
+1561:            if comment_after:
+1562:                result.append(comment_after, preformatted=True)
+1563:    bracket_split_succeeded_or_raise(head, body, tail)
+1564:    for result in (head, body, tail):
+1565:        if result:
+1566:            yield result
+1567:
+1568:
+1569:def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None:
+1570:    """Raise :exc:`CannotSplit` if the last left- or right-hand split failed.
+1571:
+1572:    Do nothing otherwise.
+1573:
+1574:    A left- or right-hand split is based on a pair of brackets. Content before
+1575:    (and including) the opening bracket is left on one line, content inside the
+1576:    brackets is put on a separate line, and finally content starting with and
+1577:    following the closing bracket is put on a separate line.
+1578:
+1579:    Those are called `head`, `body`, and `tail`, respectively. If the split
+1580:    produced the same line (all content in `head`) or ended up with an empty `body`
+1581:    and the `tail` is just the closing bracket, then it's considered failed.
+1582:    """
+1583:    tail_len = len(str(tail).strip())
+1584:    if not body:
+1585:        if tail_len == 0:
+1586:            raise CannotSplit("Splitting brackets produced the same line")
+1587:
+1588:        elif tail_len < 3:
+1589:            raise CannotSplit(
+1590:                f"Splitting brackets on an empty body to save "
+1591:                f"{tail_len} characters is not worth it"
+1592:            )
+1593:
+1594:
+1595:def delimiter_split(line: Line, py36: bool = False) -> Iterator[Line]:
+1596:    """Split according to delimiters of the highest priority.
+1597:
+1598:    This kind of split doesn't increase indentation.
+1599:    If `py36` is True, the split will add trailing commas also in function
+1600:    signatures that contain `*` and `**`.
+1601:    """
+1602:    try:
+1603:        last_leaf = line.leaves[-1]
+1604:    except IndexError:
+1605:        raise CannotSplit("Line empty")
+1606:
+1607:    delimiters = line.bracket_tracker.delimiters
+1608:    try:
+1609:        delimiter_priority = line.bracket_tracker.max_delimiter_priority(
+1610:            exclude={id(last_leaf)}
+1611:        )
+1612:    except ValueError:
+1613:        raise CannotSplit("No delimiters found")
+1614:
+1615:    current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+1616:    lowest_depth = sys.maxsize
+1617:    trailing_comma_safe = True
+1618:    for leaf in line.leaves:
+1619:        current_line.append(leaf, preformatted=True)
+1620:        comment_after = line.comments.get(id(leaf))
+1621:        if comment_after:
+1622:            current_line.append(comment_after, preformatted=True)
+1623:        lowest_depth = min(lowest_depth, leaf.bracket_depth)
+1624:        if (
+1625:            leaf.bracket_depth == lowest_depth
+1626:            and leaf.type == token.STAR
+1627:            or leaf.type == token.DOUBLESTAR
+1628:        ):
+1629:            trailing_comma_safe = trailing_comma_safe and py36
+1630:        leaf_priority = delimiters.get(id(leaf))
+1631:        if leaf_priority == delimiter_priority:
+1632:            normalize_prefix(current_line.leaves[0], inside_brackets=True)
+1633:            yield current_line
+1634:
+1635:            current_line = Line(depth=line.depth, inside_brackets=line.inside_brackets)
+1636:    if current_line:
+1637:        if (
+1638:            delimiter_priority == COMMA_PRIORITY
+1639:            and current_line.leaves[-1].type != token.COMMA
+1640:            and trailing_comma_safe
+1641:        ):
+1642:            current_line.append(Leaf(token.COMMA, ','))
+1643:        normalize_prefix(current_line.leaves[0], inside_brackets=True)
+1644:        yield current_line
+1645:
+1646:
+1647:def is_import(leaf: Leaf) -> bool:
+1648:    """Return True if the given leaf starts an import statement."""
+1649:    p = leaf.parent
+1650:    t = leaf.type
+1651:    v = leaf.value
+1652:    return bool(
+1653:        t == token.NAME
+1654:        and (
+1655:            (v == 'import' and p and p.type == syms.import_name)
+1656:            or (v == 'from' and p and p.type == syms.import_from)
+1657:        )
+1658:    )
+1659:
+1660:
+1661:def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+1662:    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+1663:    else.
+1664:
+1665:    Note: don't use backslashes for formatting or you'll lose your voting rights.
+1666:    """
+1667:    if not inside_brackets:
+1668:        spl = leaf.prefix.split('#')
+1669:        if '\\' not in spl[0]:
+1670:            nl_count = spl[-1].count('\n')
+1671:            if len(spl) > 1:
+1672:                nl_count -= 1
+1673:            leaf.prefix = '\n' * nl_count
+1674:            return
+1675:
+1676:    leaf.prefix = ''
+1677:
+1678:
+1679:def is_python36(node: Node) -> bool:
+1680:    """Return True if the current file is using Python 3.6+ features.
+1681:
+1682:    Currently looking for:
+1683:    - f-strings; and
+1684:    - trailing commas after * or ** in function signatures.
+1685:    """
+1686:    for n in node.pre_order():
+1687:        if n.type == token.STRING:
+1688:            value_head = n.value[:2]  # type: ignore
+1689:            if value_head in {'f"', 'F"', "f'", "F'", 'rf', 'fr', 'RF', 'FR'}:
+1690:                return True
+1691:
+1692:        elif (
+1693:            n.type == syms.typedargslist
+1694:            and n.children
+1695:            and n.children[-1].type == token.COMMA
+1696:        ):
+1697:            for ch in n.children:
+1698:                if ch.type == token.STAR or ch.type == token.DOUBLESTAR:
+1699:                    return True
+1700:
+1701:    return False
+1702:
+1703:
+1704:PYTHON_EXTENSIONS = {'.py'}
+1705:BLACKLISTED_DIRECTORIES = {
+1706:    'build', 'buck-out', 'dist', '_build', '.git', '.hg', '.mypy_cache', '.tox', '.venv'
+1707:}
+1708:
+1709:
+1710:def gen_python_files_in_dir(path: Path) -> Iterator[Path]:
+1711:    """Generate all files under `path` which aren't under BLACKLISTED_DIRECTORIES
+1712:    and have one of the PYTHON_EXTENSIONS.
+1713:    """
+1714:    for child in path.iterdir():
+1715:        if child.is_dir():
+1716:            if child.name in BLACKLISTED_DIRECTORIES:
+1717:                continue
+1718:
+1719:            yield from gen_python_files_in_dir(child)
+1720:
+1721:        elif child.suffix in PYTHON_EXTENSIONS:
+1722:            yield child
+1723:
+1724:
+1725:@dataclass
+1726:class Report:
+1727:    """Provides a reformatting counter. Can be rendered with `str(report)`."""
+1728:    check: bool = False
+1729:    change_count: int = 0
+1730:    same_count: int = 0
+1731:    failure_count: int = 0
+1732:
+1733:    def done(self, src: Path, changed: bool) -> None:
+1734:        """Increment the counter for successful reformatting. Write out a message."""
+1735:        if changed:
+1736:            reformatted = 'would reformat' if self.check else 'reformatted'
+1737:            out(f'{reformatted} {src}')
+1738:            self.change_count += 1
+1739:        else:
+1740:            out(f'{src} already well formatted, good job.', bold=False)
+1741:            self.same_count += 1
+1742:
+1743:    def failed(self, src: Path, message: str) -> None:
+1744:        """Increment the counter for failed reformatting. Write out a message."""
+1745:        err(f'error: cannot format {src}: {message}')
+1746:        self.failure_count += 1
+1747:
+1748:    @property
+1749:    def return_code(self) -> int:
+1750:        """Return the exit code that the app should use.
+1751:
+1752:        This considers the current state of changed files and failures:
+1753:        - if there were any failures, return 123;
+1754:        - if any files were changed and --check is being used, return 1;
+1755:        - otherwise return 0.
+1756:        """
+1757:        # According to http://tldp.org/LDP/abs/html/exitcodes.html starting with
+1758:        # 126 we have special returncodes reserved by the shell.
+1759:        if self.failure_count:
+1760:            return 123
+1761:
+1762:        elif self.change_count and self.check:
+1763:            return 1
+1764:
+1765:        return 0
+1766:
+1767:    def __str__(self) -> str:
+1768:        """Render a color report of the current state.
+1769:
+1770:        Use `click.unstyle` to remove colors.
+1771:        """
+1772:        if self.check:
+1773:            reformatted = "would be reformatted"
+1774:            unchanged = "would be left unchanged"
+1775:            failed = "would fail to reformat"
+1776:        else:
+1777:            reformatted = "reformatted"
+1778:            unchanged = "left unchanged"
+1779:            failed = "failed to reformat"
+1780:        report = []
+1781:        if self.change_count:
+1782:            s = 's' if self.change_count > 1 else ''
+1783:            report.append(
+1784:                click.style(f'{self.change_count} file{s} {reformatted}', bold=True)
+1785:            )
+1786:        if self.same_count:
+1787:            s = 's' if self.same_count > 1 else ''
+1788:            report.append(f'{self.same_count} file{s} {unchanged}')
+1789:        if self.failure_count:
+1790:            s = 's' if self.failure_count > 1 else ''
+1791:            report.append(
+1792:                click.style(f'{self.failure_count} file{s} {failed}', fg='red')
+1793:            )
+1794:        return ', '.join(report) + '.'
+1795:
+1796:
+1797:def assert_equivalent(src: str, dst: str) -> None:
+1798:    """Raise AssertionError if `src` and `dst` aren't equivalent."""
+1799:
+
+Calling tool: grepTool
+def comments_after\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+comments_after\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+SplitFunc
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+class Line\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/docutils/parsers/rst/states.py:2913:class Line(SpecializedText):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/env/lib/python3.8/site-packages/mypy/typeshed/third_party/2and3/tabulate.pyi:8:class Line(NamedTuple):
+
+Calling tool: grepTool
+^class Line
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black.py: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black.py: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+class Line\b
+Grep command failed with exit code 2: rg: .rgignore: No such file or directory (os error 2)
+rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black/black.py: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black/black.py: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+^class Line\b
+Matched content:
+518:class Line:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py
+500:        if leaf.type in OPENING_BRACKETS:
+501:            self.bracket_match[self.depth, BRACKET[leaf.type]] = leaf
+502:            self.depth += 1
+503:        self.previous = leaf
+504:
+505:    def any_open_brackets(self) -> bool:
+506:        """Return True if there is an yet unmatched open bracket on the line."""
+507:        return bool(self.bracket_match)
+508:
+509:    def max_delimiter_priority(self, exclude: Iterable[LeafID] = ()) -> int:
+510:        """Return the highest priority of a delimiter found on the line.
+511:
+512:        Values are consistent with what `is_delimiter()` returns.
+513:        """
+514:        return max(v for k, v in self.delimiters.items() if k not in exclude)
+515:
+516:
+517:@dataclass
+518:class Line:
+519:    """Holds leaves and comments. Can be printed with `str(line)`."""
+520:
+521:    depth: int = 0
+522:    leaves: List[Leaf] = Factory(list)
+523:    comments: Dict[LeafID, Leaf] = Factory(dict)
+524:    bracket_tracker: BracketTracker = Factory(BracketTracker)
+525:    inside_brackets: bool = False
+526:    has_for: bool = False
+527:    _for_loop_variable: bool = False
+528:
+529:    def append(self, leaf: Leaf, preformatted: bool = False) -> None:
+530:        """Add a new `leaf` to the end of the line.
+531:
+532:        Unless `preformatted` is True, the `leaf` will receive a new consistent
+533:        whitespace prefix and metadata applied by :class:`BracketTracker`.
+534:        Trailing commas are maybe removed, unpacked for loop variables are
+535:        demoted from being delimiters.
+536:
+537:        Inline comments are put aside.
+538:        """
+539:        has_value = leaf.value.strip()
+540:        if not has_value:
+541:            return
+542:
+543:        if self.leaves and not preformatted:
+544:            # Note: at this point leaf.prefix should be empty except for
+545:            # imports, for which we only preserve newlines.
+546:            leaf.prefix += whitespace(leaf)
+547:        if self.inside_brackets or not preformatted:
+548:            self.maybe_decrement_after_for_loop_variable(leaf)
+549:            self.bracket_tracker.mark(leaf)
+550:            self.maybe_remove_trailing_comma(leaf)
+551:            self.maybe_increment_for_loop_variable(leaf)
+552:            if self.maybe_adapt_standalone_comment(leaf):
+553:                return
+554:
+555:        if not self.append_comment(leaf):
+556:            self.leaves.append(leaf)
+557:
+558:    @property
+559:    def is_comment(self) -> bool:
+560:        """Is this line a standalone comment?"""
+561:        return bool(self) and self.leaves[0].type == STANDALONE_COMMENT
+562:
+563:    @property
+564:    def is_decorator(self) -> bool:
+565:        """Is this line a decorator?"""
+566:        return bool(self) and self.leaves[0].type == token.AT
+567:
+568:    @property
+569:    def is_import(self) -> bool:
+570:        """Is this an import line?"""
+571:        return bool(self) and is_import(self.leaves[0])
+572:
+573:    @property
+574:    def is_class(self) -> bool:
+575:        """Is this line a class definition?"""
+576:        return (
+577:            bool(self)
+578:            and self.leaves[0].type == token.NAME
+579:            and self.leaves[0].value == 'class'
+580:        )
+581:
+582:    @property
+583:    def is_def(self) -> bool:
+584:        """Is this a function definition? (Also returns True for async defs.)"""
+585:        try:
+586:            first_leaf = self.leaves[0]
+587:        except IndexError:
+588:            return False
+589:
+590:        try:
+591:            second_leaf: Optional[Leaf] = self.leaves[1]
+592:        except IndexError:
+593:            second_leaf = None
+594:        return (
+595:            (first_leaf.type == token.NAME and first_leaf.value == 'def')
+596:            or (
+597:                first_leaf.type == token.ASYNC
+598:                and second_leaf is not None
+599:                and second_leaf.type == token.NAME
+600:                and second_leaf.value == 'def'
+601:            )
+602:        )
+603:
+604:    @property
+605:    def is_flow_control(self) -> bool:
+606:        """Is this line a flow control statement?
+607:
+608:        Those are `return`, `raise`, `break`, and `continue`.
+609:        """
+610:        return (
+611:            bool(self)
+612:            and self.leaves[0].type == token.NAME
+613:            and self.leaves[0].value in FLOW_CONTROL
+614:        )
+615:
+616:    @property
+617:    def is_yield(self) -> bool:
+618:        """Is this line a yield statement?"""
+619:        return (
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py
+620:            bool(self)
+621:            and self.leaves[0].type == token.NAME
+622:            and self.leaves[0].value == 'yield'
+623:        )
+624:
+625:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+626:        """Remove trailing comma if there is one and it's safe."""
+627:        if not (
+628:            self.leaves
+629:            and self.leaves[-1].type == token.COMMA
+630:            and closing.type in CLOSING_BRACKETS
+631:        ):
+632:            return False
+633:
+634:        if closing.type == token.RBRACE:
+635:            self.leaves.pop()
+636:            return True
+637:
+638:        if closing.type == token.RSQB:
+639:            comma = self.leaves[-1]
+640:            if comma.parent and comma.parent.type == syms.listmaker:
+641:                self.leaves.pop()
+642:                return True
+643:
+644:        # For parens let's check if it's safe to remove the comma.  If the
+645:        # trailing one is the only one, we might mistakenly change a tuple
+646:        # into a different type by removing the comma.
+647:        depth = closing.bracket_depth + 1
+648:        commas = 0
+649:        opening = closing.opening_bracket
+650:        for _opening_index, leaf in enumerate(self.leaves):
+651:            if leaf is opening:
+652:                break
+653:
+654:        else:
+655:            return False
+656:
+657:        for leaf in self.leaves[_opening_index + 1:]:
+658:            if leaf is closing:
+659:                break
+660:
+661:            bracket_depth = leaf.bracket_depth
+662:            if bracket_depth == depth and leaf.type == token.COMMA:
+663:                commas += 1
+664:                if leaf.parent and leaf.parent.type == syms.arglist:
+665:                    commas += 1
+666:                    break
+667:
+668:        if commas > 1:
+669:            self.leaves.pop()
+670:            return True
+671:
+672:        return False
+673:
+674:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+675:        """In a for loop, or comprehension, the variables are often unpacks.
+676:
+677:        To avoid splitting on the comma in this situation, increase the depth of
+678:        tokens between `for` and `in`.
+679:        """
+680:        if leaf.type == token.NAME and leaf.value == 'for':
+681:            self.has_for = True
+682:            self.bracket_tracker.depth += 1
+683:            self._for_loop_variable = True
+684:            return True
+685:
+686:        return False
+687:
+688:    def maybe_decrement_after_for_loop_variable(self, leaf: Leaf) -> bool:
+689:        """See `maybe_increment_for_loop_variable` above for explanation."""
+690:        if self._for_loop_variable and leaf.type == token.NAME and leaf.value == 'in':
+691:            self.bracket_tracker.depth -= 1
+692:            self._for_loop_variable = False
+693:            return True
+694:
+695:        return False
+696:
+697:    def maybe_adapt_standalone_comment(self, comment: Leaf) -> bool:
+698:        """Hack a standalone comment to act as a trailing comment for line splitting.
+699:
+700:        If this line has brackets and a standalone `comment`, we need to adapt
+701:        it to be able to still reformat the line.
+702:
+703:        This is not perfect, the line to which the standalone comment gets
+704:        appended will appear "too long" when splitting.
+705:        """
+706:        if not (
+707:            comment.type == STANDALONE_COMMENT
+708:            and self.bracket_tracker.any_open_brackets()
+709:        ):
+710:            return False
+711:
+712:        comment.type = token.COMMENT
+713:        comment.prefix = '\n' + '    ' * (self.depth + 1)
+714:        return self.append_comment(comment)
+715:
+716:    def append_comment(self, comment: Leaf) -> bool:
+717:        """Add an inline comment to the line."""
+718:        if comment.type != token.COMMENT:
+719:            return False
+720:
+721:        try:
+722:            after = id(self.last_non_delimiter())
+723:        except LookupError:
+724:            comment.type = STANDALONE_COMMENT
+725:            comment.prefix = ''
+726:            return False
+727:
+728:        else:
+729:            if after in self.comments:
+730:                self.comments[after].value += str(comment)
+731:            else:
+732:                self.comments[after] = comment
+733:            return True
+734:
+735:    def last_non_delimiter(self) -> Leaf:
+736:        """Return the last non-delimiter on the line. Raise LookupError otherwise."""
+737:        for i in range(len(self.leaves)):
+738:            last = self.leaves[-i - 1]
+739:            if not is_delimiter(last):
+740:                return last
+741:
+742:        raise LookupError("No non-delimiters found")
+743:
+744:    def __str__(self) -> str:
+745:        """Render the line."""
+746:        if not self:
+747:            return '\n'
+748:
+749:        indent = '    ' * self.depth
+750:        leaves = iter(self.leaves)
+751:        first = next(leaves)
+752:        res = f'{first.prefix}{indent}{first.value}'
+753:        for leaf in leaves:
+754:            res += str(leaf)
+755:        for comment in self.comments.values():
+756:            res += str(comment)
+757:        return res + '\n'
+758:
+759:    def __bool__(self) -> bool:
+760:        """Return True if the line has leaves or comments."""
+761:        return bool(self.leaves or self.comments)
+762:
+763:
+764:class UnformattedLines(Line):
+765:    """Just like :class:`Line` but stores lines which aren't reformatted."""
+766:
+767:    def append(self, leaf: Leaf, preformatted: bool = True) -> None:
+768:        """Just add a new `leaf` to the end of the lines.
+769:
+770:        The `preformatted` argument is ignored.
+771:
+772:        Keeps track of indentation `depth`, which is useful when the user
+773:        says `# fmt: on`. Otherwise, doesn't do anything with the `leaf`.
+774:        """
+775:        try:
+776:            list(generate_comments(leaf))
+777:        except FormatOn as f_on:
+778:            self.leaves.append(f_on.leaf_from_consumed(leaf))
+779:            raise
+780:
+781:        self.leaves.append(leaf)
+782:        if leaf.type == token.INDENT:
+783:            self.depth += 1
+784:        elif leaf.type == token.DEDENT:
+785:            self.depth -= 1
+786:
+787:    def __str__(self) -> str:
+788:        """Render unformatted lines from leaves which were added with `append()`.
+789:
+790:        `depth` is not used for indentation in this case.
+791:        """
+792:        if not self:
+793:            return '\n'
+794:
+795:        res = ''
+796:        for leaf in self.leaves:
+797:            res += str(leaf)
+798:        return res
+799:
+800:    def append_comment(self, comment: Leaf) -> bool:
+801:        """Not implemented in this class. Raises `NotImplementedError`."""
+802:        raise NotImplementedError("Unformatted lines don't store comments separately.")
+803:
+804:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+805:        """Does nothing and returns False."""
+806:        return False
+807:
+808:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+809:        """Does nothing and returns False."""
+810:        return False
+811:
+812:    def maybe_adapt_standalone_comment(self, comment: Leaf) -> bool:
+813:        """Does nothing and returns False."""
+814:        return False
+815:
+816:
+817:@dataclass
+818:class EmptyLineTracker:
+819:    """Provides a stateful method that returns the number of potential extra
+
+Calling tool: grepTool
+def dont_increase_indentation\(|@dont_increase_indentation
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+comments_after
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from typing import .*List
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from typing import
+Matched content:
+12:from typing import (
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-22/bad/black/black.py
+1:#!/usr/bin/env python3
+2:
+3:import asyncio
+4:from asyncio.base_events import BaseEventLoop
+5:from concurrent.futures import Executor, ProcessPoolExecutor
+6:from functools import partial
+7:import keyword
+8:import os
+9:from pathlib import Path
+10:import tokenize
+11:import sys
+12:from typing import (
+13:    Dict, Generic, Iterable, Iterator, List, Optional, Set, Tuple, Type, TypeVar, Union
+14:)
+15:
+16:from attr import dataclass, Factory
+17:import click
+18:
+19:# lib2to3 fork
+20:from blib2to3.pytree import Node, Leaf, type_repr
+21:from blib2to3 import pygram, pytree
+22:from blib2to3.pgen2 import driver, token
+23:from blib2to3.pgen2.parse import ParseError
+24:
+25:__version__ = "18.3a4"
+26:DEFAULT_LINE_LENGTH = 88
+27:# types
+28:syms = pygram.python_symbols
+29:FileContent = str
+30:Encoding = str
+31:Depth = int
+32:NodeType = int
+33:LeafID = int
+34:Priority = int
+35:LN = Union[Leaf, Node]
+36:out = partial(click.secho, bold=True, err=True)
+37:err = partial(click.secho, fg='red', err=True)
+38:
+39:
+40:class NothingChanged(UserWarning):
+41:    """Raised by :func:`format_file` when reformatted code is the same as source."""
+42:
+43:
+44:class CannotSplit(Exception):
+45:    """A readable split that fits the allotted line length is impossible.
+46:
+47:    Raised by :func:`left_hand_split`, :func:`right_hand_split`, and
+48:    :func:`delimiter_split`.
+49:    """
+50:
+51:
+52:class FormatError(Exception):
+53:    """Base exception for `# fmt: on` and `# fmt: off` handling.
+54:
+55:    It holds the number of bytes of the prefix consumed before the format
+56:    control comment appeared.
+57:    """
+58:
+59:    def __init__(self, consumed: int) -> None:
+60:        super().__init__(consumed)
+61:        self.consumed = consumed
+62:
+63:    def trim_prefix(self, leaf: Leaf) -> None:
+64:        leaf.prefix = leaf.prefix[self.consumed:]
+65:
+66:    def leaf_from_consumed(self, leaf: Leaf) -> Leaf:
+67:        """Returns a new Leaf from the consumed part of the prefix."""
+68:        unformatted_prefix = leaf.prefix[:self.consumed]
+69:        return Leaf(token.NEWLINE, unformatted_prefix)
+70:
+71:
+72:class FormatOn(FormatError):
+73:    """Found a comment like `# fmt: on` in the file."""
+74:
+75:
+76:class FormatOff(FormatError):
+77:    """Found a comment like `# fmt: off` in the file."""
+78:
+79:
+80:@click.command()
+
+Calling tool: grepTool
+append_safe\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+def comments_after\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: createTodo
+Todo List Created
+Todo List (15 items):
+- [ ] Verify split_line() now includes standalone_comment_split in the inside_brackets path and that the order is [delimiter_split, standalone_comment_split, right_hand_split]; confirm the prior conditional gating on '\n' in line_str for right_hand_split is removed. (ID: todo-1)
+- [ ] Confirm all split functions used in split_line (left_hand_split, delimiter_split, standalone_comment_split, right_hand_split) have the signature (line: Line, py36: bool = False) so that the new positional call split_func(line, py36) is valid. (ID: todo-2)
+- [ ] Check that the type annotation split_funcs: List[SplitFunc] is valid: ensure SplitFunc type alias is defined/imported before use (e.g., Callable[[Line, bool], Iterator[Line]]). If not defined, flag the undefined name. (ID: todo-3)
+- [ ] Validate delimiter_split implementation was updated to use append_to_line() helper with Line.append_safe(..., preformatted=True) and that on ValueError it yields the current_line and starts a new one with the same depth and inside_brackets settings as the input line. (ID: todo-4)
+- [ ] Ensure Line has an append_safe method with behavior compatible with delimiter_split/standalone_comment_split usage (raises ValueError when appending is not possible due to formatting constraints), and that append_safe does not use the old standalone comment adaptation hack (Line.maybe_adapt_standalone_comment). (ID: todo-5)
+- [ ] Verify delimiter_split iterates over all comments following each leaf via for comment_after in line.comments_after(leaf): and no longer relies on a single mapping entry; confirm that the trailing comma logic (when delimiter_priority == COMMA_PRIORITY and py36 allows it) remains intact. (ID: todo-6)
+- [ ] Confirm that Line provides a comments_after(leaf: Leaf) -> Iterable[Leaf] API supporting multiple comments per leaf; verify its implementation and that it returns an empty iterable when no comments exist for the given leaf. (ID: todo-7)
+- [ ] Validate that the internal data model for storing comments supports multiple comments per leaf (e.g., Line.comments no longer a Dict[LeafID, Leaf] single value). If still single-valued, ensure comments_after bridges this correctly without string concatenation of multiple comments (prior behavior concatenated comment.value). (ID: todo-8)
+- [ ] Check that standalone_comment_split is added and decorated with @dont_increase_indentation; also verify that the decorator dont_increase_indentation is defined in the module and is appropriate for split functions (does not increase indentation). (ID: todo-9)
+- [ ] Review standalone_comment_split's pre-check logic: it should only proceed if there exists at least one STANDALONE_COMMENT with bracket_depth > 0; otherwise it should raise CannotSplit. The current for/else/break structure must not incorrectly require a standalone comment at depth == 0. (ID: todo-10)
+- [ ] Ensure standalone_comment_split uses the same append_to_line pattern as delimiter_split (append_safe with preformatted=True, yielding current_line on failure) and iterates comments_after for each leaf. (ID: todo-11)
+- [ ] Confirm standalone_comment_split yields the final current_line only if it contains content; verify Line.__bool__ returns True when it has leaves or comments so that if current_line: yield current_line works as intended. (ID: todo-12)
+- [ ] Check that normalize_prefix(...) calls were removed from delimiter_split and there is no residual reliance on it; ensure any necessary prefix normalization is now handled by the new splitting approach (append_safe/preformatted paths) or elsewhere as per PR intent (no whitespace-prefix hacks). (ID: todo-13)
+- [ ] Verify that left_hand_split and right_hand_split remain compatible with the new multiple-comments model; if they still use line.comments.get(id(leaf)), ensure this doesn’t conflict with the new comments_after API or cause loss of additional comments in those split modes (at least not for cases relevant to test_comments3). (ID: todo-14)
+- [ ] Cross-check tests/tests/comments3.py use-case: nested bracketed expressions with standalone comments inside should trigger the inside_brackets code path; confirm that the updated split selection would attempt standalone_comment_split for such lines and not block wrapping due to comments. (ID: todo-15)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 15
+description: 'Verify split_line() now includes standalone_comment_split in the inside_brackets path and that the order is [delimiter_split, standalone_comment_split, right_hand_split]; confirm the prior conditional gating on '\n' in line_str for right_hand_split is removed.'
