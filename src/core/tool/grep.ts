@@ -63,7 +63,6 @@ export function createGrepTool(targetDir: string) {
       const grepCommand = ["rg", "--no-heading", "--line-number"];
       grepCommand.push(params.pattern);
       grepCommand.push(absolutePath);
-      console.log(grepCommand);
       const proc = Bun.spawnSync(grepCommand);
 
       if (proc.exitCode === 1) {

@@ -21,7 +21,7 @@ def main():
         "--output",
         "-o",
         default="output",
-        help="Output directory for confusion matrix (default: output)",
+        help="Output directory (default: output)",
     )
 
     args = parser.parse_args()
