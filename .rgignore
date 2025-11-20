@@ -1,3 +1,4 @@
 *.py.original
 *.py.rej
 coverage_bugsinpy.txt
+env/
