@@ -1,0 +1,4449 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+
+Calling tool: grepTool
+test_comment_in_decorator
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comment_in_decorator
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:630:    def test_comment_in_decorator(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+600:            result = CliRunner().invoke(black.main, [str(workspace)])
+601:            self.assertEqual(result.exit_code, 123)
+602:            cache = black.read_cache()
+603:            self.assertNotIn(failing, cache)
+604:            self.assertIn(clean, cache)
+605:
+606:    def test_write_cache_write_fail(self) -> None:
+607:        with cache_dir(), patch.object(Path, "open") as mock:
+608:            mock.side_effect = OSError
+609:            black.write_cache({}, [])
+610:
+611:    def test_check_diff_use_together(self) -> None:
+612:        with cache_dir():
+613:            # Files which will be reformatted.
+614:            src1 = (THIS_DIR / "string_quotes.py").resolve()
+615:            result = CliRunner().invoke(black.main, [str(src1), "--diff", "--check"])
+616:            self.assertEqual(result.exit_code, 1)
+617:
+618:            # Files which will not be reformatted.
+619:            src2 = (THIS_DIR / "composition.py").resolve()
+620:            result = CliRunner().invoke(black.main, [str(src2), "--diff", "--check"])
+621:            self.assertEqual(result.exit_code, 0)
+622:
+623:            # Multi file command.
+624:            result = CliRunner().invoke(
+625:                black.main, [str(src1), str(src2), "--diff", "--check"]
+626:            )
+627:            self.assertEqual(result.exit_code, 1)
+628:
+629:    @patch("black.dump_to_file", dump_to_stderr)
+630:    def test_comment_in_decorator(self) -> None:
+631:        source, expected = read_data("comments6")
+632:        actual = fs(source)
+633:        self.assertFormatEqual(expected, actual)
+634:        black.assert_equivalent(source, actual)
+635:        black.assert_stable(source, actual, line_length=ll)
+636:
+637:
+638:if __name__ == "__main__":
+639:    unittest.main()
+
+Calling tool: grepTool
+comments6
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/bugsinpy_bug.info:4:test_file="tests/comments6.py;tests/test_black.py"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:631:        source, expected = read_data("comments6")
+
+Calling tool: globTool
+**/tests/comments6.py
+Grep command failed with exit code 2: rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black: No such file or directory (os error 2)
+
+
+Calling tool: globTool
+**/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+1:@property
+2:# TODO: X
+3:@property
+4:# TODO: Y
+5:# TODO: Z
+6:@property
+7:def foo():
+8:    pass
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:32:def read_data(name: str) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager
+5:from functools import partial
+6:from io import StringIO
+7:import os
+8:from pathlib import Path
+9:import sys
+10:from tempfile import TemporaryDirectory
+11:from typing import Any, List, Tuple, Iterator
+12:import unittest
+13:from unittest.mock import patch
+14:
+15:from click import unstyle
+16:from click.testing import CliRunner
+17:
+18:import black
+19:
+20:ll = 88
+21:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+22:fs = partial(black.format_str, line_length=ll)
+23:THIS_FILE = Path(__file__)
+24:THIS_DIR = THIS_FILE.parent
+25:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+26:
+27:
+28:def dump_to_stderr(*output: str) -> str:
+29:    return "\n" + "\n".join(output) + "\n"
+30:
+31:
+32:def read_data(name: str) -> Tuple[str, str]:
+33:    """read_data('test_name') -> 'input', 'output'"""
+34:    if not name.endswith((".py", ".out", ".diff")):
+35:        name += ".py"
+36:    _input: List[str] = []
+37:    _output: List[str] = []
+38:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+39:        lines = test.readlines()
+40:    result = _input
+41:    for line in lines:
+42:        line = line.replace(EMPTY_LINE, "")
+43:        if line.rstrip() == "# output":
+44:            result = _output
+45:            continue
+46:
+47:        result.append(line)
+48:    if _input and not _output:
+49:        # If there's no output marker, treat the entire file as already pre-formatted.
+50:        _output = _input[:]
+51:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+52:
+53:
+54:@contextmanager
+55:def cache_dir(exists: bool = True) -> Iterator[Path]:
+56:    with TemporaryDirectory() as workspace:
+57:        cache_dir = Path(workspace)
+58:        if not exists:
+59:            cache_dir = cache_dir / "new"
+60:        cache_file = cache_dir / "cache.pkl"
+61:        with patch("black.CACHE_DIR", cache_dir), patch("black.CACHE_FILE", cache_file):
+62:            yield cache_dir
+63:
+64:
+65:@contextmanager
+66:def event_loop(close: bool) -> Iterator[None]:
+67:    policy = asyncio.get_event_loop_policy()
+68:    old_loop = policy.get_event_loop()
+69:    loop = policy.new_event_loop()
+70:    asyncio.set_event_loop(loop)
+71:    try:
+72:        yield
+73:
+74:    finally:
+75:        policy.set_event_loop(old_loop)
+76:        if close:
+77:            loop.close()
+78:
+79:
+80:class BlackTestCase(unittest.TestCase):
+
+Calling tool: grepTool
+class Line\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+class Line
+Matched content:
+701:class Line:
+1078:class LineGenerator(Visitor[Line]):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+680:        To avoid splitting on the comma in this situation, increase the depth of
+681:        tokens between `lambda` and `:`.
+682:        """
+683:        if leaf.type == token.NAME and leaf.value == "lambda":
+684:            self.depth += 1
+685:            self._lambda_arguments = True
+686:            return True
+687:
+688:        return False
+689:
+690:    def maybe_decrement_after_lambda_arguments(self, leaf: Leaf) -> bool:
+691:        """See `maybe_increment_lambda_arguments` above for explanation."""
+692:        if self._lambda_arguments and leaf.type == token.COLON:
+693:            self.depth -= 1
+694:            self._lambda_arguments = False
+695:            return True
+696:
+697:        return False
+698:
+699:
+700:@dataclass
+701:class Line:
+702:    """Holds leaves and comments. Can be printed with `str(line)`."""
+703:
+704:    depth: int = 0
+705:    leaves: List[Leaf] = Factory(list)
+706:    comments: List[Tuple[Index, Leaf]] = Factory(list)
+707:    bracket_tracker: BracketTracker = Factory(BracketTracker)
+708:    inside_brackets: bool = False
+709:
+710:    def append(self, leaf: Leaf, preformatted: bool = False) -> None:
+711:        """Add a new `leaf` to the end of the line.
+712:
+713:        Unless `preformatted` is True, the `leaf` will receive a new consistent
+714:        whitespace prefix and metadata applied by :class:`BracketTracker`.
+715:        Trailing commas are maybe removed, unpacked for loop variables are
+716:        demoted from being delimiters.
+717:
+718:        Inline comments are put aside.
+719:        """
+720:        has_value = leaf.type in BRACKETS or bool(leaf.value.strip())
+721:        if not has_value:
+722:            return
+723:
+724:        if self.leaves and not preformatted:
+725:            # Note: at this point leaf.prefix should be empty except for
+726:            # imports, for which we only preserve newlines.
+727:            leaf.prefix += whitespace(leaf)
+728:        if self.inside_brackets or not preformatted:
+729:            self.bracket_tracker.mark(leaf)
+730:            self.maybe_remove_trailing_comma(leaf)
+731:
+732:        if not self.append_comment(leaf):
+733:            self.leaves.append(leaf)
+734:
+735:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+736:        """Like :func:`append()` but disallow invalid standalone comment structure.
+737:
+738:        Raises ValueError when any `leaf` is appended after a standalone comment
+739:        or when a standalone comment is not the first leaf on the line.
+740:        """
+741:        if self.bracket_tracker.depth == 0:
+742:            if self.is_comment:
+743:                raise ValueError("cannot append to standalone comments")
+744:
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+746:                raise ValueError(
+747:                    "cannot append standalone comments to a populated line"
+748:                )
+749:
+750:        self.append(leaf, preformatted=preformatted)
+751:
+752:    @property
+753:    def is_comment(self) -> bool:
+754:        """Is this line a standalone comment?"""
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+756:
+757:    @property
+758:    def is_decorator(self) -> bool:
+759:        """Is this line a decorator?"""
+760:        return bool(self) and self.leaves[0].type == token.AT
+761:
+762:    @property
+763:    def is_import(self) -> bool:
+764:        """Is this an import line?"""
+765:        return bool(self) and is_import(self.leaves[0])
+766:
+767:    @property
+768:    def is_class(self) -> bool:
+769:        """Is this line a class definition?"""
+770:        return (
+771:            bool(self)
+772:            and self.leaves[0].type == token.NAME
+773:            and self.leaves[0].value == "class"
+774:        )
+775:
+776:    @property
+777:    def is_def(self) -> bool:
+778:        """Is this a function definition? (Also returns True for async defs.)"""
+779:        try:
+780:            first_leaf = self.leaves[0]
+781:        except IndexError:
+782:            return False
+783:
+784:        try:
+785:            second_leaf: Optional[Leaf] = self.leaves[1]
+786:        except IndexError:
+787:            second_leaf = None
+788:        return (
+789:            (first_leaf.type == token.NAME and first_leaf.value == "def")
+790:            or (
+791:                first_leaf.type == token.ASYNC
+792:                and second_leaf is not None
+793:                and second_leaf.type == token.NAME
+794:                and second_leaf.value == "def"
+795:            )
+796:        )
+797:
+798:    @property
+799:    def is_flow_control(self) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+800:        """Is this line a flow control statement?
+801:
+802:        Those are `return`, `raise`, `break`, and `continue`.
+803:        """
+804:        return (
+805:            bool(self)
+806:            and self.leaves[0].type == token.NAME
+807:            and self.leaves[0].value in FLOW_CONTROL
+808:        )
+809:
+810:    @property
+811:    def is_yield(self) -> bool:
+812:        """Is this line a yield statement?"""
+813:        return (
+814:            bool(self)
+815:            and self.leaves[0].type == token.NAME
+816:            and self.leaves[0].value == "yield"
+817:        )
+818:
+819:    def contains_standalone_comments(self, depth_limit: int = sys.maxsize) -> bool:
+820:        """If so, needs to be split before emitting."""
+821:        for leaf in self.leaves:
+822:            if leaf.type == STANDALONE_COMMENT:
+823:                if leaf.bracket_depth <= depth_limit:
+824:                    return True
+825:
+826:        return False
+827:
+828:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+829:        """Remove trailing comma if there is one and it's safe."""
+830:        if not (
+831:            self.leaves
+832:            and self.leaves[-1].type == token.COMMA
+833:            and closing.type in CLOSING_BRACKETS
+834:        ):
+835:            return False
+836:
+837:        if closing.type == token.RBRACE:
+838:            self.remove_trailing_comma()
+839:            return True
+840:
+841:        if closing.type == token.RSQB:
+842:            comma = self.leaves[-1]
+843:            if comma.parent and comma.parent.type == syms.listmaker:
+844:                self.remove_trailing_comma()
+845:                return True
+846:
+847:        # For parens let's check if it's safe to remove the comma.  If the
+848:        # trailing one is the only one, we might mistakenly change a tuple
+849:        # into a different type by removing the comma.
+850:        depth = closing.bracket_depth + 1
+851:        commas = 0
+852:        opening = closing.opening_bracket
+853:        for _opening_index, leaf in enumerate(self.leaves):
+854:            if leaf is opening:
+855:                break
+856:
+857:        else:
+858:            return False
+859:
+860:        for leaf in self.leaves[_opening_index + 1:]:
+861:            if leaf is closing:
+862:                break
+863:
+864:            bracket_depth = leaf.bracket_depth
+865:            if bracket_depth == depth and leaf.type == token.COMMA:
+866:                commas += 1
+867:                if leaf.parent and leaf.parent.type == syms.arglist:
+868:                    commas += 1
+869:                    break
+870:
+871:        if commas > 1:
+872:            self.remove_trailing_comma()
+873:            return True
+874:
+875:        return False
+876:
+877:    def append_comment(self, comment: Leaf) -> bool:
+878:        """Add an inline or standalone comment to the line."""
+879:        if (
+880:            comment.type == STANDALONE_COMMENT
+881:            and self.bracket_tracker.any_open_brackets()
+882:        ):
+883:            comment.prefix = ""
+884:            return False
+885:
+886:        if comment.type != token.COMMENT:
+887:            return False
+888:
+889:        after = len(self.leaves) - 1
+890:        if after == -1:
+891:            comment.type = STANDALONE_COMMENT
+892:            comment.prefix = ""
+893:            return False
+894:
+895:        else:
+896:            self.comments.append((after, comment))
+897:            return True
+898:
+899:    def comments_after(self, leaf: Leaf) -> Iterator[Leaf]:
+900:        """Generate comments that should appear directly after `leaf`."""
+901:        for _leaf_index, _leaf in enumerate(self.leaves):
+902:            if leaf is _leaf:
+903:                break
+904:
+905:        else:
+906:            return
+907:
+908:        for index, comment_after in self.comments:
+909:            if _leaf_index == index:
+910:                yield comment_after
+911:
+912:    def remove_trailing_comma(self) -> None:
+913:        """Remove the trailing comma and moves the comments attached to it."""
+914:        comma_index = len(self.leaves) - 1
+915:        for i in range(len(self.comments)):
+916:            comment_index, comment = self.comments[i]
+917:            if comment_index == comma_index:
+918:                self.comments[i] = (comma_index - 1, comment)
+919:        self.leaves.pop()
+
+Calling tool: grepTool
+def assertFormatEqual\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:83:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+80:class BlackTestCase(unittest.TestCase):
+81:    maxDiff = None
+82:
+83:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+84:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+85:            bdv: black.DebugVisitor[Any]
+86:            black.out("Expected tree:", fg="green")
+87:            try:
+88:                exp_node = black.lib2to3_parse(expected)
+89:                bdv = black.DebugVisitor()
+90:                list(bdv.visit(exp_node))
+91:            except Exception as ve:
+92:                black.err(str(ve))
+93:            black.out("Actual tree:", fg="red")
+94:            try:
+95:                exp_node = black.lib2to3_parse(actual)
+96:                bdv = black.DebugVisitor()
+97:                list(bdv.visit(exp_node))
+98:            except Exception as ve:
+99:                black.err(str(ve))
+100:        self.assertEqual(expected, actual)
+101:
+102:    @patch("black.dump_to_file", dump_to_stderr)
+103:    def test_self(self) -> None:
+104:        source, expected = read_data("test_black")
+105:        actual = fs(source)
+106:        self.assertFormatEqual(expected, actual)
+107:        black.assert_equivalent(source, actual)
+108:        black.assert_stable(source, actual, line_length=ll)
+109:        self.assertFalse(ff(THIS_FILE))
+110:
+111:    @patch("black.dump_to_file", dump_to_stderr)
+112:    def test_black(self) -> None:
+113:        source, expected = read_data("../black")
+114:        actual = fs(source)
+115:        self.assertFormatEqual(expected, actual)
+116:        black.assert_equivalent(source, actual)
+117:        black.assert_stable(source, actual, line_length=ll)
+118:        self.assertFalse(ff(THIS_DIR / ".." / "black.py"))
+119:
+
+Calling tool: createTodo
+Todo List Created
+Todo List (11 items):
+- [ ] Verify in black.py:EmptyLineTracker._maybe_empty_lines that a new condition exists: when current line is a decorator and the previous logical line is a standalone comment, the function returns (0, 0) to avoid inserting empty lines (lines ~1047-1049). (ID: todo-1)
+- [ ] Confirm that the existing guard for consecutive decorators remains intact: when previous_line.is_decorator is True, _maybe_empty_lines returns (0, 0) (lines ~1043-1045). (ID: todo-2)
+- [ ] Check that the new decorator-comment condition is placed in the same def/class/decorator block and only applies when is_decorator is True, ensuring it does not affect class or def separation behavior. (ID: todo-3)
+- [ ] Ensure that the code still appends to previous_defs only for non-decorator defs/classes (i.e., `if not is_decorator: self.previous_defs.append(depth)` remains unchanged). (ID: todo-4)
+- [ ] Validate that the early return for the first line in the file (previous_line is None) remains in the def/class/decorator block so no empty lines are inserted before the first decorator/def/class (lines ~1039-1042). (ID: todo-5)
+- [ ] Verify the implementation of Line.is_comment (lines ~752-756) returns True only for standalone comment lines (single leaf of type STANDALONE_COMMENT). (ID: todo-6)
+- [ ] Verify the Line.append_comment logic (lines ~877-897) converts a leading comment on an otherwise empty logical line to STANDALONE_COMMENT, enabling is_comment to detect standalone comments. (ID: todo-7)
+- [ ] Confirm the test tests/test_black.py::BlackTestCase::test_comment_in_decorator reads data from tests/comments6.py and asserts formatted output equals expected via assertFormatEqual, meaning no changes are expected. (ID: todo-8)
+- [ ] Inspect tests/comments6.py to verify it contains decorators with standalone comment lines between them and no '# output' marker, implying expected equals source (identity formatting). (ID: todo-9)
+- [ ] Verify that test_comment_in_decorator also calls black.assert_equivalent and black.assert_stable with the produced output, consistent with Black's test expectations (lines ~633-635). (ID: todo-10)
+- [ ] Check that no other unrelated logic was modified in _maybe_empty_lines outside the inserted decorator-comment condition (e.g., import/yield separation, flow control handling) to ensure PR scope is limited to decorator comment handling. (ID: todo-11)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 11
+description: 'Verify in black.py:EmptyLineTracker._maybe_empty_lines that a new condition exists: when current line is a decorator and the previous logical line is a standalone comment, the function returns (0, 0) to avoid inserting empty lines (lines ~1047-1049).'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: grepTool
+def _maybe_empty_lines\(
+Matched content:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s EmptyLineTracker._maybe_empty_lines, lines 1047-1049 add the condition `if is_decorator and self.previous_line and self.previous_line.is_comment: return 0, 0`, ensuring no empty lines are inserted between a decorator and a preceding standalone comment.
+
+
+Todo item 1 of 11 is correct
+description: 'Verify in black.py:EmptyLineTracker._maybe_empty_lines that a new condition exists: when current line is a decorator and the previous logical line is a standalone comment, the function returns (0, 0) to avoid inserting empty lines (lines ~1047-1049).'
+Validating todo item 2 of 11
+description: 'Confirm that the existing guard for consecutive decorators remains intact: when previous_line.is_decorator is True, _maybe_empty_lines returns (0, 0) (lines ~1043-1045).'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+
+Calling tool: grepTool
+def _maybe_empty_lines\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Verified in black.py within EmptyLineTracker._maybe_empty_lines (lines 1043-1045) that when self.previous_line and self.previous_line.is_decorator are True, the function returns (0, 0). The decorator guard remains intact alongside the new comment-specific guard.
+
+
+Todo item 2 of 11 is correct
+description: 'Confirm that the existing guard for consecutive decorators remains intact: when previous_line.is_decorator is True, _maybe_empty_lines returns (0, 0) (lines ~1043-1045).'
+Validating todo item 3 of 11
+description: 'Check that the new decorator-comment condition is placed in the same def/class/decorator block and only applies when is_decorator is True, ensuring it does not affect class or def separation behavior.'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In EmptyLineTracker._maybe_empty_lines(), the new check `if is_decorator and self.previous_line and self.previous_line.is_comment: return 0, 0` is inside the same def/class/decorator handling block (`if is_decorator or current_line.is_def or current_line.is_class:`) and is gated by `is_decorator`. Therefore it only affects decorator handling and does not change class or def separation behavior.
+
+
+Todo item 3 of 11 is correct
+description: 'Check that the new decorator-comment condition is placed in the same def/class/decorator block and only applies when is_decorator is True, ensuring it does not affect class or def separation behavior.'
+Validating todo item 4 of 11
+description: 'Ensure that the code still appends to previous_defs only for non-decorator defs/classes (i.e., `if not is_decorator: self.previous_defs.append(depth)` remains unchanged).'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+960:            self.depth += 1
+961:        elif leaf.type == token.DEDENT:
+962:            self.depth -= 1
+963:
+964:    def __str__(self) -> str:
+965:        """Render unformatted lines from leaves which were added with `append()`.
+966:
+967:        `depth` is not used for indentation in this case.
+968:        """
+969:        if not self:
+970:            return "\n"
+971:
+972:        res = ""
+973:        for leaf in self.leaves:
+974:            res += str(leaf)
+975:        return res
+976:
+977:    def append_comment(self, comment: Leaf) -> bool:
+978:        """Not implemented in this class. Raises `NotImplementedError`."""
+979:        raise NotImplementedError("Unformatted lines don't store comments separately.")
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+
+Calling tool: grepTool
+previous_defs\.append\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1038:                self.previous_defs.append(depth)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py (EmptyLineTracker._maybe_empty_lines), lines 1035-1039 show the logic: after computing is_decorator, it appends to previous_defs only when not a decorator (`if not is_decorator: self.previous_defs.append(depth)`). The new change only adds a check to avoid empty lines between decorator comments and doesn’t alter this append logic.
+
+
+Todo item 4 of 11 is correct
+description: 'Ensure that the code still appends to previous_defs only for non-decorator defs/classes (i.e., `if not is_decorator: self.previous_defs.append(depth)` remains unchanged).'
+Validating todo item 5 of 11
+description: 'Validate that the early return for the first line in the file (previous_line is None) remains in the def/class/decorator block so no empty lines are inserted before the first decorator/def/class (lines ~1039-1042).'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py within EmptyLineTracker._maybe_empty_lines, lines 1039-1042 contain the early return when previous_line is None, and it is inside the def/class/decorator block. This ensures no empty lines are inserted before the first decorator/def/class, unchanged by the new decorator-comment logic added below.
+
+
+Todo item 5 of 11 is correct
+description: 'Validate that the early return for the first line in the file (previous_line is None) remains in the def/class/decorator block so no empty lines are inserted before the first decorator/def/class (lines ~1039-1042).'
+Validating todo item 6 of 11
+description: 'Verify the implementation of Line.is_comment (lines ~752-756) returns True only for standalone comment lines (single leaf of type STANDALONE_COMMENT).'
+Calling tool: grepTool
+class Line
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:701:class Line:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1078:class LineGenerator(Visitor[Line]):
+
+Calling tool: grepTool
+is_comment
+Matched content:
+742:            if self.is_comment:
+753:    def is_comment(self) -> bool:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1698:    if isinstance(line, UnformattedLines) or line.is_comment:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+730:            self.maybe_remove_trailing_comma(leaf)
+731:
+732:        if not self.append_comment(leaf):
+733:            self.leaves.append(leaf)
+734:
+735:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+736:        """Like :func:`append()` but disallow invalid standalone comment structure.
+737:
+738:        Raises ValueError when any `leaf` is appended after a standalone comment
+739:        or when a standalone comment is not the first leaf on the line.
+740:        """
+741:        if self.bracket_tracker.depth == 0:
+742:            if self.is_comment:
+743:                raise ValueError("cannot append to standalone comments")
+744:
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+746:                raise ValueError(
+747:                    "cannot append standalone comments to a populated line"
+748:                )
+749:
+750:        self.append(leaf, preformatted=preformatted)
+751:
+752:    @property
+753:    def is_comment(self) -> bool:
+754:        """Is this line a standalone comment?"""
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+756:
+757:    @property
+758:    def is_decorator(self) -> bool:
+759:        """Is this line a decorator?"""
+760:        return bool(self) and self.leaves[0].type == token.AT
+761:
+762:    @property
+763:    def is_import(self) -> bool:
+764:        """Is this an import line?"""
+765:        return bool(self) and is_import(self.leaves[0])
+766:
+767:    @property
+768:    def is_class(self) -> bool:
+769:        """Is this line a class definition?"""
+770:        return (
+771:            bool(self)
+772:            and self.leaves[0].type == token.NAME
+773:            and self.leaves[0].value == "class"
+774:        )
+775:
+776:    @property
+777:    def is_def(self) -> bool:
+778:        """Is this a function definition? (Also returns True for async defs.)"""
+779:        try:
+780:            first_leaf = self.leaves[0]
+781:        except IndexError:
+782:            return False
+783:
+784:        try:
+785:            second_leaf: Optional[Leaf] = self.leaves[1]
+786:        except IndexError:
+787:            second_leaf = None
+788:        return (
+789:            (first_leaf.type == token.NAME and first_leaf.value == "def")
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+545:STANDALONE_COMMENT = 153
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+822:            if leaf.type == STANDALONE_COMMENT:
+880:            comment.type == STANDALONE_COMMENT
+891:            comment.type = STANDALONE_COMMENT
+1309:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1648:            comment_type = STANDALONE_COMMENT
+1656:            if comment_type == STANDALONE_COMMENT:
+1945:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1608:
+1609:def generate_comments(leaf: Leaf) -> Iterator[Leaf]:
+1610:    """Clean the prefix of the `leaf` and generate comments from it, if any.
+1611:
+1612:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+1613:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+1614:    move because it does away with modifying the grammar to include all the
+1615:    possible places in which comments can be placed.
+1616:
+1617:    The sad consequence for us though is that comments don't "belong" anywhere.
+1618:    This is why this function generates simple parentless Leaf objects for
+1619:    comments.  We simply don't know what the correct parent should be.
+1620:
+1621:    No matter though, we can live without this.  We really only need to
+1622:    differentiate between inline and standalone comments.  The latter don't
+1623:    share the line with any code.
+1624:
+1625:    Inline comments are emitted as regular token.COMMENT leaves.  Standalone
+1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1627:    """
+1628:    p = leaf.prefix
+1629:    if not p:
+1630:        return
+1631:
+1632:    if "#" not in p:
+1633:        return
+1634:
+1635:    consumed = 0
+1636:    nlines = 0
+1637:    for index, line in enumerate(p.split("\n")):
+1638:        consumed += len(line) + 1  # adding the length of the split '\n'
+1639:        line = line.lstrip()
+1640:        if not line:
+1641:            nlines += 1
+1642:        if not line.startswith("#"):
+1643:            continue
+1644:
+1645:        if index == 0 and leaf.type != token.ENDMARKER:
+1646:            comment_type = token.COMMENT  # simple trailing comment
+1647:        else:
+1648:            comment_type = STANDALONE_COMMENT
+1649:        comment = make_comment(line)
+1650:        yield Leaf(comment_type, comment, prefix="\n" * nlines)
+1651:
+1652:        if comment in {"# fmt: on", "# yapf: enable"}:
+1653:            raise FormatOn(consumed)
+1654:
+1655:        if comment in {"# fmt: off", "# yapf: disable"}:
+1656:            if comment_type == STANDALONE_COMMENT:
+1657:                raise FormatOff(consumed)
+1658:
+1659:            prev = preceding_leaf(leaf)
+1660:            if not prev or prev.type in WHITESPACE:  # standalone comment in disguise
+1661:                raise FormatOff(consumed)
+1662:
+1663:        nlines = 0
+1664:
+1665:
+1666:def make_comment(content: str) -> str:
+1667:    """Return a consistently formatted comment from the given `content` string.
+1668:
+1669:    All comments (except for "##", "#!", "#:") should have a single space between
+1670:    the hash sign and the content.
+1671:
+1672:    If `content` didn't start with a hash sign, one is provided.
+1673:    """
+1674:    content = content.rstrip()
+1675:    if not content:
+1676:        return "#"
+1677:
+1678:    if content[0] == "#":
+1679:        content = content[1:]
+1680:    if content and content[0] not in " !:#":
+1681:        content = " " + content
+1682:    return "#" + content
+1683:
+1684:
+1685:def split_line(
+1686:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+1687:) -> Iterator[Line]:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py lines 752-756, Line.is_comment returns True only if the line has exactly one leaf and that leaf’s type is STANDALONE_COMMENT, which matches the requirement for standalone comment lines.
+
+
+Todo item 6 of 11 is correct
+description: 'Verify the implementation of Line.is_comment (lines ~752-756) returns True only for standalone comment lines (single leaf of type STANDALONE_COMMENT).'
+Validating todo item 7 of 11
+description: 'Verify the Line.append_comment logic (lines ~877-897) converts a leading comment on an otherwise empty logical line to STANDALONE_COMMENT, enabling is_comment to detect standalone comments.'
+Calling tool: grepTool
+class Line
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:701:class Line:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1078:class LineGenerator(Visitor[Line]):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+680:        To avoid splitting on the comma in this situation, increase the depth of
+681:        tokens between `lambda` and `:`.
+682:        """
+683:        if leaf.type == token.NAME and leaf.value == "lambda":
+684:            self.depth += 1
+685:            self._lambda_arguments = True
+686:            return True
+687:
+688:        return False
+689:
+690:    def maybe_decrement_after_lambda_arguments(self, leaf: Leaf) -> bool:
+691:        """See `maybe_increment_lambda_arguments` above for explanation."""
+692:        if self._lambda_arguments and leaf.type == token.COLON:
+693:            self.depth -= 1
+694:            self._lambda_arguments = False
+695:            return True
+696:
+697:        return False
+698:
+699:
+700:@dataclass
+701:class Line:
+702:    """Holds leaves and comments. Can be printed with `str(line)`."""
+703:
+704:    depth: int = 0
+705:    leaves: List[Leaf] = Factory(list)
+706:    comments: List[Tuple[Index, Leaf]] = Factory(list)
+707:    bracket_tracker: BracketTracker = Factory(BracketTracker)
+708:    inside_brackets: bool = False
+709:
+710:    def append(self, leaf: Leaf, preformatted: bool = False) -> None:
+711:        """Add a new `leaf` to the end of the line.
+712:
+713:        Unless `preformatted` is True, the `leaf` will receive a new consistent
+714:        whitespace prefix and metadata applied by :class:`BracketTracker`.
+715:        Trailing commas are maybe removed, unpacked for loop variables are
+716:        demoted from being delimiters.
+717:
+718:        Inline comments are put aside.
+719:        """
+720:        has_value = leaf.type in BRACKETS or bool(leaf.value.strip())
+721:        if not has_value:
+722:            return
+723:
+724:        if self.leaves and not preformatted:
+725:            # Note: at this point leaf.prefix should be empty except for
+726:            # imports, for which we only preserve newlines.
+727:            leaf.prefix += whitespace(leaf)
+728:        if self.inside_brackets or not preformatted:
+729:            self.bracket_tracker.mark(leaf)
+730:            self.maybe_remove_trailing_comma(leaf)
+731:
+732:        if not self.append_comment(leaf):
+733:            self.leaves.append(leaf)
+734:
+735:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+736:        """Like :func:`append()` but disallow invalid standalone comment structure.
+737:
+738:        Raises ValueError when any `leaf` is appended after a standalone comment
+739:        or when a standalone comment is not the first leaf on the line.
+740:        """
+741:        if self.bracket_tracker.depth == 0:
+742:            if self.is_comment:
+743:                raise ValueError("cannot append to standalone comments")
+744:
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+746:                raise ValueError(
+747:                    "cannot append standalone comments to a populated line"
+748:                )
+749:
+750:        self.append(leaf, preformatted=preformatted)
+751:
+752:    @property
+753:    def is_comment(self) -> bool:
+754:        """Is this line a standalone comment?"""
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+756:
+757:    @property
+758:    def is_decorator(self) -> bool:
+759:        """Is this line a decorator?"""
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+760:        return bool(self) and self.leaves[0].type == token.AT
+761:
+762:    @property
+763:    def is_import(self) -> bool:
+764:        """Is this an import line?"""
+765:        return bool(self) and is_import(self.leaves[0])
+766:
+767:    @property
+768:    def is_class(self) -> bool:
+769:        """Is this line a class definition?"""
+770:        return (
+771:            bool(self)
+772:            and self.leaves[0].type == token.NAME
+773:            and self.leaves[0].value == "class"
+774:        )
+775:
+776:    @property
+777:    def is_def(self) -> bool:
+778:        """Is this a function definition? (Also returns True for async defs.)"""
+779:        try:
+780:            first_leaf = self.leaves[0]
+781:        except IndexError:
+782:            return False
+783:
+784:        try:
+785:            second_leaf: Optional[Leaf] = self.leaves[1]
+786:        except IndexError:
+787:            second_leaf = None
+788:        return (
+789:            (first_leaf.type == token.NAME and first_leaf.value == "def")
+790:            or (
+791:                first_leaf.type == token.ASYNC
+792:                and second_leaf is not None
+793:                and second_leaf.type == token.NAME
+794:                and second_leaf.value == "def"
+795:            )
+796:        )
+797:
+798:    @property
+799:    def is_flow_control(self) -> bool:
+800:        """Is this line a flow control statement?
+801:
+802:        Those are `return`, `raise`, `break`, and `continue`.
+803:        """
+804:        return (
+805:            bool(self)
+806:            and self.leaves[0].type == token.NAME
+807:            and self.leaves[0].value in FLOW_CONTROL
+808:        )
+809:
+810:    @property
+811:    def is_yield(self) -> bool:
+812:        """Is this line a yield statement?"""
+813:        return (
+814:            bool(self)
+815:            and self.leaves[0].type == token.NAME
+816:            and self.leaves[0].value == "yield"
+817:        )
+818:
+819:    def contains_standalone_comments(self, depth_limit: int = sys.maxsize) -> bool:
+820:        """If so, needs to be split before emitting."""
+821:        for leaf in self.leaves:
+822:            if leaf.type == STANDALONE_COMMENT:
+823:                if leaf.bracket_depth <= depth_limit:
+824:                    return True
+825:
+826:        return False
+827:
+828:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+829:        """Remove trailing comma if there is one and it's safe."""
+830:        if not (
+831:            self.leaves
+832:            and self.leaves[-1].type == token.COMMA
+833:            and closing.type in CLOSING_BRACKETS
+834:        ):
+835:            return False
+836:
+837:        if closing.type == token.RBRACE:
+838:            self.remove_trailing_comma()
+839:            return True
+
+Calling tool: grepTool
+def append_comment\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:877:    def append_comment(self, comment: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:977:    def append_comment(self, comment: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+860:        for leaf in self.leaves[_opening_index + 1:]:
+861:            if leaf is closing:
+862:                break
+863:
+864:            bracket_depth = leaf.bracket_depth
+865:            if bracket_depth == depth and leaf.type == token.COMMA:
+866:                commas += 1
+867:                if leaf.parent and leaf.parent.type == syms.arglist:
+868:                    commas += 1
+869:                    break
+870:
+871:        if commas > 1:
+872:            self.remove_trailing_comma()
+873:            return True
+874:
+875:        return False
+876:
+877:    def append_comment(self, comment: Leaf) -> bool:
+878:        """Add an inline or standalone comment to the line."""
+879:        if (
+880:            comment.type == STANDALONE_COMMENT
+881:            and self.bracket_tracker.any_open_brackets()
+882:        ):
+883:            comment.prefix = ""
+884:            return False
+885:
+886:        if comment.type != token.COMMENT:
+887:            return False
+888:
+889:        after = len(self.leaves) - 1
+890:        if after == -1:
+891:            comment.type = STANDALONE_COMMENT
+892:            comment.prefix = ""
+893:            return False
+894:
+895:        else:
+896:            self.comments.append((after, comment))
+897:            return True
+898:
+899:    def comments_after(self, leaf: Leaf) -> Iterator[Leaf]:
+900:        """Generate comments that should appear directly after `leaf`."""
+901:        for _leaf_index, _leaf in enumerate(self.leaves):
+902:            if leaf is _leaf:
+903:                break
+904:
+905:        else:
+906:            return
+907:
+908:        for index, comment_after in self.comments:
+909:            if _leaf_index == index:
+910:                yield comment_after
+911:
+912:    def remove_trailing_comma(self) -> None:
+913:        """Remove the trailing comma and moves the comments attached to it."""
+914:        comma_index = len(self.leaves) - 1
+915:        for i in range(len(self.comments)):
+916:            comment_index, comment = self.comments[i]
+917:            if comment_index == comma_index:
+918:                self.comments[i] = (comma_index - 1, comment)
+919:        self.leaves.pop()
+920:
+921:    def __str__(self) -> str:
+922:        """Render the line."""
+923:        if not self:
+924:            return "\n"
+925:
+926:        indent = "    " * self.depth
+927:        leaves = iter(self.leaves)
+928:        first = next(leaves)
+929:        res = f"{first.prefix}{indent}{first.value}"
+930:        for leaf in leaves:
+931:            res += str(leaf)
+932:        for _, comment in self.comments:
+933:            res += str(comment)
+934:        return res + "\n"
+935:
+936:    def __bool__(self) -> bool:
+937:        """Return True if the line has leaves or comments."""
+938:        return bool(self.leaves or self.comments)
+939:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+940:
+941:class UnformattedLines(Line):
+942:    """Just like :class:`Line` but stores lines which aren't reformatted."""
+943:
+944:    def append(self, leaf: Leaf, preformatted: bool = True) -> None:
+945:        """Just add a new `leaf` to the end of the lines.
+946:
+947:        The `preformatted` argument is ignored.
+948:
+949:        Keeps track of indentation `depth`, which is useful when the user
+950:        says `# fmt: on`. Otherwise, doesn't do anything with the `leaf`.
+951:        """
+952:        try:
+953:            list(generate_comments(leaf))
+954:        except FormatOn as f_on:
+955:            self.leaves.append(f_on.leaf_from_consumed(leaf))
+956:            raise
+957:
+958:        self.leaves.append(leaf)
+959:        if leaf.type == token.INDENT:
+960:            self.depth += 1
+961:        elif leaf.type == token.DEDENT:
+962:            self.depth -= 1
+963:
+964:    def __str__(self) -> str:
+965:        """Render unformatted lines from leaves which were added with `append()`.
+966:
+967:        `depth` is not used for indentation in this case.
+968:        """
+969:        if not self:
+970:            return "\n"
+971:
+972:        res = ""
+973:        for leaf in self.leaves:
+974:            res += str(leaf)
+975:        return res
+976:
+977:    def append_comment(self, comment: Leaf) -> bool:
+978:        """Not implemented in this class. Raises `NotImplementedError`."""
+979:        raise NotImplementedError("Unformatted lines don't store comments separately.")
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+1110:        if isinstance(self.current_line, UnformattedLines):
+1111:            # File contained `# fmt: off`
+1112:            yield from self.visit_unformatted(node)
+1113:
+1114:        else:
+1115:            yield from super().visit(node)
+1116:
+1117:    def visit_default(self, node: LN) -> Iterator[Line]:
+1118:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+1119:        if isinstance(node, Leaf):
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:545:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:822:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:880:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:891:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1309:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1648:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1656:            if comment_type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1945:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+520:            out(f" {node.value!r}", fg="blue", bold=False)
+521:
+522:    @classmethod
+523:    def show(cls, code: str) -> None:
+524:        """Pretty-print the lib2to3 AST of a given string of `code`.
+525:
+526:        Convenience method for debugging.
+527:        """
+528:        v: DebugVisitor[None] = DebugVisitor()
+529:        list(v.visit(lib2to3_parse(code)))
+530:
+531:
+532:KEYWORDS = set(keyword.kwlist)
+533:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+534:FLOW_CONTROL = {"return", "raise", "break", "continue"}
+535:STATEMENT = {
+536:    syms.if_stmt,
+537:    syms.while_stmt,
+538:    syms.for_stmt,
+539:    syms.try_stmt,
+540:    syms.except_clause,
+541:    syms.with_stmt,
+542:    syms.funcdef,
+543:    syms.classdef,
+544:}
+545:STANDALONE_COMMENT = 153
+546:LOGIC_OPERATORS = {"and", "or"}
+547:COMPARATORS = {
+548:    token.LESS,
+549:    token.GREATER,
+550:    token.EQEQUAL,
+551:    token.NOTEQUAL,
+552:    token.LESSEQUAL,
+553:    token.GREATEREQUAL,
+554:}
+555:MATH_OPERATORS = {
+556:    token.PLUS,
+557:    token.MINUS,
+558:    token.STAR,
+559:    token.SLASH,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In Line.append, append_comment is called first. In Line.append_comment (black.py:877-897), when there are no leaves (after == -1), it converts a leading token.COMMENT to STANDALONE_COMMENT and returns False, causing append() to append it to leaves. The is_comment property (lines 752-756) checks for a single STANDALONE_COMMENT leaf, enabling detection of standalone comments.
+
+
+Todo item 7 of 11 is correct
+description: 'Verify the Line.append_comment logic (lines ~877-897) converts a leading comment on an otherwise empty logical line to STANDALONE_COMMENT, enabling is_comment to detect standalone comments.'
+Validating todo item 8 of 11
+description: 'Confirm the test tests/test_black.py::BlackTestCase::test_comment_in_decorator reads data from tests/comments6.py and asserts formatted output equals expected via assertFormatEqual, meaning no changes are expected.'
+Calling tool: grepTool
+class BlackTestCase
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:80:class BlackTestCase(unittest.TestCase):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager
+5:from functools import partial
+6:from io import StringIO
+7:import os
+8:from pathlib import Path
+9:import sys
+10:from tempfile import TemporaryDirectory
+11:from typing import Any, List, Tuple, Iterator
+12:import unittest
+13:from unittest.mock import patch
+14:
+15:from click import unstyle
+16:from click.testing import CliRunner
+17:
+18:import black
+19:
+20:ll = 88
+21:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+22:fs = partial(black.format_str, line_length=ll)
+23:THIS_FILE = Path(__file__)
+24:THIS_DIR = THIS_FILE.parent
+25:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+26:
+27:
+28:def dump_to_stderr(*output: str) -> str:
+29:    return "\n" + "\n".join(output) + "\n"
+30:
+31:
+32:def read_data(name: str) -> Tuple[str, str]:
+33:    """read_data('test_name') -> 'input', 'output'"""
+34:    if not name.endswith((".py", ".out", ".diff")):
+35:        name += ".py"
+36:    _input: List[str] = []
+37:    _output: List[str] = []
+38:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+39:        lines = test.readlines()
+40:    result = _input
+41:    for line in lines:
+42:        line = line.replace(EMPTY_LINE, "")
+43:        if line.rstrip() == "# output":
+44:            result = _output
+45:            continue
+46:
+47:        result.append(line)
+48:    if _input and not _output:
+49:        # If there's no output marker, treat the entire file as already pre-formatted.
+50:        _output = _input[:]
+51:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+52:
+53:
+54:@contextmanager
+55:def cache_dir(exists: bool = True) -> Iterator[Path]:
+56:    with TemporaryDirectory() as workspace:
+57:        cache_dir = Path(workspace)
+58:        if not exists:
+59:            cache_dir = cache_dir / "new"
+60:        cache_file = cache_dir / "cache.pkl"
+61:        with patch("black.CACHE_DIR", cache_dir), patch("black.CACHE_FILE", cache_file):
+62:            yield cache_dir
+63:
+64:
+65:@contextmanager
+66:def event_loop(close: bool) -> Iterator[None]:
+67:    policy = asyncio.get_event_loop_policy()
+68:    old_loop = policy.get_event_loop()
+69:    loop = policy.new_event_loop()
+70:    asyncio.set_event_loop(loop)
+71:    try:
+72:        yield
+73:
+74:    finally:
+75:        policy.set_event_loop(old_loop)
+76:        if close:
+77:            loop.close()
+78:
+79:
+80:class BlackTestCase(unittest.TestCase):
+81:    maxDiff = None
+82:
+83:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+84:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+85:            bdv: black.DebugVisitor[Any]
+86:            black.out("Expected tree:", fg="green")
+87:            try:
+88:                exp_node = black.lib2to3_parse(expected)
+89:                bdv = black.DebugVisitor()
+90:                list(bdv.visit(exp_node))
+91:            except Exception as ve:
+92:                black.err(str(ve))
+93:            black.out("Actual tree:", fg="red")
+94:            try:
+95:                exp_node = black.lib2to3_parse(actual)
+96:                bdv = black.DebugVisitor()
+97:                list(bdv.visit(exp_node))
+98:            except Exception as ve:
+99:                black.err(str(ve))
+100:        self.assertEqual(expected, actual)
+101:
+102:    @patch("black.dump_to_file", dump_to_stderr)
+103:    def test_self(self) -> None:
+104:        source, expected = read_data("test_black")
+105:        actual = fs(source)
+106:        self.assertFormatEqual(expected, actual)
+107:        black.assert_equivalent(source, actual)
+108:        black.assert_stable(source, actual, line_length=ll)
+109:        self.assertFalse(ff(THIS_FILE))
+110:
+111:    @patch("black.dump_to_file", dump_to_stderr)
+112:    def test_black(self) -> None:
+113:        source, expected = read_data("../black")
+114:        actual = fs(source)
+115:        self.assertFormatEqual(expected, actual)
+116:        black.assert_equivalent(source, actual)
+117:        black.assert_stable(source, actual, line_length=ll)
+118:        self.assertFalse(ff(THIS_DIR / ".." / "black.py"))
+119:
+120:    def test_piping(self) -> None:
+121:        source, expected = read_data("../black")
+122:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+123:        try:
+124:            sys.stdin, sys.stdout = StringIO(source), StringIO()
+125:            sys.stdin.name = "<stdin>"
+126:            black.format_stdin_to_stdout(
+127:                line_length=ll, fast=True, write_back=black.WriteBack.YES
+128:            )
+129:            sys.stdout.seek(0)
+130:            actual = sys.stdout.read()
+131:        finally:
+132:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+133:        self.assertFormatEqual(expected, actual)
+134:        black.assert_equivalent(source, actual)
+135:        black.assert_stable(source, actual, line_length=ll)
+136:
+137:    def test_piping_diff(self) -> None:
+138:        source, _ = read_data("expression.py")
+139:        expected, _ = read_data("expression.diff")
+140:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+141:        try:
+142:            sys.stdin, sys.stdout = StringIO(source), StringIO()
+143:            sys.stdin.name = "<stdin>"
+144:            black.format_stdin_to_stdout(
+145:                line_length=ll, fast=True, write_back=black.WriteBack.DIFF
+146:            )
+147:            sys.stdout.seek(0)
+148:            actual = sys.stdout.read()
+149:        finally:
+150:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+151:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+152:        self.assertEqual(expected, actual)
+153:
+154:    @patch("black.dump_to_file", dump_to_stderr)
+155:    def test_setup(self) -> None:
+156:        source, expected = read_data("../setup")
+157:        actual = fs(source)
+158:        self.assertFormatEqual(expected, actual)
+159:        black.assert_equivalent(source, actual)
+160:        black.assert_stable(source, actual, line_length=ll)
+161:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+162:
+163:    @patch("black.dump_to_file", dump_to_stderr)
+164:    def test_function(self) -> None:
+165:        source, expected = read_data("function")
+166:        actual = fs(source)
+167:        self.assertFormatEqual(expected, actual)
+168:        black.assert_equivalent(source, actual)
+169:        black.assert_stable(source, actual, line_length=ll)
+170:
+171:    @patch("black.dump_to_file", dump_to_stderr)
+172:    def test_expression(self) -> None:
+173:        source, expected = read_data("expression")
+174:        actual = fs(source)
+175:        self.assertFormatEqual(expected, actual)
+176:        black.assert_equivalent(source, actual)
+177:        black.assert_stable(source, actual, line_length=ll)
+178:
+179:    def test_expression_ff(self) -> None:
+180:        source, expected = read_data("expression")
+181:        tmp_file = Path(black.dump_to_file(source))
+182:        try:
+183:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+184:            with open(tmp_file, encoding="utf8") as f:
+185:                actual = f.read()
+186:        finally:
+187:            os.unlink(tmp_file)
+188:        self.assertFormatEqual(expected, actual)
+189:        with patch("black.dump_to_file", dump_to_stderr):
+190:            black.assert_equivalent(source, actual)
+191:            black.assert_stable(source, actual, line_length=ll)
+192:
+193:    def test_expression_diff(self) -> None:
+194:        source, _ = read_data("expression.py")
+195:        expected, _ = read_data("expression.diff")
+196:        tmp_file = Path(black.dump_to_file(source))
+197:        hold_stdout = sys.stdout
+198:        try:
+199:            sys.stdout = StringIO()
+200:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+
+Calling tool: grepTool
+test_comment_in_decorator\(
+Matched content:
+630:    def test_comment_in_decorator(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+620:            result = CliRunner().invoke(black.main, [str(src2), "--diff", "--check"])
+621:            self.assertEqual(result.exit_code, 0)
+622:
+623:            # Multi file command.
+624:            result = CliRunner().invoke(
+625:                black.main, [str(src1), str(src2), "--diff", "--check"]
+626:            )
+627:            self.assertEqual(result.exit_code, 1)
+628:
+629:    @patch("black.dump_to_file", dump_to_stderr)
+630:    def test_comment_in_decorator(self) -> None:
+631:        source, expected = read_data("comments6")
+632:        actual = fs(source)
+633:        self.assertFormatEqual(expected, actual)
+634:        black.assert_equivalent(source, actual)
+635:        black.assert_stable(source, actual, line_length=ll)
+636:
+637:
+638:if __name__ == "__main__":
+639:    unittest.main()
+
+Calling tool: globTool
+**/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+1:@property
+2:# TODO: X
+3:@property
+4:# TODO: Y
+5:# TODO: Z
+6:@property
+7:def foo():
+8:    pass
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Located test_comment_in_decorator in tests/test_black.py; it reads source, expected = read_data("comments6") and asserts self.assertFormatEqual(expected, actual) where read_data uses the entire file as expected if no '# output' marker. tests/comments6.py has no output marker, so no changes are expected.
+
+
+Todo item 8 of 11 is correct
+description: 'Confirm the test tests/test_black.py::BlackTestCase::test_comment_in_decorator reads data from tests/comments6.py and asserts formatted output equals expected via assertFormatEqual, meaning no changes are expected.'
+Validating todo item 9 of 11
+description: 'Inspect tests/comments6.py to verify it contains decorators with standalone comment lines between them and no '# output' marker, implying expected equals source (identity formatting).'
+Calling tool: globTool
+**/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+1:@property
+2:# TODO: X
+3:@property
+4:# TODO: Y
+5:# TODO: Z
+6:@property
+7:def foo():
+8:    pass
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Found tests/comments6.py with decorators and standalone comment lines between them (lines 1-6) and no '# output' marker present, implying identity formatting as expected.
+
+
+Todo item 9 of 11 is correct
+description: 'Inspect tests/comments6.py to verify it contains decorators with standalone comment lines between them and no '# output' marker, implying expected equals source (identity formatting).'
+Validating todo item 10 of 11
+description: 'Verify that test_comment_in_decorator also calls black.assert_equivalent and black.assert_stable with the produced output, consistent with Black's test expectations (lines ~633-635).'
+Calling tool: grepTool
+test_comment_in_decorator
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comment_in_decorator
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:630:    def test_comment_in_decorator(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+620:            result = CliRunner().invoke(black.main, [str(src2), "--diff", "--check"])
+621:            self.assertEqual(result.exit_code, 0)
+622:
+623:            # Multi file command.
+624:            result = CliRunner().invoke(
+625:                black.main, [str(src1), str(src2), "--diff", "--check"]
+626:            )
+627:            self.assertEqual(result.exit_code, 1)
+628:
+629:    @patch("black.dump_to_file", dump_to_stderr)
+630:    def test_comment_in_decorator(self) -> None:
+631:        source, expected = read_data("comments6")
+632:        actual = fs(source)
+633:        self.assertFormatEqual(expected, actual)
+634:        black.assert_equivalent(source, actual)
+635:        black.assert_stable(source, actual, line_length=ll)
+636:
+637:
+638:if __name__ == "__main__":
+639:    unittest.main()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In tests/test_black.py at lines 634-635 within test_comment_in_decorator, the test calls black.assert_equivalent(source, actual) and black.assert_stable(source, actual, line_length=ll), satisfying the requirement.
+
+
+Todo item 10 of 11 is correct
+description: 'Verify that test_comment_in_decorator also calls black.assert_equivalent and black.assert_stable with the produced output, consistent with Black's test expectations (lines ~633-635).'
+Validating todo item 11 of 11
+description: 'Check that no other unrelated logic was modified in _maybe_empty_lines outside the inserted decorator-comment condition (e.g., import/yield separation, flow control handling) to ensure PR scope is limited to decorator comment handling.'
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+1110:        if isinstance(self.current_line, UnformattedLines):
+1111:            # File contained `# fmt: off`
+1112:            yield from self.visit_unformatted(node)
+1113:
+1114:        else:
+1115:            yield from super().visit(node)
+1116:
+1117:    def visit_default(self, node: LN) -> Iterator[Line]:
+1118:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+1119:        if isinstance(node, Leaf):
+1120:            any_open_brackets = self.current_line.bracket_tracker.any_open_brackets()
+1121:            try:
+1122:                for comment in generate_comments(node):
+1123:                    if any_open_brackets:
+1124:                        # any comment within brackets is subject to splitting
+1125:                        self.current_line.append(comment)
+1126:                    elif comment.type == token.COMMENT:
+1127:                        # regular trailing comment
+1128:                        self.current_line.append(comment)
+1129:                        yield from self.line()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Inspected black.py:EmptyLineTracker._maybe_empty_lines and confirmed the only change is the new conditional skipping empty lines when a decorator comment precedes a decorator. Flow control, import/yield separation, and other logic remain unchanged, so the PR scope is limited to decorator comment handling.
+
+
+Todo item 11 of 11 is correct
+description: 'Check that no other unrelated logic was modified in _maybe_empty_lines outside the inserted decorator-comment condition (e.g., import/yield separation, flow control handling) to ensure PR scope is limited to decorator comment handling.'
+Validating todo item 1 of 11
+description: 'Verify in black.py:EmptyLineTracker._maybe_empty_lines that a new condition exists: when current line is a decorator and the previous logical line is a standalone comment, the function returns (0, 0) to avoid inserting empty lines (lines ~1047-1049).'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: grepTool
+def _maybe_empty_lines\(
+Matched content:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s EmptyLineTracker._maybe_empty_lines, lines 1047-1049 add the condition `if is_decorator and self.previous_line and self.previous_line.is_comment: return 0, 0`, ensuring no empty lines are inserted between a decorator and a preceding standalone comment.
+
+Todo item 1 of 11 is correct
+description: 'Verify in black.py:EmptyLineTracker._maybe_empty_lines that a new condition exists: when current line is a decorator and the previous logical line is a standalone comment, the function returns (0, 0) to avoid inserting empty lines (lines ~1047-1049).'
+
+Validating todo item 2 of 11
+description: 'Confirm that the existing guard for consecutive decorators remains intact: when previous_line.is_decorator is True, _maybe_empty_lines returns (0, 0) (lines ~1043-1045).'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+
+Calling tool: grepTool
+def _maybe_empty_lines\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Verified in black.py within EmptyLineTracker._maybe_empty_lines (lines 1043-1045) that when self.previous_line and self.previous_line.is_decorator are True, the function returns (0, 0). The decorator guard remains intact alongside the new comment-specific guard.
+
+Todo item 2 of 11 is correct
+description: 'Confirm that the existing guard for consecutive decorators remains intact: when previous_line.is_decorator is True, _maybe_empty_lines returns (0, 0) (lines ~1043-1045).'
+
+Validating todo item 3 of 11
+description: 'Check that the new decorator-comment condition is placed in the same def/class/decorator block and only applies when is_decorator is True, ensuring it does not affect class or def separation behavior.'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In EmptyLineTracker._maybe_empty_lines(), the new check `if is_decorator and self.previous_line and self.previous_line.is_comment: return 0, 0` is inside the same def/class/decorator handling block (`if is_decorator or current_line.is_def or current_line.is_class:`) and is gated by `is_decorator`. Therefore it only affects decorator handling and does not change class or def separation behavior.
+
+Todo item 3 of 11 is correct
+description: 'Check that the new decorator-comment condition is placed in the same def/class/decorator block and only applies when is_decorator is True, ensuring it does not affect class or def separation behavior.'
+
+Validating todo item 4 of 11
+description: 'Ensure that the code still appends to previous_defs only for non-decorator defs/classes (i.e., `if not is_decorator: self.previous_defs.append(depth)` remains unchanged).'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+960:            self.depth += 1
+961:        elif leaf.type == token.DEDENT:
+962:            self.depth -= 1
+963:
+964:    def __str__(self) -> str:
+965:        """Render unformatted lines from leaves which were added with `append()`.
+966:
+967:        `depth` is not used for indentation in this case.
+968:        """
+969:        if not self:
+970:            return "\n"
+971:
+972:        res = ""
+973:        for leaf in self.leaves:
+974:            res += str(leaf)
+975:        return res
+976:
+977:    def append_comment(self, comment: Leaf) -> bool:
+978:        """Not implemented in this class. Raises `NotImplementedError`."""
+979:        raise NotImplementedError("Unformatted lines don't store comments separately.")
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+
+Calling tool: grepTool
+previous_defs\.append\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1038:                self.previous_defs.append(depth)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py (EmptyLineTracker._maybe_empty_lines), lines 1035-1039 show the logic: after computing is_decorator, it appends to previous_defs only when not a decorator (`if not is_decorator: self.previous_defs.append(depth)`). The new change only adds a check to avoid empty lines between decorator comments and doesn’t alter this append logic.
+
+Todo item 4 of 11 is correct
+description: 'Ensure that the code still appends to previous_defs only for non-decorator defs/classes (i.e., `if not is_decorator: self.previous_defs.append(depth)` remains unchanged).'
+
+Validating todo item 5 of 11
+description: 'Validate that the early return for the first line in the file (previous_line is None) remains in the def/class/decorator block so no empty lines are inserted before the first decorator/def/class (lines ~1039-1042).'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py within EmptyLineTracker._maybe_empty_lines, lines 1039-1042 contain the early return when previous_line is None, and it is inside the def/class/decorator block. This ensures no empty lines are inserted before the first decorator/def/class, unchanged by the new decorator-comment logic added below.
+
+Todo item 5 of 11 is correct
+description: 'Validate that the early return for the first line in the file (previous_line is None) remains in the def/class/decorator block so no empty lines are inserted before the first decorator/def/class (lines ~1039-1042).'
+
+Validating todo item 6 of 11
+description: 'Verify the implementation of Line.is_comment (lines ~752-756) returns True only for standalone comment lines (single leaf of type STANDALONE_COMMENT).'
+
+Calling tool: grepTool
+class Line
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:701:class Line:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1078:class LineGenerator(Visitor[Line]):
+
+Calling tool: grepTool
+is_comment
+Matched content:
+742:            if self.is_comment:
+753:    def is_comment(self) -> bool:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1698:    if isinstance(line, UnformattedLines) or line.is_comment:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+730:            self.maybe_remove_trailing_comma(leaf)
+731:
+732:        if not self.append_comment(leaf):
+733:            self.leaves.append(leaf)
+734:
+735:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+736:        """Like :func:`append()` but disallow invalid standalone comment structure.
+737:
+738:        Raises ValueError when any `leaf` is appended after a standalone comment
+739:        or when a standalone comment is not the first leaf on the line.
+740:        """
+741:        if self.bracket_tracker.depth == 0:
+742:            if self.is_comment:
+743:                raise ValueError("cannot append to standalone comments")
+744:
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+746:                raise ValueError(
+747:                    "cannot append standalone comments to a populated line"
+748:                )
+749:
+750:        self.append(leaf, preformatted=preformatted)
+751:
+752:    @property
+753:    def is_comment(self) -> bool:
+754:        """Is this line a standalone comment?"""
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+756:
+757:    @property
+758:    def is_decorator(self) -> bool:
+759:        """Is this line a decorator?"""
+760:        return bool(self) and self.leaves[0].type == token.AT
+761:
+762:    @property
+763:    def is_import(self) -> bool:
+764:        """Is this an import line?"""
+765:        return bool(self) and is_import(self.leaves[0])
+766:
+767:    @property
+768:    def is_class(self) -> bool:
+769:        """Is this line a class definition?"""
+770:        return (
+771:            bool(self)
+772:            and self.leaves[0].type == token.NAME
+773:            and self.leaves[0].value == "class"
+774:        )
+775:
+776:    @property
+777:    def is_def(self) -> bool:
+778:        """Is this a function definition? (Also returns True for async defs.)"""
+779:        try:
+780:            first_leaf = self.leaves[0]
+781:        except IndexError:
+782:            return False
+783:
+784:        try:
+785:            second_leaf: Optional[Leaf] = self.leaves[1]
+786:        except IndexError:
+787:            second_leaf = None
+788:        return (
+789:            (first_leaf.type == token.NAME and first_leaf.value == "def")
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+545:STANDALONE_COMMENT = 153
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+822:            if leaf.type == STANDALONE_COMMENT:
+880:            comment.type == STANDALONE_COMMENT
+891:            comment.type = STANDALONE_COMMENT
+1309:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1648:            comment_type = STANDALONE_COMMENT
+1656:            if comment_type == STANDALONE_COMMENT:
+1945:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1608:
+1609:def generate_comments(leaf: Leaf) -> Iterator[Leaf]:
+1610:    """Clean the prefix of the `leaf` and generate comments from it, if any.
+1611:
+1612:    Comments in lib2to3 are shoved into the whitespace prefix.  This happens
+1613:    in `pgen2/driver.py:Driver.parse_tokens()`.  This was a brilliant implementation
+1614:    move because it does away with modifying the grammar to include all the
+1615:    possible places in which comments can be placed.
+1616:
+1617:    The sad consequence for us though is that comments don't "belong" anywhere.
+1618:    This is why this function generates simple parentless Leaf objects for
+1619:    comments.  We simply don't know what the correct parent should be.
+1620:
+1621:    No matter though, we can live without this.  We really only need to
+1622:    differentiate between inline and standalone comments.  The latter don't
+1623:    share the line with any code.
+1624:
+1625:    Inline comments are emitted as regular token.COMMENT leaves.  Standalone
+1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+1627:    """
+1628:    p = leaf.prefix
+1629:    if not p:
+1630:        return
+1631:
+1632:    if "#" not in p:
+1633:        return
+1634:
+1635:    consumed = 0
+1636:    nlines = 0
+1637:    for index, line in enumerate(p.split("\n")):
+1638:        consumed += len(line) + 1  # adding the length of the split '\n'
+1639:        line = line.lstrip()
+1640:        if not line:
+1641:            nlines += 1
+1642:        if not line.startswith("#"):
+1643:            continue
+1644:
+1645:        if index == 0 and leaf.type != token.ENDMARKER:
+1646:            comment_type = token.COMMENT  # simple trailing comment
+1647:        else:
+1648:            comment_type = STANDALONE_COMMENT
+1649:        comment = make_comment(line)
+1650:        yield Leaf(comment_type, comment, prefix="\n" * nlines)
+1651:
+1652:        if comment in {"# fmt: on", "# yapf: enable"}:
+1653:            raise FormatOn(consumed)
+1654:
+1655:        if comment in {"# fmt: off", "# yapf: disable"}:
+1656:            if comment_type == STANDALONE_COMMENT:
+1657:                raise FormatOff(consumed)
+1658:
+1659:            prev = preceding_leaf(leaf)
+1660:            if not prev or prev.type in WHITESPACE:  # standalone comment in disguise
+1661:                raise FormatOff(consumed)
+1662:
+1663:        nlines = 0
+1664:
+1665:
+1666:def make_comment(content: str) -> str:
+1667:    """Return a consistently formatted comment from the given `content` string.
+1668:
+1669:    All comments (except for "##", "#!", "#:") should have a single space between
+1670:    the hash sign and the content.
+1671:
+1672:    If `content` didn't start with a hash sign, one is provided.
+1673:    """
+1674:    content = content.rstrip()
+1675:    if not content:
+1676:        return "#"
+1677:
+1678:    if content[0] == "#":
+1679:        content = content[1:]
+1680:    if content and content[0] not in " !:#":
+1681:        content = " " + content
+1682:    return "#" + content
+1683:
+1684:
+1685:def split_line(
+1686:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+1687:) -> Iterator[Line]:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py lines 752-756, Line.is_comment returns True only if the line has exactly one leaf and that leaf’s type is STANDALONE_COMMENT, which matches the requirement for standalone comment lines.
+
+Todo item 6 of 11 is correct
+description: 'Verify the implementation of Line.is_comment (lines ~752-756) returns True only for standalone comment lines (single leaf of type STANDALONE_COMMENT).'
+
+Validating todo item 7 of 11
+description: 'Verify the Line.append_comment logic (lines ~877-897) converts a leading comment on an otherwise empty logical line to STANDALONE_COMMENT, enabling is_comment to detect standalone comments.'
+
+Calling tool: grepTool
+class Line
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:701:class Line:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1078:class LineGenerator(Visitor[Line]):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+680:        To avoid splitting on the comma in this situation, increase the depth of
+681:        tokens between `lambda` and `:`.
+682:        """
+683:        if leaf.type == token.NAME and leaf.value == "lambda":
+684:            self.depth += 1
+685:            self._lambda_arguments = True
+686:            return True
+687:
+688:        return False
+689:
+690:    def maybe_decrement_after_lambda_arguments(self, leaf: Leaf) -> bool:
+691:        """See `maybe_increment_lambda_arguments` above for explanation."""
+692:        if self._lambda_arguments and leaf.type == token.COLON:
+693:            self.depth -= 1
+694:            self._lambda_arguments = False
+695:            return True
+696:
+697:        return False
+698:
+699:
+700:@dataclass
+701:class Line:
+702:    """Holds leaves and comments. Can be printed with `str(line)`."""
+703:
+704:    depth: int = 0
+705:    leaves: List[Leaf] = Factory(list)
+706:    comments: List[Tuple[Index, Leaf]] = Factory(list)
+707:    bracket_tracker: BracketTracker = Factory(BracketTracker)
+708:    inside_brackets: bool = False
+709:
+710:    def append(self, leaf: Leaf, preformatted: bool = False) -> None:
+711:        """Add a new `leaf` to the end of the line.
+712:
+713:        Unless `preformatted` is True, the `leaf` will receive a new consistent
+714:        whitespace prefix and metadata applied by :class:`BracketTracker`.
+715:        Trailing commas are maybe removed, unpacked for loop variables are
+716:        demoted from being delimiters.
+717:
+718:        Inline comments are put aside.
+719:        """
+720:        has_value = leaf.type in BRACKETS or bool(leaf.value.strip())
+721:        if not has_value:
+722:            return
+723:
+724:        if self.leaves and not preformatted:
+725:            # Note: at this point leaf.prefix should be empty except for
+726:            # imports, for which we only preserve newlines.
+727:            leaf.prefix += whitespace(leaf)
+728:        if self.inside_brackets or not preformatted:
+729:            self.bracket_tracker.mark(leaf)
+730:            self.maybe_remove_trailing_comma(leaf)
+731:
+732:        if not self.append_comment(leaf):
+733:            self.leaves.append(leaf)
+734:
+735:    def append_safe(self, leaf: Leaf, preformatted: bool = False) -> None:
+736:        """Like :func:`append()` but disallow invalid standalone comment structure.
+737:
+738:        Raises ValueError when any `leaf` is appended after a standalone comment
+739:        or when a standalone comment is not the first leaf on the line.
+740:        """
+741:        if self.bracket_tracker.depth == 0:
+742:            if self.is_comment:
+743:                raise ValueError("cannot append to standalone comments")
+744:
+745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+746:                raise ValueError(
+747:                    "cannot append standalone comments to a populated line"
+748:                )
+749:
+750:        self.append(leaf, preformatted=preformatted)
+751:
+752:    @property
+753:    def is_comment(self) -> bool:
+754:        """Is this line a standalone comment?"""
+755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+756:
+757:    @property
+758:    def is_decorator(self) -> bool:
+759:        """Is this line a decorator?"""
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+760:        return bool(self) and self.leaves[0].type == token.AT
+761:
+762:    @property
+763:    def is_import(self) -> bool:
+764:        """Is this an import line?"""
+765:        return bool(self) and is_import(self.leaves[0])
+766:
+767:    @property
+768:    def is_class(self) -> bool:
+769:        """Is this line a class definition?"""
+770:        return (
+771:            bool(self)
+772:            and self.leaves[0].type == token.NAME
+773:            and self.leaves[0].value == "class"
+774:        )
+775:
+776:    @property
+777:    def is_def(self) -> bool:
+778:        """Is this a function definition? (Also returns True for async defs.)"""
+779:        try:
+780:            first_leaf = self.leaves[0]
+781:        except IndexError:
+782:            return False
+783:
+784:        try:
+785:            second_leaf: Optional[Leaf] = self.leaves[1]
+786:        except IndexError:
+787:            second_leaf = None
+788:        return (
+789:            (first_leaf.type == token.NAME and first_leaf.value == "def")
+790:            or (
+791:                first_leaf.type == token.ASYNC
+792:                and second_leaf is not None
+793:                and second_leaf.type == token.NAME
+794:                and second_leaf.value == "def"
+795:            )
+796:        )
+797:
+798:    @property
+799:    def is_flow_control(self) -> bool:
+800:        """Is this line a flow control statement?
+801:
+802:        Those are `return`, `raise`, `break`, and `continue`.
+803:        """
+804:        return (
+805:            bool(self)
+806:            and self.leaves[0].type == token.NAME
+807:            and self.leaves[0].value in FLOW_CONTROL
+808:        )
+809:
+810:    @property
+811:    def is_yield(self) -> bool:
+812:        """Is this line a yield statement?"""
+813:        return (
+814:            bool(self)
+815:            and self.leaves[0].type == token.NAME
+816:            and self.leaves[0].value == "yield"
+817:        )
+818:
+819:    def contains_standalone_comments(self, depth_limit: int = sys.maxsize) -> bool:
+820:        """If so, needs to be split before emitting."""
+821:        for leaf in self.leaves:
+822:            if leaf.type == STANDALONE_COMMENT:
+823:                if leaf.bracket_depth <= depth_limit:
+824:                    return True
+825:
+826:        return False
+827:
+828:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+829:        """Remove trailing comma if there is one and it's safe."""
+830:        if not (
+831:            self.leaves
+832:            and self.leaves[-1].type == token.COMMA
+833:            and closing.type in CLOSING_BRACKETS
+834:        ):
+835:            return False
+836:
+837:        if closing.type == token.RBRACE:
+838:            self.remove_trailing_comma()
+839:            return True
+
+Calling tool: grepTool
+def append_comment\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:877:    def append_comment(self, comment: Leaf) -> bool:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:977:    def append_comment(self, comment: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+860:        for leaf in self.leaves[_opening_index + 1:]:
+861:            if leaf is closing:
+862:                break
+863:
+864:            bracket_depth = leaf.bracket_depth
+865:            if bracket_depth == depth and leaf.type == token.COMMA:
+866:                commas += 1
+867:                if leaf.parent and leaf.parent.type == syms.arglist:
+868:                    commas += 1
+869:                    break
+870:
+871:        if commas > 1:
+872:            self.remove_trailing_comma()
+873:            return True
+874:
+875:        return False
+876:
+877:    def append_comment(self, comment: Leaf) -> bool:
+878:        """Add an inline or standalone comment to the line."""
+879:        if (
+880:            comment.type == STANDALONE_COMMENT
+881:            and self.bracket_tracker.any_open_brackets()
+882:        ):
+883:            comment.prefix = ""
+884:            return False
+885:
+886:        if comment.type != token.COMMENT:
+887:            return False
+888:
+889:        after = len(self.leaves) - 1
+890:        if after == -1:
+891:            comment.type = STANDALONE_COMMENT
+892:            comment.prefix = ""
+893:            return False
+894:
+895:        else:
+896:            self.comments.append((after, comment))
+897:            return True
+898:
+899:    def comments_after(self, leaf: Leaf) -> Iterator[Leaf]:
+900:        """Generate comments that should appear directly after `leaf`."""
+901:        for _leaf_index, _leaf in enumerate(self.leaves):
+902:            if leaf is _leaf:
+903:                break
+904:
+905:        else:
+906:            return
+907:
+908:        for index, comment_after in self.comments:
+909:            if _leaf_index == index:
+910:                yield comment_after
+911:
+912:    def remove_trailing_comma(self) -> None:
+913:        """Remove the trailing comma and moves the comments attached to it."""
+914:        comma_index = len(self.leaves) - 1
+915:        for i in range(len(self.comments)):
+916:            comment_index, comment = self.comments[i]
+917:            if comment_index == comma_index:
+918:                self.comments[i] = (comma_index - 1, comment)
+919:        self.leaves.pop()
+920:
+921:    def __str__(self) -> str:
+922:        """Render the line."""
+923:        if not self:
+924:            return "\n"
+925:
+926:        indent = "    " * self.depth
+927:        leaves = iter(self.leaves)
+928:        first = next(leaves)
+929:        res = f"{first.prefix}{indent}{first.value}"
+930:        for leaf in leaves:
+931:            res += str(leaf)
+932:        for _, comment in self.comments:
+933:            res += str(comment)
+934:        return res + "\n"
+935:
+936:    def __bool__(self) -> bool:
+937:        """Return True if the line has leaves or comments."""
+938:        return bool(self.leaves or self.comments)
+939:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+940:
+941:class UnformattedLines(Line):
+942:    """Just like :class:`Line` but stores lines which aren't reformatted."""
+943:
+944:    def append(self, leaf: Leaf, preformatted: bool = True) -> None:
+945:        """Just add a new `leaf` to the end of the lines.
+946:
+947:        The `preformatted` argument is ignored.
+948:
+949:        Keeps track of indentation `depth`, which is useful when the user
+950:        says `# fmt: on`. Otherwise, doesn't do anything with the `leaf`.
+951:        """
+952:        try:
+953:            list(generate_comments(leaf))
+954:        except FormatOn as f_on:
+955:            self.leaves.append(f_on.leaf_from_consumed(leaf))
+956:            raise
+957:
+958:        self.leaves.append(leaf)
+959:        if leaf.type == token.INDENT:
+960:            self.depth += 1
+961:        elif leaf.type == token.DEDENT:
+962:            self.depth -= 1
+963:
+964:    def __str__(self) -> str:
+965:        """Render unformatted lines from leaves which were added with `append()`.
+966:
+967:        `depth` is not used for indentation in this case.
+968:        """
+969:        if not self:
+970:            return "\n"
+971:
+972:        res = ""
+973:        for leaf in self.leaves:
+974:            res += str(leaf)
+975:        return res
+976:
+977:    def append_comment(self, comment: Leaf) -> bool:
+978:        """Not implemented in this class. Raises `NotImplementedError`."""
+979:        raise NotImplementedError("Unformatted lines don't store comments separately.")
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+1110:        if isinstance(self.current_line, UnformattedLines):
+1111:            # File contained `# fmt: off`
+1112:            yield from self.visit_unformatted(node)
+1113:
+1114:        else:
+1115:            yield from super().visit(node)
+1116:
+1117:    def visit_default(self, node: LN) -> Iterator[Line]:
+1118:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+1119:        if isinstance(node, Leaf):
+
+Calling tool: grepTool
+STANDALONE_COMMENT
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:545:STANDALONE_COMMENT = 153
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:745:            if self.leaves and leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:755:        return len(self.leaves) == 1 and self.leaves[0].type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:822:            if leaf.type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:880:            comment.type == STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:891:            comment.type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1309:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1626:    are emitted with a fake STANDALONE_COMMENT token identifier.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1648:            comment_type = STANDALONE_COMMENT
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1656:            if comment_type == STANDALONE_COMMENT:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:1945:            and current_line.leaves[-1].type != STANDALONE_COMMENT
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+520:            out(f" {node.value!r}", fg="blue", bold=False)
+521:
+522:    @classmethod
+523:    def show(cls, code: str) -> None:
+524:        """Pretty-print the lib2to3 AST of a given string of `code`.
+525:
+526:        Convenience method for debugging.
+527:        """
+528:        v: DebugVisitor[None] = DebugVisitor()
+529:        list(v.visit(lib2to3_parse(code)))
+530:
+531:
+532:KEYWORDS = set(keyword.kwlist)
+533:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+534:FLOW_CONTROL = {"return", "raise", "break", "continue"}
+535:STATEMENT = {
+536:    syms.if_stmt,
+537:    syms.while_stmt,
+538:    syms.for_stmt,
+539:    syms.try_stmt,
+540:    syms.except_clause,
+541:    syms.with_stmt,
+542:    syms.funcdef,
+543:    syms.classdef,
+544:}
+545:STANDALONE_COMMENT = 153
+546:LOGIC_OPERATORS = {"and", "or"}
+547:COMPARATORS = {
+548:    token.LESS,
+549:    token.GREATER,
+550:    token.EQEQUAL,
+551:    token.NOTEQUAL,
+552:    token.LESSEQUAL,
+553:    token.GREATEREQUAL,
+554:}
+555:MATH_OPERATORS = {
+556:    token.PLUS,
+557:    token.MINUS,
+558:    token.STAR,
+559:    token.SLASH,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In Line.append, append_comment is called first. In Line.append_comment (black.py:877-897), when there are no leaves (after == -1), it converts a leading token.COMMENT to STANDALONE_COMMENT and returns False, causing append() to append it to leaves. The is_comment property (lines 752-756) checks for a single STANDALONE_COMMENT leaf, enabling detection of standalone comments.
+
+Todo item 7 of 11 is correct
+description: 'Verify the Line.append_comment logic (lines ~877-897) converts a leading comment on an otherwise empty logical line to STANDALONE_COMMENT, enabling is_comment to detect standalone comments.'
+
+Validating todo item 8 of 11
+description: 'Confirm the test tests/test_black.py::BlackTestCase::test_comment_in_decorator reads data from tests/comments6.py and asserts formatted output equals expected via assertFormatEqual, meaning no changes are expected.'
+
+Calling tool: grepTool
+class BlackTestCase
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:80:class BlackTestCase(unittest.TestCase):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager
+5:from functools import partial
+6:from io import StringIO
+7:import os
+8:from pathlib import Path
+9:import sys
+10:from tempfile import TemporaryDirectory
+11:from typing import Any, List, Tuple, Iterator
+12:import unittest
+13:from unittest.mock import patch
+14:
+15:from click import unstyle
+16:from click.testing import CliRunner
+17:
+18:import black
+19:
+20:ll = 88
+21:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+22:fs = partial(black.format_str, line_length=ll)
+23:THIS_FILE = Path(__file__)
+24:THIS_DIR = THIS_FILE.parent
+25:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+26:
+27:
+28:def dump_to_stderr(*output: str) -> str:
+29:    return "\n" + "\n".join(output) + "\n"
+30:
+31:
+32:def read_data(name: str) -> Tuple[str, str]:
+33:    """read_data('test_name') -> 'input', 'output'"""
+34:    if not name.endswith((".py", ".out", ".diff")):
+35:        name += ".py"
+36:    _input: List[str] = []
+37:    _output: List[str] = []
+38:    with open(THIS_DIR / name, "r", encoding="utf8") as test:
+39:        lines = test.readlines()
+40:    result = _input
+41:    for line in lines:
+42:        line = line.replace(EMPTY_LINE, "")
+43:        if line.rstrip() == "# output":
+44:            result = _output
+45:            continue
+46:
+47:        result.append(line)
+48:    if _input and not _output:
+49:        # If there's no output marker, treat the entire file as already pre-formatted.
+50:        _output = _input[:]
+51:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+52:
+53:
+54:@contextmanager
+55:def cache_dir(exists: bool = True) -> Iterator[Path]:
+56:    with TemporaryDirectory() as workspace:
+57:        cache_dir = Path(workspace)
+58:        if not exists:
+59:            cache_dir = cache_dir / "new"
+60:        cache_file = cache_dir / "cache.pkl"
+61:        with patch("black.CACHE_DIR", cache_dir), patch("black.CACHE_FILE", cache_file):
+62:            yield cache_dir
+63:
+64:
+65:@contextmanager
+66:def event_loop(close: bool) -> Iterator[None]:
+67:    policy = asyncio.get_event_loop_policy()
+68:    old_loop = policy.get_event_loop()
+69:    loop = policy.new_event_loop()
+70:    asyncio.set_event_loop(loop)
+71:    try:
+72:        yield
+73:
+74:    finally:
+75:        policy.set_event_loop(old_loop)
+76:        if close:
+77:            loop.close()
+78:
+79:
+80:class BlackTestCase(unittest.TestCase):
+81:    maxDiff = None
+82:
+83:    def assertFormatEqual(self, expected: str, actual: str) -> None:
+84:        if actual != expected and not os.environ.get("SKIP_AST_PRINT"):
+85:            bdv: black.DebugVisitor[Any]
+86:            black.out("Expected tree:", fg="green")
+87:            try:
+88:                exp_node = black.lib2to3_parse(expected)
+89:                bdv = black.DebugVisitor()
+90:                list(bdv.visit(exp_node))
+91:            except Exception as ve:
+92:                black.err(str(ve))
+93:            black.out("Actual tree:", fg="red")
+94:            try:
+95:                exp_node = black.lib2to3_parse(actual)
+96:                bdv = black.DebugVisitor()
+97:                list(bdv.visit(exp_node))
+98:            except Exception as ve:
+99:                black.err(str(ve))
+100:        self.assertEqual(expected, actual)
+101:
+102:    @patch("black.dump_to_file", dump_to_stderr)
+103:    def test_self(self) -> None:
+104:        source, expected = read_data("test_black")
+105:        actual = fs(source)
+106:        self.assertFormatEqual(expected, actual)
+107:        black.assert_equivalent(source, actual)
+108:        black.assert_stable(source, actual, line_length=ll)
+109:        self.assertFalse(ff(THIS_FILE))
+110:
+111:    @patch("black.dump_to_file", dump_to_stderr)
+112:    def test_black(self) -> None:
+113:        source, expected = read_data("../black")
+114:        actual = fs(source)
+115:        self.assertFormatEqual(expected, actual)
+116:        black.assert_equivalent(source, actual)
+117:        black.assert_stable(source, actual, line_length=ll)
+118:        self.assertFalse(ff(THIS_DIR / ".." / "black.py"))
+119:
+120:    def test_piping(self) -> None:
+121:        source, expected = read_data("../black")
+122:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+123:        try:
+124:            sys.stdin, sys.stdout = StringIO(source), StringIO()
+125:            sys.stdin.name = "<stdin>"
+126:            black.format_stdin_to_stdout(
+127:                line_length=ll, fast=True, write_back=black.WriteBack.YES
+128:            )
+129:            sys.stdout.seek(0)
+130:            actual = sys.stdout.read()
+131:        finally:
+132:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+133:        self.assertFormatEqual(expected, actual)
+134:        black.assert_equivalent(source, actual)
+135:        black.assert_stable(source, actual, line_length=ll)
+136:
+137:    def test_piping_diff(self) -> None:
+138:        source, _ = read_data("expression.py")
+139:        expected, _ = read_data("expression.diff")
+140:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+141:        try:
+142:            sys.stdin, sys.stdout = StringIO(source), StringIO()
+143:            sys.stdin.name = "<stdin>"
+144:            black.format_stdin_to_stdout(
+145:                line_length=ll, fast=True, write_back=black.WriteBack.DIFF
+146:            )
+147:            sys.stdout.seek(0)
+148:            actual = sys.stdout.read()
+149:        finally:
+150:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+151:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+152:        self.assertEqual(expected, actual)
+153:
+154:    @patch("black.dump_to_file", dump_to_stderr)
+155:    def test_setup(self) -> None:
+156:        source, expected = read_data("../setup")
+157:        actual = fs(source)
+158:        self.assertFormatEqual(expected, actual)
+159:        black.assert_equivalent(source, actual)
+160:        black.assert_stable(source, actual, line_length=ll)
+161:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+162:
+163:    @patch("black.dump_to_file", dump_to_stderr)
+164:    def test_function(self) -> None:
+165:        source, expected = read_data("function")
+166:        actual = fs(source)
+167:        self.assertFormatEqual(expected, actual)
+168:        black.assert_equivalent(source, actual)
+169:        black.assert_stable(source, actual, line_length=ll)
+170:
+171:    @patch("black.dump_to_file", dump_to_stderr)
+172:    def test_expression(self) -> None:
+173:        source, expected = read_data("expression")
+174:        actual = fs(source)
+175:        self.assertFormatEqual(expected, actual)
+176:        black.assert_equivalent(source, actual)
+177:        black.assert_stable(source, actual, line_length=ll)
+178:
+179:    def test_expression_ff(self) -> None:
+180:        source, expected = read_data("expression")
+181:        tmp_file = Path(black.dump_to_file(source))
+182:        try:
+183:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+184:            with open(tmp_file, encoding="utf8") as f:
+185:                actual = f.read()
+186:        finally:
+187:            os.unlink(tmp_file)
+188:        self.assertFormatEqual(expected, actual)
+189:        with patch("black.dump_to_file", dump_to_stderr):
+190:            black.assert_equivalent(source, actual)
+191:            black.assert_stable(source, actual, line_length=ll)
+192:
+193:    def test_expression_diff(self) -> None:
+194:        source, _ = read_data("expression.py")
+195:        expected, _ = read_data("expression.diff")
+196:        tmp_file = Path(black.dump_to_file(source))
+197:        hold_stdout = sys.stdout
+198:        try:
+199:            sys.stdout = StringIO()
+200:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+
+Calling tool: grepTool
+test_comment_in_decorator\(
+Matched content:
+630:    def test_comment_in_decorator(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+620:            result = CliRunner().invoke(black.main, [str(src2), "--diff", "--check"])
+621:            self.assertEqual(result.exit_code, 0)
+622:
+623:            # Multi file command.
+624:            result = CliRunner().invoke(
+625:                black.main, [str(src1), str(src2), "--diff", "--check"]
+626:            )
+627:            self.assertEqual(result.exit_code, 1)
+628:
+629:    @patch("black.dump_to_file", dump_to_stderr)
+630:    def test_comment_in_decorator(self) -> None:
+631:        source, expected = read_data("comments6")
+632:        actual = fs(source)
+633:        self.assertFormatEqual(expected, actual)
+634:        black.assert_equivalent(source, actual)
+635:        black.assert_stable(source, actual, line_length=ll)
+636:
+637:
+638:if __name__ == "__main__":
+639:    unittest.main()
+
+Calling tool: globTool
+**/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+1:@property
+2:# TODO: X
+3:@property
+4:# TODO: Y
+5:# TODO: Z
+6:@property
+7:def foo():
+8:    pass
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Located test_comment_in_decorator in tests/test_black.py; it reads source, expected = read_data("comments6") and asserts self.assertFormatEqual(expected, actual) where read_data uses the entire file as expected if no '# output' marker. tests/comments6.py has no output marker, so no changes are expected.
+
+Todo item 8 of 11 is correct
+description: 'Confirm the test tests/test_black.py::BlackTestCase::test_comment_in_decorator reads data from tests/comments6.py and asserts formatted output equals expected via assertFormatEqual, meaning no changes are expected.'
+
+Validating todo item 9 of 11
+description: 'Inspect tests/comments6.py to verify it contains decorators with standalone comment lines between them and no '# output' marker, implying expected equals source (identity formatting).'
+
+Calling tool: globTool
+**/comments6.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/comments6.py
+1:@property
+2:# TODO: X
+3:@property
+4:# TODO: Y
+5:# TODO: Z
+6:@property
+7:def foo():
+8:    pass
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Found tests/comments6.py with decorators and standalone comment lines between them (lines 1-6) and no '# output' marker present, implying identity formatting as expected.
+
+Todo item 9 of 11 is correct
+description: 'Inspect tests/comments6.py to verify it contains decorators with standalone comment lines between them and no '# output' marker, implying expected equals source (identity formatting).'
+
+Validating todo item 10 of 11
+description: 'Verify that test_comment_in_decorator also calls black.assert_equivalent and black.assert_stable with the produced output, consistent with Black's test expectations (lines ~633-635).'
+
+Calling tool: grepTool
+test_comment_in_decorator
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_comment_in_decorator
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py:630:    def test_comment_in_decorator(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/tests/test_black.py
+620:            result = CliRunner().invoke(black.main, [str(src2), "--diff", "--check"])
+621:            self.assertEqual(result.exit_code, 0)
+622:
+623:            # Multi file command.
+624:            result = CliRunner().invoke(
+625:                black.main, [str(src1), str(src2), "--diff", "--check"]
+626:            )
+627:            self.assertEqual(result.exit_code, 1)
+628:
+629:    @patch("black.dump_to_file", dump_to_stderr)
+630:    def test_comment_in_decorator(self) -> None:
+631:        source, expected = read_data("comments6")
+632:        actual = fs(source)
+633:        self.assertFormatEqual(expected, actual)
+634:        black.assert_equivalent(source, actual)
+635:        black.assert_stable(source, actual, line_length=ll)
+636:
+637:
+638:if __name__ == "__main__":
+639:    unittest.main()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In tests/test_black.py at lines 634-635 within test_comment_in_decorator, the test calls black.assert_equivalent(source, actual) and black.assert_stable(source, actual, line_length=ll), satisfying the requirement.
+
+Todo item 10 of 11 is correct
+description: 'Verify that test_comment_in_decorator also calls black.assert_equivalent and black.assert_stable with the produced output, consistent with Black's test expectations (lines ~633-635).'
+
+Validating todo item 11 of 11
+description: 'Check that no other unrelated logic was modified in _maybe_empty_lines outside the inserted decorator-comment condition (e.g., import/yield separation, flow control handling) to ensure PR scope is limited to decorator comment handling.'
+
+Calling tool: grepTool
+class EmptyLineTracker
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py:991:class EmptyLineTracker:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-19/good/black/black.py
+980:
+981:    def maybe_remove_trailing_comma(self, closing: Leaf) -> bool:
+982:        """Does nothing and returns False."""
+983:        return False
+984:
+985:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+986:        """Does nothing and returns False."""
+987:        return False
+988:
+989:
+990:@dataclass
+991:class EmptyLineTracker:
+992:    """Provides a stateful method that returns the number of potential extra
+993:    empty lines needed before and after the currently processed line.
+994:
+995:    Note: this tracker works on lines that haven't been split yet.  It assumes
+996:    the prefix of the first leaf consists of optional newlines.  Those newlines
+997:    are consumed by `maybe_empty_lines()` and included in the computation.
+998:    """
+999:    previous_line: Optional[Line] = None
+1000:    previous_after: int = 0
+1001:    previous_defs: List[int] = Factory(list)
+1002:
+1003:    def maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1004:        """Return the number of extra empty lines before and after the `current_line`.
+1005:
+1006:        This is for separating `def`, `async def` and `class` with extra empty
+1007:        lines (two on module-level), as well as providing an extra empty line
+1008:        after flow control keywords to make them more prominent.
+1009:        """
+1010:        if isinstance(current_line, UnformattedLines):
+1011:            return 0, 0
+1012:
+1013:        before, after = self._maybe_empty_lines(current_line)
+1014:        before -= self.previous_after
+1015:        self.previous_after = after
+1016:        self.previous_line = current_line
+1017:        return before, after
+1018:
+1019:    def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
+1020:        max_allowed = 1
+1021:        if current_line.depth == 0:
+1022:            max_allowed = 2
+1023:        if current_line.leaves:
+1024:            # Consume the first leaf's extra newlines.
+1025:            first_leaf = current_line.leaves[0]
+1026:            before = first_leaf.prefix.count("\n")
+1027:            before = min(before, max_allowed)
+1028:            first_leaf.prefix = ""
+1029:        else:
+1030:            before = 0
+1031:        depth = current_line.depth
+1032:        while self.previous_defs and self.previous_defs[-1] >= depth:
+1033:            self.previous_defs.pop()
+1034:            before = 1 if depth else 2
+1035:        is_decorator = current_line.is_decorator
+1036:        if is_decorator or current_line.is_def or current_line.is_class:
+1037:            if not is_decorator:
+1038:                self.previous_defs.append(depth)
+1039:            if self.previous_line is None:
+1040:                # Don't insert empty lines before the first line in the file.
+1041:                return 0, 0
+1042:
+1043:            if self.previous_line and self.previous_line.is_decorator:
+1044:                # Don't insert empty lines between decorators.
+1045:                return 0, 0
+1046:
+1047:            if is_decorator and self.previous_line and self.previous_line.is_comment:
+1048:                # Don't insert empty lines between decorator comments.
+1049:                return 0, 0
+1050:
+1051:            newlines = 2
+1052:            if current_line.depth:
+1053:                newlines -= 1
+1054:            return newlines, 0
+1055:
+1056:        if current_line.is_flow_control:
+1057:            return before, 1
+1058:
+1059:        if (
+1060:            self.previous_line
+1061:            and self.previous_line.is_import
+1062:            and not current_line.is_import
+1063:            and depth == self.previous_line.depth
+1064:        ):
+1065:            return (before or 1), 0
+1066:
+1067:        if (
+1068:            self.previous_line
+1069:            and self.previous_line.is_yield
+1070:            and (not current_line.is_yield or depth != self.previous_line.depth)
+1071:        ):
+1072:            return (before or 1), 0
+1073:
+1074:        return before, 0
+1075:
+1076:
+1077:@dataclass
+1078:class LineGenerator(Visitor[Line]):
+1079:    """Generates reformatted Line objects.  Empty lines are not emitted.
+1080:
+1081:    Note: destroys the tree it's visiting by mutating prefixes of its leaves
+1082:    in ways that will no longer stringify to valid Python code on the tree.
+1083:    """
+1084:    current_line: Line = Factory(Line)
+1085:
+1086:    def line(self, indent: int = 0, type: Type[Line] = Line) -> Iterator[Line]:
+1087:        """Generate a line.
+1088:
+1089:        If the line is empty, only emit if it makes sense.
+1090:        If the line is too long, split it first and then generate.
+1091:
+1092:        If any lines were generated, set up a new current_line.
+1093:        """
+1094:        if not self.current_line:
+1095:            if self.current_line.__class__ == type:
+1096:                self.current_line.depth += indent
+1097:            else:
+1098:                self.current_line = type(depth=self.current_line.depth + indent)
+1099:            return  # Line is empty, don't emit. Creating a new one unnecessary.
+1100:
+1101:        complete_line = self.current_line
+1102:        self.current_line = type(depth=complete_line.depth + indent)
+1103:        yield complete_line
+1104:
+1105:    def visit(self, node: LN) -> Iterator[Line]:
+1106:        """Main method to visit `node` and its children.
+1107:
+1108:        Yields :class:`Line` objects.
+1109:        """
+1110:        if isinstance(self.current_line, UnformattedLines):
+1111:            # File contained `# fmt: off`
+1112:            yield from self.visit_unformatted(node)
+1113:
+1114:        else:
+1115:            yield from super().visit(node)
+1116:
+1117:    def visit_default(self, node: LN) -> Iterator[Line]:
+1118:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+1119:        if isinstance(node, Leaf):
+1120:            any_open_brackets = self.current_line.bracket_tracker.any_open_brackets()
+1121:            try:
+1122:                for comment in generate_comments(node):
+1123:                    if any_open_brackets:
+1124:                        # any comment within brackets is subject to splitting
+1125:                        self.current_line.append(comment)
+1126:                    elif comment.type == token.COMMENT:
+1127:                        # regular trailing comment
+1128:                        self.current_line.append(comment)
+1129:                        yield from self.line()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Inspected black.py:EmptyLineTracker._maybe_empty_lines and confirmed the only change is the new conditional skipping empty lines when a decorator comment precedes a decorator. Flow control, import/yield separation, and other logic remain unchanged, so the PR scope is limited to decorator comment handling.
+
+Todo item 11 of 11 is correct
+description: 'Check that no other unrelated logic was modified in _maybe_empty_lines outside the inserted decorator-comment condition (e.g., import/yield separation, flow control handling) to ensure PR scope is limited to decorator comment handling.'
+
+
+=== PHASE 2 COMPLETE ===
+

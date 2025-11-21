@@ -1,0 +1,1097 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py:238:def lib2to3_parse(src_txt: str) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py
+200:
+201:def format_file_contents(
+202:    src_contents: str, line_length: int, fast: bool
+203:) -> FileContent:
+204:    """Reformats a file and returns its contents and encoding."""
+205:    if src_contents.strip() == '':
+206:        raise NothingChanged
+207:
+208:    dst_contents = format_str(src_contents, line_length=line_length)
+209:    if src_contents == dst_contents:
+210:        raise NothingChanged
+211:
+212:    if not fast:
+213:        assert_equivalent(src_contents, dst_contents)
+214:        assert_stable(src_contents, dst_contents, line_length=line_length)
+215:    return dst_contents
+216:
+217:
+218:def format_str(src_contents: str, line_length: int) -> FileContent:
+219:    """Reformats a string and returns new contents."""
+220:    src_node = lib2to3_parse(src_contents)
+221:    dst_contents = ""
+222:    lines = LineGenerator()
+223:    elt = EmptyLineTracker()
+224:    py36 = is_python36(src_node)
+225:    empty_line = Line()
+226:    after = 0
+227:    for current_line in lines.visit(src_node):
+228:        for _ in range(after):
+229:            dst_contents += str(empty_line)
+230:        before, after = elt.maybe_empty_lines(current_line)
+231:        for _ in range(before):
+232:            dst_contents += str(empty_line)
+233:        for line in split_line(current_line, line_length=line_length, py36=py36):
+234:            dst_contents += str(line)
+235:    return dst_contents
+236:
+237:
+238:def lib2to3_parse(src_txt: str) -> Node:
+239:    """Given a string with source, return the lib2to3 Node."""
+240:    grammar = pygram.python_grammar_no_print_statement
+241:    drv = driver.Driver(grammar, pytree.convert)
+242:    if src_txt[-1] != '\n':
+243:        nl = '\r\n' if '\r\n' in src_txt[:1024] else '\n'
+244:        src_txt += nl
+245:    try:
+246:        result = drv.parse_string(src_txt, True)
+247:    except ParseError as pe:
+248:        lineno, column = pe.context[1]
+249:        lines = src_txt.splitlines()
+250:        try:
+251:            faulty_line = lines[lineno - 1]
+252:        except IndexError:
+253:            faulty_line = "<line number missing in source>"
+254:        raise ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}") from None
+255:
+256:    if isinstance(result, Leaf):
+257:        result = Node(syms.file_input, [result])
+258:    return result
+259:
+260:
+261:def lib2to3_unparse(node: Node) -> str:
+262:    """Given a lib2to3 node, return its string representation."""
+263:    code = str(node)
+264:    return code
+265:
+266:
+267:T = TypeVar('T')
+268:
+269:
+270:class Visitor(Generic[T]):
+271:    """Basic lib2to3 visitor that yields things on visiting."""
+272:
+273:    def visit(self, node: LN) -> Iterator[T]:
+274:        if node.type < 256:
+275:            name = token.tok_name[node.type]
+276:        else:
+277:            name = type_repr(node.type)
+278:        yield from getattr(self, f'visit_{name}', self.visit_default)(node)
+279:
+280:    def visit_default(self, node: LN) -> Iterator[T]:
+281:        if isinstance(node, Node):
+282:            for child in node.children:
+283:                yield from self.visit(child)
+284:
+285:
+286:@dataclass
+287:class DebugVisitor(Visitor[T]):
+288:    tree_depth: int = 0
+289:
+290:    def visit_default(self, node: LN) -> Iterator[T]:
+291:        indent = ' ' * (2 * self.tree_depth)
+292:        if isinstance(node, Node):
+293:            _type = type_repr(node.type)
+294:            out(f'{indent}{_type}', fg='yellow')
+295:            self.tree_depth += 1
+296:            for child in node.children:
+297:                yield from self.visit(child)
+298:
+299:            self.tree_depth -= 1
+300:            out(f'{indent}/{_type}', fg='yellow', bold=False)
+301:        else:
+302:            _type = token.tok_name.get(node.type, str(node.type))
+303:            out(f'{indent}{_type}', fg='blue', nl=False)
+304:            if node.prefix:
+305:                # We don't have to handle prefixes for `Node` objects since
+306:                # that delegates to the first child anyway.
+307:                out(f' {node.prefix!r}', fg='green', bold=False, nl=False)
+308:            out(f' {node.value!r}', fg='blue', bold=False)
+309:
+310:
+311:KEYWORDS = set(keyword.kwlist)
+312:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+313:FLOW_CONTROL = {'return', 'raise', 'break', 'continue'}
+314:STATEMENT = {
+315:    syms.if_stmt,
+316:    syms.while_stmt,
+317:    syms.for_stmt,
+318:    syms.try_stmt,
+319:    syms.except_clause,
+
+Calling tool: grepTool
+def whitespace\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py:847:def whitespace(leaf: Leaf) -> str:  # noqa C901
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py
+820:
+821:    def visit_ENDMARKER(self, leaf: Leaf) -> Iterator[Line]:
+822:        yield from self.visit_default(leaf)
+823:        yield from self.line()
+824:
+825:    def __attrs_post_init__(self) -> None:
+826:        """You are in a twisty little maze of passages."""
+827:        v = self.visit_stmt
+828:        self.visit_if_stmt = partial(v, keywords={'if', 'else', 'elif'})
+829:        self.visit_while_stmt = partial(v, keywords={'while', 'else'})
+830:        self.visit_for_stmt = partial(v, keywords={'for', 'else'})
+831:        self.visit_try_stmt = partial(v, keywords={'try', 'except', 'else', 'finally'})
+832:        self.visit_except_clause = partial(v, keywords={'except'})
+833:        self.visit_funcdef = partial(v, keywords={'def'})
+834:        self.visit_with_stmt = partial(v, keywords={'with'})
+835:        self.visit_classdef = partial(v, keywords={'class'})
+836:        self.visit_async_funcdef = self.visit_async_stmt
+837:        self.visit_decorated = self.visit_decorators
+838:
+839:
+840:BRACKET = {token.LPAR: token.RPAR, token.LSQB: token.RSQB, token.LBRACE: token.RBRACE}
+841:OPENING_BRACKETS = set(BRACKET.keys())
+842:CLOSING_BRACKETS = set(BRACKET.values())
+843:BRACKETS = OPENING_BRACKETS | CLOSING_BRACKETS
+844:ALWAYS_NO_SPACE = CLOSING_BRACKETS | {token.COMMA, STANDALONE_COMMENT}
+845:
+846:
+847:def whitespace(leaf: Leaf) -> str:  # noqa C901
+848:    """Return whitespace prefix if needed for the given `leaf`."""
+849:    NO = ''
+850:    SPACE = ' '
+851:    DOUBLESPACE = '  '
+852:    t = leaf.type
+853:    p = leaf.parent
+854:    v = leaf.value
+855:    if t in ALWAYS_NO_SPACE:
+856:        return NO
+857:
+858:    if t == token.COMMENT:
+859:        return DOUBLESPACE
+860:
+861:    assert p is not None, f"INTERNAL ERROR: hand-made leaf without parent: {leaf!r}"
+862:    if t == token.COLON and p.type not in {syms.subscript, syms.subscriptlist}:
+863:        return NO
+864:
+865:    prev = leaf.prev_sibling
+866:    if not prev:
+867:        prevp = preceding_leaf(p)
+868:        if not prevp or prevp.type in OPENING_BRACKETS:
+869:            return NO
+870:
+871:        if t == token.COLON:
+872:            return SPACE if prevp.type == token.COMMA else NO
+873:
+874:        if prevp.type == token.EQUAL:
+875:            if prevp.parent and prevp.parent.type in {
+876:                syms.arglist,
+877:                syms.argument,
+878:                syms.parameters,
+879:                syms.typedargslist,
+880:                syms.varargslist,
+881:            }:
+882:                return NO
+883:
+884:        elif prevp.type == token.DOUBLESTAR:
+885:            if prevp.parent and prevp.parent.type in {
+886:                syms.arglist,
+887:                syms.argument,
+888:                syms.dictsetmaker,
+889:                syms.parameters,
+890:                syms.typedargslist,
+891:                syms.varargslist,
+892:            }:
+893:                return NO
+894:
+895:        elif prevp.type == token.COLON:
+896:            if prevp.parent and prevp.parent.type in {syms.subscript, syms.sliceop}:
+897:                return NO
+898:
+899:        elif (
+900:            prevp.parent
+901:            and prevp.parent.type in {syms.factor, syms.star_expr}
+902:            and prevp.type in MATH_OPERATORS
+903:        ):
+904:            return NO
+905:
+906:    elif prev.type in OPENING_BRACKETS:
+907:        return NO
+908:
+909:    if p.type in {syms.parameters, syms.arglist}:
+910:        # untyped function signatures or calls
+911:        if t == token.RPAR:
+912:            return NO
+913:
+914:        if not prev or prev.type != token.COMMA:
+915:            return NO
+916:
+917:    if p.type == syms.varargslist:
+918:        # lambdas
+919:        if t == token.RPAR:
+920:            return NO
+921:
+922:        if prev and prev.type != token.COMMA:
+923:            return NO
+924:
+925:    elif p.type == syms.typedargslist:
+926:        # typed function signatures
+927:        if not prev:
+928:            return NO
+929:
+930:        if t == token.EQUAL:
+931:            if prev.type != syms.tname:
+932:                return NO
+933:
+934:        elif prev.type == token.EQUAL:
+935:            # A bit hacky: if the equal sign has whitespace, it means we
+936:            # previously found it's a typed argument.  So, we're using that, too.
+937:            return prev.prefix
+938:
+939:        elif prev.type != token.COMMA:
+940:            return NO
+941:
+942:    elif p.type == syms.tname:
+943:        # type names
+944:        if not prev:
+945:            prevp = preceding_leaf(p)
+946:            if not prevp or prevp.type != token.COMMA:
+947:                return NO
+948:
+949:    elif p.type == syms.trailer:
+950:        # attributes and calls
+951:        if t == token.LPAR or t == token.RPAR:
+952:            return NO
+953:
+954:        if not prev:
+955:            if t == token.DOT:
+956:                prevp = preceding_leaf(p)
+957:                if not prevp or prevp.type != token.NUMBER:
+958:                    return NO
+959:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py
+960:            elif t == token.LSQB:
+961:                return NO
+962:
+963:        elif prev.type != token.COMMA:
+964:            return NO
+965:
+966:    elif p.type == syms.argument:
+967:        # single argument
+968:        if t == token.EQUAL:
+969:            return NO
+970:
+971:        if not prev:
+972:            prevp = preceding_leaf(p)
+973:            if not prevp or prevp.type == token.LPAR:
+974:                return NO
+975:
+976:        elif prev.type == token.EQUAL or prev.type == token.DOUBLESTAR:
+977:            return NO
+978:
+979:    elif p.type == syms.decorator:
+980:        # decorators
+981:        return NO
+982:
+983:    elif p.type == syms.dotted_name:
+984:        if prev:
+985:            return NO
+986:
+987:        prevp = preceding_leaf(p)
+988:        if not prevp or prevp.type == token.AT or prevp.type == token.DOT:
+989:            return NO
+990:
+991:    elif p.type == syms.classdef:
+992:        if t == token.LPAR:
+993:            return NO
+994:
+995:        if prev and prev.type == token.LPAR:
+996:            return NO
+997:
+998:    elif p.type == syms.subscript:
+999:        # indexing
+1000:        if not prev:
+1001:            assert p.parent is not None, "subscripts are always parented"
+1002:            if p.parent.type == syms.subscriptlist:
+1003:                return SPACE
+1004:
+1005:            return NO
+1006:
+1007:        else:
+1008:            return NO
+1009:
+1010:    elif p.type == syms.atom:
+1011:        if prev and t == token.DOT:
+1012:            # dots, but not the first one.
+1013:            return NO
+1014:
+1015:    elif (
+1016:        p.type == syms.listmaker
+1017:        or p.type == syms.testlist_gexp
+1018:        or p.type == syms.subscriptlist
+1019:    ):
+1020:        # list interior, including unpacking
+1021:        if not prev:
+1022:            return NO
+1023:
+1024:    elif p.type == syms.dictsetmaker:
+1025:        # dict and set interior, including unpacking
+1026:        if not prev:
+1027:            return NO
+1028:
+1029:        if prev.type == token.DOUBLESTAR:
+1030:            return NO
+1031:
+1032:    elif p.type in {syms.factor, syms.star_expr}:
+1033:        # unary ops
+1034:        if not prev:
+1035:            prevp = preceding_leaf(p)
+1036:            if not prevp or prevp.type in OPENING_BRACKETS:
+1037:                return NO
+1038:
+1039:            prevp_parent = prevp.parent
+1040:            assert prevp_parent is not None
+1041:            if prevp.type == token.COLON and prevp_parent.type in {
+1042:                syms.subscript, syms.sliceop
+1043:            }:
+1044:                return NO
+1045:
+1046:            elif prevp.type == token.EQUAL and prevp_parent.type == syms.argument:
+1047:                return NO
+1048:
+1049:        elif t == token.NAME or t == token.NUMBER:
+1050:            return NO
+1051:
+1052:    elif p.type == syms.import_from:
+1053:        if t == token.DOT:
+1054:            if prev and prev.type == token.DOT:
+1055:                return NO
+1056:
+1057:        elif t == token.NAME:
+1058:            if v == 'import':
+1059:                return SPACE
+1060:
+1061:            if prev and prev.type == token.DOT:
+1062:                return NO
+1063:
+1064:    elif p.type == syms.sliceop:
+1065:        return NO
+1066:
+1067:    return SPACE
+1068:
+1069:
+1070:def preceding_leaf(node: Optional[LN]) -> Optional[Leaf]:
+1071:    """Returns the first leaf that precedes `node`, if any."""
+1072:    while node:
+1073:        res = node.prev_sibling
+1074:        if res:
+1075:            if isinstance(res, Leaf):
+1076:                return res
+1077:
+1078:            try:
+1079:                return list(res.leaves())[-1]
+1080:
+1081:            except IndexError:
+1082:                return None
+1083:
+1084:        node = node.parent
+1085:    return None
+1086:
+1087:
+1088:def is_delimiter(leaf: Leaf) -> int:
+1089:    """Returns the priority of the `leaf` delimiter. Returns 0 if not delimiter.
+1090:
+1091:    Higher numbers are higher priority.
+1092:    """
+1093:    if leaf.type == token.COMMA:
+1094:        return COMMA_PRIORITY
+1095:
+1096:    if leaf.type in COMPARATORS:
+1097:        return COMPARATOR_PRIORITY
+1098:
+1099:    if (
+
+Calling tool: grepTool
+python_grammar_no_print_statement
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py:240:    grammar = pygram.python_grammar_no_print_statement
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.pyi:118:python_grammar_no_print_statement: Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:36:python_grammar_no_print_statement = python_grammar.copy()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:37:del python_grammar_no_print_statement.keywords["print"]
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE)
+33:
+34:python_symbols = Symbols(python_grammar)
+35:
+36:python_grammar_no_print_statement = python_grammar.copy()
+37:del python_grammar_no_print_statement.keywords["print"]
+38:
+39:pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE)
+40:pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: grepTool
+test_python2
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/tests/test_black.py:184:    def test_python2(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/tests/test_black.py
+150:
+151:    @patch("black.dump_to_file", dump_to_stderr)
+152:    def test_cantfit(self) -> None:
+153:        source, expected = read_data('cantfit')
+154:        actual = fs(source)
+155:        self.assertFormatEqual(expected, actual)
+156:        black.assert_equivalent(source, actual)
+157:        black.assert_stable(source, actual, line_length=ll)
+158:
+159:    @patch("black.dump_to_file", dump_to_stderr)
+160:    def test_import_spacing(self) -> None:
+161:        source, expected = read_data('import_spacing')
+162:        actual = fs(source)
+163:        self.assertFormatEqual(expected, actual)
+164:        black.assert_equivalent(source, actual)
+165:        black.assert_stable(source, actual, line_length=ll)
+166:
+167:    @patch("black.dump_to_file", dump_to_stderr)
+168:    def test_composition(self) -> None:
+169:        source, expected = read_data('composition')
+170:        actual = fs(source)
+171:        self.assertFormatEqual(expected, actual)
+172:        black.assert_equivalent(source, actual)
+173:        black.assert_stable(source, actual, line_length=ll)
+174:
+175:    @patch("black.dump_to_file", dump_to_stderr)
+176:    def test_empty_lines(self) -> None:
+177:        source, expected = read_data('empty_lines')
+178:        actual = fs(source)
+179:        self.assertFormatEqual(expected, actual)
+180:        black.assert_equivalent(source, actual)
+181:        black.assert_stable(source, actual, line_length=ll)
+182:
+183:    @patch("black.dump_to_file", dump_to_stderr)
+184:    def test_python2(self) -> None:
+185:        source, expected = read_data('python2')
+186:        actual = fs(source)
+187:        self.assertFormatEqual(expected, actual)
+188:        # black.assert_equivalent(source, actual)
+189:        black.assert_stable(source, actual, line_length=ll)
+190:
+191:    def test_report(self) -> None:
+192:        report = black.Report()
+193:        out_lines = []
+194:        err_lines = []
+195:
+196:        def out(msg: str, **kwargs: Any) -> None:
+197:            out_lines.append(msg)
+198:
+199:        def err(msg: str, **kwargs: Any) -> None:
+200:            err_lines.append(msg)
+201:
+202:        with patch("black.out", out), patch("black.err", err):
+203:            report.done(Path('f1'), changed=False)
+204:            self.assertEqual(len(out_lines), 1)
+205:            self.assertEqual(len(err_lines), 0)
+206:            self.assertEqual(out_lines[-1], 'f1 already well formatted, good job.')
+207:            self.assertEqual(unstyle(str(report)), '1 file left unchanged.')
+208:            self.assertEqual(report.return_code, 0)
+209:            report.done(Path('f2'), changed=True)
+210:            self.assertEqual(len(out_lines), 2)
+211:            self.assertEqual(len(err_lines), 0)
+212:            self.assertEqual(out_lines[-1], 'reformatted f2')
+213:            self.assertEqual(
+214:                unstyle(str(report)), '1 file reformatted, 1 file left unchanged.'
+215:            )
+216:            self.assertEqual(report.return_code, 0)
+217:            report.check = True
+218:            self.assertEqual(report.return_code, 1)
+219:            report.check = False
+220:            report.failed(Path('e1'), 'boom')
+221:            self.assertEqual(len(out_lines), 2)
+222:            self.assertEqual(len(err_lines), 1)
+223:            self.assertEqual(err_lines[-1], 'error: cannot format e1: boom')
+224:            self.assertEqual(
+225:                unstyle(str(report)),
+226:                '1 file reformatted, 1 file left unchanged, '
+227:                '1 file failed to reformat.',
+228:            )
+229:            self.assertEqual(report.return_code, 123)
+230:            report.done(Path('f3'), changed=True)
+231:            self.assertEqual(len(out_lines), 3)
+232:            self.assertEqual(len(err_lines), 1)
+233:            self.assertEqual(out_lines[-1], 'reformatted f3')
+234:            self.assertEqual(
+235:                unstyle(str(report)),
+236:                '2 files reformatted, 1 file left unchanged, '
+237:                '1 file failed to reformat.',
+238:            )
+239:            self.assertEqual(report.return_code, 123)
+240:            report.failed(Path('e2'), 'boom')
+241:            self.assertEqual(len(out_lines), 3)
+242:            self.assertEqual(len(err_lines), 2)
+243:            self.assertEqual(err_lines[-1], 'error: cannot format e2: boom')
+244:            self.assertEqual(
+245:                unstyle(str(report)),
+246:                '2 files reformatted, 1 file left unchanged, '
+247:                '2 files failed to reformat.',
+248:            )
+249:            self.assertEqual(report.return_code, 123)
+250:            report.done(Path('f4'), changed=False)
+251:            self.assertEqual(len(out_lines), 4)
+252:            self.assertEqual(len(err_lines), 2)
+253:            self.assertEqual(out_lines[-1], 'f4 already well formatted, good job.')
+254:            self.assertEqual(
+255:                unstyle(str(report)),
+256:                '2 files reformatted, 2 files left unchanged, '
+257:                '2 files failed to reformat.',
+258:            )
+259:            self.assertEqual(report.return_code, 123)
+260:            report.check = True
+261:            self.assertEqual(
+262:                unstyle(str(report)),
+263:                '2 files would be reformatted, 2 files would be left unchanged, '
+264:                '2 files would fail to reformat.',
+265:            )
+266:
+267:    def test_is_python36(self) -> None:
+268:        node = black.lib2to3_parse("def f(*, arg): ...\n")
+269:        self.assertFalse(black.is_python36(node))
+
+Calling tool: globTool
+**/tests/**/python2*
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/tests/python2.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/tests/python2.py
+1:#!/usr/bin/env python2
+2:
+3:import sys
+4:
+5:print >> sys.stderr , "Warning:" ,
+6:print >> sys.stderr , "this is a blast from the past."
+7:print >> sys.stderr , "Look, a repr:", `sys`
+8:
+9:
+10:def function((_globals, _locals)):
+11:    exec "print 'hi from exec!'" in _globals, _locals
+12:
+13:
+14:function((globals(), locals()))
+15:
+16:
+17:# output
+18:
+19:
+20:#!/usr/bin/env python2
+21:
+22:import sys
+23:
+24:print >>sys.stderr, "Warning:",
+25:print >>sys.stderr, "this is a blast from the past."
+26:print >>sys.stderr, "Look, a repr:", ` sys `
+27:
+28:
+29:def function((_globals, _locals)):
+30:    exec "print 'hi from exec!'" in _globals, _locals
+31:
+32:
+33:function((globals(), locals()))
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/tests/function.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:import sys
+4:
+5:from third_party import X, Y, Z
+6:
+7:from library import some_connection, \
+8:                    some_decorator
+9:f'trigger 3.6 mode'
+10:def func_no_args():
+11:  a; b; c
+12:  if True: raise RuntimeError
+13:  if False: ...
+14:  for i in range(10):
+15:    print(i)
+16:    continue
+17:  return None
+18:async def coroutine(arg):
+19: "Single-line docstring. Multiline is harder to reformat."
+20: async with some_connection() as conn:
+21:     await conn.do_what_i_mean('SELECT bobby, tables FROM xkcd', timeout=2)
+22: await asyncio.sleep(1)
+23:@asyncio.coroutine
+24:@some_decorator(
+25:with_args=True,
+26:many_args=[1,2,3]
+27:)
+28:def function_signature_stress_test(number:int,no_annotation=None,text:str="default",* ,debug:bool=False,**kwargs) -> str:
+29: return text[number:-1]
+30:def spaces(a=1, b=(), c=[], d={}, e=True, f=-1, g=1 if False else 2, h="", i=r''):
+31: offset = attr.ib(default=attr.Factory( lambda: _r.uniform(10000, 200000)))
+32: assert task._cancel_stack[:len(old_stack)] == old_stack
+33:def spaces2(result= _core.Value(None)):
+34: ...
+35:def example(session):
+36:    result = session.query(models.Customer.id).filter(
+37:        models.Customer.account_id == account_id,
+38:        models.Customer.email == email_address,
+39:    ).order_by(
+40:        models.Customer.id.asc()
+41:    ).all()
+42:def long_lines():
+43:    if True:
+44:        typedargslist.extend(
+45:            gen_annotated_params(ast_args.kwonlyargs, ast_args.kw_defaults, parameters, implicit_default=True)
+46:        )
+47:    _type_comment_re = re.compile(
+48:        r"""
+49:        ^
+50:        [\t ]*
+51:        \#[ ]type:[ ]*
+52:        (?P<type>
+53:            [^#\t\n]+?
+54:        )
+55:        (?<!ignore)     # note: this will force the non-greedy + in <type> to match
+56:                        # a trailing space which is why we need the silliness below
+57:        (?<!ignore[ ]{1})(?<!ignore[ ]{2})(?<!ignore[ ]{3})(?<!ignore[ ]{4})
+58:        (?<!ignore[ ]{5})(?<!ignore[ ]{6})(?<!ignore[ ]{7})(?<!ignore[ ]{8})
+59:        (?<!ignore[ ]{9})(?<!ignore[ ]{10})
+60:        [\t ]*
+61:        (?P<nl>
+62:            (?:\#[^\n]*)?
+63:            \n?
+64:        )
+65:        $
+66:        """, re.MULTILINE | re.VERBOSE
+67:    )
+68:
+69:# output
+70:
+71:
+72:#!/usr/bin/env python3
+73:import asyncio
+74:import sys
+75:
+76:from third_party import X, Y, Z
+77:
+78:from library import some_connection, some_decorator
+79:
+80:f'trigger 3.6 mode'
+81:
+82:
+83:def func_no_args():
+84:    a
+85:    b
+86:    c
+87:    if True:
+88:        raise RuntimeError
+89:
+90:    if False:
+91:        ...
+92:    for i in range(10):
+93:        print(i)
+94:        continue
+95:
+96:    return None
+97:
+98:
+99:async def coroutine(arg):
+100:    "Single-line docstring. Multiline is harder to reformat."
+101:    async with some_connection() as conn:
+102:        await conn.do_what_i_mean('SELECT bobby, tables FROM xkcd', timeout=2)
+103:    await asyncio.sleep(1)
+104:
+105:
+106:@asyncio.coroutine
+107:@some_decorator(with_args=True, many_args=[1, 2, 3])
+108:def function_signature_stress_test(
+109:    number: int,
+110:    no_annotation=None,
+111:    text: str = "default",
+112:    *,
+113:    debug: bool = False,
+114:    **kwargs,
+115:) -> str:
+116:    return text[number:-1]
+117:
+118:
+119:def spaces(a=1, b=(), c=[], d={}, e=True, f=-1, g=1 if False else 2, h="", i=r''):
+120:    offset = attr.ib(default=attr.Factory(lambda: _r.uniform(10000, 200000)))
+121:    assert task._cancel_stack[:len(old_stack)] == old_stack
+122:
+123:
+124:def spaces2(result=_core.Value(None)):
+125:    ...
+126:
+127:
+128:def example(session):
+129:    result = session.query(models.Customer.id).filter(
+130:        models.Customer.account_id == account_id, models.Customer.email == email_address
+131:    ).order_by(
+132:        models.Customer.id.asc()
+133:    ).all()
+134:
+135:
+136:def long_lines():
+137:    if True:
+138:        typedargslist.extend(
+139:            gen_annotated_params(
+140:                ast_args.kwonlyargs,
+141:                ast_args.kw_defaults,
+142:                parameters,
+143:                implicit_default=True,
+144:            )
+145:        )
+146:    _type_comment_re = re.compile(
+147:        r"""
+148:        ^
+149:        [\t ]*
+150:        \#[ ]type:[ ]*
+151:        (?P<type>
+152:            [^#\t\n]+?
+153:        )
+154:        (?<!ignore)     # note: this will force the non-greedy + in <type> to match
+155:                        # a trailing space which is why we need the silliness below
+156:        (?<!ignore[ ]{1})(?<!ignore[ ]{2})(?<!ignore[ ]{3})(?<!ignore[ ]{4})
+157:        (?<!ignore[ ]{5})(?<!ignore[ ]{6})(?<!ignore[ ]{7})(?<!ignore[ ]{8})
+158:        (?<!ignore[ ]{9})(?<!ignore[ ]{10})
+159:        [\t ]*
+160:        (?P<nl>
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.pyi
+1:# Stubs for lib2to3.pygram (Python 3.6)
+2:
+3:from typing import Any
+4:from blib2to3.pgen2.grammar import Grammar
+5:
+6:class Symbols:
+7:    def __init__(self, grammar: Grammar) -> None: ...
+8:
+9:class python_symbols(Symbols):
+10:    and_expr: int
+11:    and_test: int
+12:    annassign: int
+13:    arglist: int
+14:    argument: int
+15:    arith_expr: int
+16:    assert_stmt: int
+17:    async_funcdef: int
+18:    async_stmt: int
+19:    atom: int
+20:    augassign: int
+21:    break_stmt: int
+22:    classdef: int
+23:    comp_for: int
+24:    comp_if: int
+25:    comp_iter: int
+26:    comp_op: int
+27:    comparison: int
+28:    compound_stmt: int
+29:    continue_stmt: int
+30:    decorated: int
+31:    decorator: int
+32:    decorators: int
+33:    del_stmt: int
+34:    dictsetmaker: int
+35:    dotted_as_name: int
+36:    dotted_as_names: int
+37:    dotted_name: int
+38:    encoding_decl: int
+39:    eval_input: int
+40:    except_clause: int
+41:    exec_stmt: int
+42:    expr: int
+43:    expr_stmt: int
+44:    exprlist: int
+45:    factor: int
+46:    file_input: int
+47:    flow_stmt: int
+48:    for_stmt: int
+49:    funcdef: int
+50:    global_stmt: int
+51:    if_stmt: int
+52:    import_as_name: int
+53:    import_as_names: int
+54:    import_from: int
+55:    import_name: int
+56:    import_stmt: int
+57:    lambdef: int
+58:    listmaker: int
+59:    not_test: int
+60:    old_comp_for: int
+61:    old_comp_if: int
+62:    old_comp_iter: int
+63:    old_lambdef: int
+64:    old_test: int
+65:    or_test: int
+66:    parameters: int
+67:    pass_stmt: int
+68:    power: int
+69:    print_stmt: int
+70:    raise_stmt: int
+71:    return_stmt: int
+72:    shift_expr: int
+73:    simple_stmt: int
+74:    single_input: int
+75:    sliceop: int
+76:    small_stmt: int
+77:    star_expr: int
+78:    stmt: int
+79:    subscript: int
+80:    subscriptlist: int
+81:    suite: int
+82:    term: int
+83:    test: int
+84:    testlist: int
+85:    testlist1: int
+86:    testlist_gexp: int
+87:    testlist_safe: int
+88:    testlist_star_expr: int
+89:    tfpdef: int
+90:    tfplist: int
+91:    tname: int
+92:    trailer: int
+93:    try_stmt: int
+94:    typedargslist: int
+95:    varargslist: int
+96:    vfpdef: int
+97:    vfplist: int
+98:    vname: int
+99:    while_stmt: int
+100:    with_item: int
+101:    with_stmt: int
+102:    with_var: int
+103:    xor_expr: int
+104:    yield_arg: int
+105:    yield_expr: int
+106:    yield_stmt: int
+107:
+108:class pattern_symbols(Symbols):
+109:    Alternative: int
+110:    Alternatives: int
+111:    Details: int
+112:    Matcher: int
+113:    NegatedUnit: int
+114:    Repeater: int
+115:    Unit: int
+116:
+117:python_grammar: Grammar
+118:python_grammar_no_print_statement: Grammar
+119:pattern_grammar: Grammar
+
+Calling tool: createTodo
+Todo List Created
+Todo List (14 items):
+- [ ] In blib2to3/pygram.py, verify new grammars are defined exactly as follows: (1) python_grammar_no_exec_statement = python_grammar.copy(); delete 'exec' from .keywords; (2) python_grammar_no_print_statement_no_exec_statement = python_grammar.copy(); delete both 'print' and 'exec' from .keywords. Ensure existing python_grammar_no_print_statement remains unchanged. (ID: todo-1)
+- [ ] In black.py, confirm a top-level GRAMMARS constant exists and lists grammars in this exact order: pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement, pygram.python_grammar_no_exec_statement, pygram.python_grammar. (ID: todo-2)
+- [ ] In black.py lib2to3_parse(), verify the function loops over GRAMMARS, instantiates driver.Driver(grammar, pytree.convert) for each, and attempts drv.parse_string(src_txt, True). It should break on the first success and continue on ParseError. (ID: todo-3)
+- [ ] In lib2to3_parse(), verify the newline-append logic remains: if src_txt does not end with '\n', append either '\r\n' if present in the first 1024 chars else '\n' before parsing. (ID: todo-4)
+- [ ] In lib2to3_parse(), verify that on ParseError, it constructs a ValueError with message 'Cannot parse: {lineno}:{column}: {faulty_line}', assigns it to a variable (e.g., exc), and continues to the next grammar; after exhausting grammars, raises that stored exception with 'from None'. (ID: todo-5)
+- [ ] In lib2to3_parse(), confirm post-parse behavior remains unchanged: if the parse result is a Leaf, it is wrapped into Node(syms.file_input, [result]) before returning. (ID: todo-6)
+- [ ] In black.py whitespace(leaf), verify a new conditional branch handles Python 2 print chevron: when previous significant leaf (prevp) is token.RIGHTSHIFT, prevp.parent exists and has type syms.shift_expr, and prevp.prev_sibling is a NAME with value 'print', the function returns NO (no whitespace). (ID: todo-7)
+- [ ] In whitespace(leaf), confirm the new print-chevron condition is placed within the 'if not prev' branch (using preceding_leaf) and before any generic spacing rules that would otherwise insert a space after RIGHTSHIFT, ensuring only the Python 2 print chevron case is affected. (ID: todo-8)
+- [ ] In tests/function.py (input section), verify an exec call is added inside func_no_args: exec("new-style exec", {}, {}), and in the expected output section the call remains formatted without a space between 'exec' and '(' (i.e., 'exec(' not 'exec ('). (ID: todo-9)
+- [ ] In tests/function.py (both input and expected), verify the coroutine definition signature includes a parameter named exec with default False: 'async def coroutine(arg, exec=False):'. (ID: todo-10)
+- [ ] In tests/test_black.py::test_python2, verify it reads 'python2' fixture via read_data('python2'), formats it, asserts formatted output equals expected, and does not call assert_equivalent (only assert_stable), consistent with reliance on Python 3 AST for equivalence checks. (ID: todo-11)
+- [ ] In tests/python2.py expected output section, verify 'print >>sys.stderr, ...' appears without a space between '>>' and the following name, matching the intent of the new whitespace rule for Python 2 print chevron. (ID: todo-12)
+- [ ] Verify GRAMMARS ordering is restrictive-to-default so that non-statement interpretations of 'print' and 'exec' are attempted before the default grammar, enabling correct handling of Python 3-style built-in calls. (ID: todo-13)
+- [ ] Verify there are no stale or unused variables left in lib2to3_parse(), such as a leftover top-level 'grammar = pygram.python_grammar_no_print_statement' assignment that is no longer used after introducing the GRAMMARS loop. (ID: todo-14)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 14
+description: 'In blib2to3/pygram.py, verify new grammars are defined exactly as follows: (1) python_grammar_no_exec_statement = python_grammar.copy(); delete 'exec' from .keywords; (2) python_grammar_no_print_statement_no_exec_statement = python_grammar.copy(); delete both 'print' and 'exec' from .keywords. Ensure existing python_grammar_no_print_statement remains unchanged.'
+Calling tool: grepTool
+python_grammar_no_print_statement|python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement
+Grep command failed with exit code 2: rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+python_grammar_no_print_statement|python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py:240:    grammar = pygram.python_grammar_no_print_statement
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.pyi:118:python_grammar_no_print_statement: Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:36:python_grammar_no_print_statement = python_grammar.copy()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:37:del python_grammar_no_print_statement.keywords["print"]
+
+Calling tool: grepTool
+python_grammar_no_exec_statement|no_print_statement_no_exec_statement
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE)
+33:
+34:python_symbols = Symbols(python_grammar)
+35:
+36:python_grammar_no_print_statement = python_grammar.copy()
+37:del python_grammar_no_print_statement.keywords["print"]
+38:
+39:pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE)
+40:pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: grepTool
+GRAMMARS|python_grammar_no_print_statement_no_exec_statement|python_grammar_no_exec_statement
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pygram.py only python_grammar_no_print_statement is defined and deletes 'print'. The new grammars python_grammar_no_exec_statement and python_grammar_no_print_statement_no_exec_statement are missing, so the requirement is not implemented.
+
+
+Validating todo item 1 of 14
+description: 'In blib2to3/pygram.py, verify new grammars are defined exactly as follows: (1) python_grammar_no_exec_statement = python_grammar.copy(); delete 'exec' from .keywords; (2) python_grammar_no_print_statement_no_exec_statement = python_grammar.copy(); delete both 'print' and 'exec' from .keywords. Ensure existing python_grammar_no_print_statement remains unchanged.'
+
+Calling tool: grepTool
+python_grammar_no_print_statement|python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement
+Grep command failed with exit code 2: rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: grepTool
+python_grammar_no_print_statement|python_grammar_no_exec_statement|python_grammar_no_print_statement_no_exec_statement
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/black.py:240:    grammar = pygram.python_grammar_no_print_statement
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.pyi:118:python_grammar_no_print_statement: Grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:36:python_grammar_no_print_statement = python_grammar.copy()
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py:37:del python_grammar_no_print_statement.keywords["print"]
+
+Calling tool: grepTool
+python_grammar_no_exec_statement|no_print_statement_no_exec_statement
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-23/bad/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE)
+33:
+34:python_symbols = Symbols(python_grammar)
+35:
+36:python_grammar_no_print_statement = python_grammar.copy()
+37:del python_grammar_no_print_statement.keywords["print"]
+38:
+39:pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE)
+40:pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: grepTool
+GRAMMARS|python_grammar_no_print_statement_no_exec_statement|python_grammar_no_exec_statement
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pygram.py only python_grammar_no_print_statement is defined and deletes 'print'. The new grammars python_grammar_no_exec_statement and python_grammar_no_print_statement_no_exec_statement are missing, so the requirement is not implemented.
+
+
+=== PHASE 2 COMPLETE ===
+

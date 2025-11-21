@@ -1,0 +1,904 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: grepTool
+def generate_tokens\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py:337:def generate_tokens(readline):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.pyi:28:def generate_tokens(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py
+480:                    if endmatch:                           # all on one line
+481:                        pos = endmatch.end(0)
+482:                        token = line[start:pos]
+483:                        if stashed:
+484:                            yield stashed
+485:                            stashed = None
+486:                        yield (STRING, token, spos, (lnum, pos), line)
+487:                    else:
+488:                        strstart = (lnum, start)           # multiple lines
+489:                        contstr = line[start:]
+490:                        contline = line
+491:                        break
+492:                elif initial in single_quoted or \
+493:                    token[:2] in single_quoted or \
+494:                    token[:3] in single_quoted:
+495:                    if token[-1] == '\n':                  # continued string
+496:                        strstart = (lnum, start)
+497:                        endprog = (endprogs[initial] or endprogs[token[1]] or
+498:                                   endprogs[token[2]])
+499:                        contstr, needcont = line[start:], 1
+500:                        contline = line
+501:                        break
+502:                    else:                                  # ordinary string
+503:                        if stashed:
+504:                            yield stashed
+505:                            stashed = None
+506:                        yield (STRING, token, spos, epos, line)
+507:                elif initial.isidentifier():               # ordinary name
+508:                    if token in ('async', 'await'):
+509:                        if async_def:
+510:                            yield (ASYNC if token == 'async' else AWAIT,
+511:                                   token, spos, epos, line)
+512:                            continue
+513:
+514:                    tok = (NAME, token, spos, epos, line)
+515:                    if token == 'async' and not stashed:
+516:                        stashed = tok
+517:                        continue
+518:
+519:                    if token == 'def':
+520:                        if (stashed
+521:                                and stashed[0] == NAME
+522:                                and stashed[1] == 'async'):
+523:
+524:                            async_def = True
+525:                            async_def_indent = indents[-1]
+526:
+527:                            yield (ASYNC, stashed[1],
+528:                                   stashed[2], stashed[3],
+529:                                   stashed[4])
+530:                            stashed = None
+531:
+532:                    if stashed:
+533:                        yield stashed
+534:                        stashed = None
+535:
+536:                    yield tok
+537:                elif initial == '\\':                      # continued stmt
+538:                    # This yield is new; needed for better idempotency:
+539:                    if stashed:
+540:                        yield stashed
+541:                        stashed = None
+542:                    yield (NL, token, spos, (lnum, pos), line)
+543:                    continued = 1
+544:                else:
+545:                    if initial in '([{': parenlev = parenlev + 1
+546:                    elif initial in ')]}': parenlev = parenlev - 1
+547:                    if stashed:
+548:                        yield stashed
+549:                        stashed = None
+550:                    yield (OP, token, spos, epos, line)
+551:            else:
+552:                yield (ERRORTOKEN, line[pos],
+553:                           (lnum, pos), (lnum, pos+1), line)
+554:                pos = pos + 1
+555:
+556:    if stashed:
+557:        yield stashed
+558:        stashed = None
+559:
+560:    for indent in indents[1:]:                 # pop remaining indent levels
+561:        yield (DEDENT, '', (lnum, 0), (lnum, 0), '')
+562:    yield (ENDMARKER, '', (lnum, 0), (lnum, 0), '')
+563:
+564:if __name__ == '__main__':                     # testing
+565:    import sys
+566:    if len(sys.argv) > 1: tokenize(open(sys.argv[1]).readline)
+567:    else: tokenize(sys.stdin.readline)
+
+Calling tool: grepTool
+test_python37
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python37
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py:415:    def test_python37(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py
+380:        self.assertFormatEqual(expected, actual)
+381:        black.assert_equivalent(source, actual)
+382:        black.assert_stable(source, actual, line_length=ll)
+383:
+384:    @patch("black.dump_to_file", dump_to_stderr)
+385:    def test_numeric_literals_py2(self) -> None:
+386:        source, expected = read_data("numeric_literals_py2")
+387:        actual = fs(source)
+388:        self.assertFormatEqual(expected, actual)
+389:        black.assert_stable(source, actual, line_length=ll)
+390:
+391:    @patch("black.dump_to_file", dump_to_stderr)
+392:    def test_python2(self) -> None:
+393:        source, expected = read_data("python2")
+394:        actual = fs(source)
+395:        self.assertFormatEqual(expected, actual)
+396:        # black.assert_equivalent(source, actual)
+397:        black.assert_stable(source, actual, line_length=ll)
+398:
+399:    @patch("black.dump_to_file", dump_to_stderr)
+400:    def test_python2_unicode_literals(self) -> None:
+401:        source, expected = read_data("python2_unicode_literals")
+402:        actual = fs(source)
+403:        self.assertFormatEqual(expected, actual)
+404:        black.assert_stable(source, actual, line_length=ll)
+405:
+406:    @patch("black.dump_to_file", dump_to_stderr)
+407:    def test_stub(self) -> None:
+408:        mode = black.FileMode.PYI
+409:        source, expected = read_data("stub.pyi")
+410:        actual = fs(source, mode=mode)
+411:        self.assertFormatEqual(expected, actual)
+412:        black.assert_stable(source, actual, line_length=ll, mode=mode)
+413:
+414:    @patch("black.dump_to_file", dump_to_stderr)
+415:    def test_python37(self) -> None:
+416:        source, expected = read_data("python37")
+417:        actual = fs(source)
+418:        self.assertFormatEqual(expected, actual)
+419:        major, minor = sys.version_info[:2]
+420:        if major > 3 or (major == 3 and minor >= 7):
+421:            black.assert_equivalent(source, actual)
+422:        black.assert_stable(source, actual, line_length=ll)
+423:
+424:    @patch("black.dump_to_file", dump_to_stderr)
+425:    def test_fmtonoff(self) -> None:
+426:        source, expected = read_data("fmtonoff")
+427:        actual = fs(source)
+428:        self.assertFormatEqual(expected, actual)
+429:        black.assert_equivalent(source, actual)
+430:        black.assert_stable(source, actual, line_length=ll)
+431:
+432:    @patch("black.dump_to_file", dump_to_stderr)
+433:    def test_fmtonoff2(self) -> None:
+434:        source, expected = read_data("fmtonoff2")
+435:        actual = fs(source)
+436:        self.assertFormatEqual(expected, actual)
+437:        black.assert_equivalent(source, actual)
+438:        black.assert_stable(source, actual, line_length=ll)
+439:
+440:    @patch("black.dump_to_file", dump_to_stderr)
+441:    def test_remove_empty_parentheses_after_class(self) -> None:
+442:        source, expected = read_data("class_blank_parentheses")
+443:        actual = fs(source)
+444:        self.assertFormatEqual(expected, actual)
+445:        black.assert_equivalent(source, actual)
+446:        black.assert_stable(source, actual, line_length=ll)
+447:
+448:    @patch("black.dump_to_file", dump_to_stderr)
+449:    def test_new_line_between_class_and_code(self) -> None:
+450:        source, expected = read_data("class_methods_new_line")
+451:        actual = fs(source)
+452:        self.assertFormatEqual(expected, actual)
+453:        black.assert_equivalent(source, actual)
+454:        black.assert_stable(source, actual, line_length=ll)
+455:
+456:    def test_report_verbose(self) -> None:
+457:        report = black.Report(verbose=True)
+458:        out_lines = []
+459:        err_lines = []
+460:
+461:        def out(msg: str, **kwargs: Any) -> None:
+462:            out_lines.append(msg)
+463:
+464:        def err(msg: str, **kwargs: Any) -> None:
+465:            err_lines.append(msg)
+466:
+467:        with patch("black.out", out), patch("black.err", err):
+468:            report.done(Path("f1"), black.Changed.NO)
+469:            self.assertEqual(len(out_lines), 1)
+470:            self.assertEqual(len(err_lines), 0)
+471:            self.assertEqual(out_lines[-1], "f1 already well formatted, good job.")
+472:            self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
+473:            self.assertEqual(report.return_code, 0)
+474:            report.done(Path("f2"), black.Changed.YES)
+475:            self.assertEqual(len(out_lines), 2)
+476:            self.assertEqual(len(err_lines), 0)
+477:            self.assertEqual(out_lines[-1], "reformatted f2")
+478:            self.assertEqual(
+479:                unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
+480:            )
+481:            report.done(Path("f3"), black.Changed.CACHED)
+482:            self.assertEqual(len(out_lines), 3)
+483:            self.assertEqual(len(err_lines), 0)
+484:            self.assertEqual(
+485:                out_lines[-1], "f3 wasn't modified on disk since last run."
+486:            )
+487:            self.assertEqual(
+488:                unstyle(str(report)), "1 file reformatted, 2 files left unchanged."
+489:            )
+490:            self.assertEqual(report.return_code, 0)
+491:            report.check = True
+492:            self.assertEqual(report.return_code, 1)
+493:            report.check = False
+494:            report.failed(Path("e1"), "boom")
+495:            self.assertEqual(len(out_lines), 3)
+496:            self.assertEqual(len(err_lines), 1)
+497:            self.assertEqual(err_lines[-1], "error: cannot format e1: boom")
+498:            self.assertEqual(
+499:                unstyle(str(report)),
+
+Calling tool: grepTool
+python37
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/bugsinpy_bug.info:4:test_file="tests/data/python37.py;tests/test_black.py"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python37
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py:415:    def test_python37(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py:416:        source, expected = read_data("python37")
+
+Calling tool: globTool
+**/tests/data/python37*
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/data/python37.py
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/data/python37.py
+1:#!/usr/bin/env python3.7
+2:
+3:def f():
+4:    return (i*2 async for i in arange(42))
+5:
+6:# output
+7:
+8:
+9:#!/usr/bin/env python3.7
+10:
+11:
+12:def f():
+13:    return (i * 2 async for i in arange(42))
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py
+300:    encoding = find_cookie(first)
+301:    if encoding:
+302:        return encoding, [first]
+303:    if not blank_re.match(first):
+304:        return default, [first]
+305:
+306:    second = read_or_stop()
+307:    if not second:
+308:        return default, [first]
+309:
+310:    encoding = find_cookie(second)
+311:    if encoding:
+312:        return encoding, [first, second]
+313:
+314:    return default, [first, second]
+315:
+316:def untokenize(iterable):
+317:    """Transform tokens back into Python source code.
+318:
+319:    Each element returned by the iterable must be a token sequence
+320:    with at least two elements, a token number and token value.  If
+321:    only two tokens are passed, the resulting output is poor.
+322:
+323:    Round-trip invariant for full input:
+324:        Untokenized source will match input source exactly
+325:
+326:    Round-trip invariant for limited intput:
+327:        # Output text will tokenize the back to the input
+328:        t1 = [tok[:2] for tok in generate_tokens(f.readline)]
+329:        newcode = untokenize(t1)
+330:        readline = iter(newcode.splitlines(1)).next
+331:        t2 = [tok[:2] for tokin generate_tokens(readline)]
+332:        assert t1 == t2
+333:    """
+334:    ut = Untokenizer()
+335:    return ut.untokenize(iterable)
+336:
+337:def generate_tokens(readline):
+338:    """
+339:    The generate_tokens() generator requires one argument, readline, which
+340:    must be a callable object which provides the same interface as the
+341:    readline() method of built-in file objects. Each call to the function
+342:    should return one line of input as a string.  Alternately, readline
+343:    can be a callable function terminating with StopIteration:
+344:        readline = open(myfile).next    # Example of alternate readline
+345:
+346:    The generator produces 5-tuples with these members: the token type; the
+347:    token string; a 2-tuple (srow, scol) of ints specifying the row and
+348:    column where the token begins in the source; a 2-tuple (erow, ecol) of
+349:    ints specifying the row and column where the token ends in the source;
+350:    and the line on which the token was found. The line passed is the
+351:    logical line; continuation lines are included.
+352:    """
+353:    lnum = parenlev = continued = 0
+354:    numchars = '0123456789'
+355:    contstr, needcont = '', 0
+356:    contline = None
+357:    indents = [0]
+358:
+359:    # 'stashed' and 'async_*' are used for async/await parsing
+360:    stashed = None
+361:    async_def = False
+362:    async_def_indent = 0
+363:    async_def_nl = False
+364:
+365:    while 1:                                   # loop over lines in stream
+366:        try:
+367:            line = readline()
+368:        except StopIteration:
+369:            line = ''
+370:        lnum = lnum + 1
+371:        pos, max = 0, len(line)
+372:
+373:        if contstr:                            # continued string
+374:            if not line:
+375:                raise TokenError("EOF in multi-line string", strstart)
+376:            endmatch = endprog.match(line)
+377:            if endmatch:
+378:                pos = end = endmatch.end(0)
+379:                yield (STRING, contstr + line[:end],
+380:                       strstart, (lnum, end), contline + line)
+381:                contstr, needcont = '', 0
+382:                contline = None
+383:            elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
+384:                yield (ERRORTOKEN, contstr + line,
+385:                           strstart, (lnum, len(line)), contline)
+386:                contstr = ''
+387:                contline = None
+388:                continue
+389:            else:
+390:                contstr = contstr + line
+391:                contline = contline + line
+392:                continue
+393:
+394:        elif parenlev == 0 and not continued:  # new statement
+395:            if not line: break
+396:            column = 0
+397:            while pos < max:                   # measure leading whitespace
+398:                if line[pos] == ' ': column = column + 1
+399:                elif line[pos] == '\t': column = (column//tabsize + 1)*tabsize
+400:                elif line[pos] == '\f': column = 0
+401:                else: break
+402:                pos = pos + 1
+403:            if pos == max: break
+404:
+405:            if stashed:
+406:                yield stashed
+407:                stashed = None
+408:
+409:            if line[pos] in '\r\n':            # skip blank lines
+410:                yield (NL, line[pos:], (lnum, pos), (lnum, len(line)), line)
+411:                continue
+412:
+413:            if line[pos] == '#':               # skip comments
+414:                comment_token = line[pos:].rstrip('\r\n')
+415:                nl_pos = pos + len(comment_token)
+416:                yield (COMMENT, comment_token,
+417:                        (lnum, pos), (lnum, pos + len(comment_token)), line)
+418:                yield (NL, line[nl_pos:],
+419:                        (lnum, nl_pos), (lnum, len(line)), line)
+420:                continue
+421:
+422:            if column > indents[-1]:           # count indents
+423:                indents.append(column)
+424:                yield (INDENT, line[:pos], (lnum, 0), (lnum, pos), line)
+425:
+426:            while column < indents[-1]:        # count dedents
+427:                if column not in indents:
+428:                    raise IndentationError(
+429:                        "unindent does not match any outer indentation level",
+430:                        ("<tokenize>", lnum, pos, line))
+431:                indents = indents[:-1]
+432:
+433:                if async_def and async_def_indent >= indents[-1]:
+434:                    async_def = False
+435:                    async_def_nl = False
+436:                    async_def_indent = 0
+437:
+438:                yield (DEDENT, '', (lnum, pos), (lnum, pos), line)
+439:
+440:            if async_def and async_def_nl and async_def_indent >= indents[-1]:
+441:                async_def = False
+442:                async_def_nl = False
+443:                async_def_indent = 0
+444:
+445:        else:                                  # continued statement
+446:            if not line:
+447:                raise TokenError("EOF in multi-line statement", (lnum, 0))
+448:            continued = 0
+449:
+450:        while pos < max:
+451:            pseudomatch = pseudoprog.match(line, pos)
+452:            if pseudomatch:                                # scan for tokens
+453:                start, end = pseudomatch.span(1)
+454:                spos, epos, pos = (lnum, start), (lnum, end), end
+455:                token, initial = line[start:end], line[start]
+456:
+457:                if initial in numchars or \
+458:                   (initial == '.' and token != '.'):      # ordinary number
+459:                    yield (NUMBER, token, spos, epos, line)
+460:                elif initial in '\r\n':
+461:                    newline = NEWLINE
+462:                    if parenlev > 0:
+463:                        newline = NL
+464:                    elif async_def:
+465:                        async_def_nl = True
+466:                    if stashed:
+467:                        yield stashed
+468:                        stashed = None
+469:                    yield (newline, token, spos, epos, line)
+470:
+471:                elif initial == '#':
+472:                    assert not token.endswith("\n")
+473:                    if stashed:
+474:                        yield stashed
+475:                        stashed = None
+476:                    yield (COMMENT, token, spos, epos, line)
+477:                elif token in triple_quoted:
+478:                    endprog = endprogs[token]
+479:                    endmatch = endprog.match(line, pos)
+480:                    if endmatch:                           # all on one line
+481:                        pos = endmatch.end(0)
+482:                        token = line[start:pos]
+483:                        if stashed:
+484:                            yield stashed
+485:                            stashed = None
+486:                        yield (STRING, token, spos, (lnum, pos), line)
+487:                    else:
+488:                        strstart = (lnum, start)           # multiple lines
+489:                        contstr = line[start:]
+490:                        contline = line
+491:                        break
+492:                elif initial in single_quoted or \
+493:                    token[:2] in single_quoted or \
+494:                    token[:3] in single_quoted:
+495:                    if token[-1] == '\n':                  # continued string
+496:                        strstart = (lnum, start)
+497:                        endprog = (endprogs[initial] or endprogs[token[1]] or
+498:                                   endprogs[token[2]])
+499:                        contstr, needcont = line[start:], 1
+500:                        contline = line
+501:                        break
+502:                    else:                                  # ordinary string
+503:                        if stashed:
+504:                            yield stashed
+505:                            stashed = None
+506:                        yield (STRING, token, spos, epos, line)
+507:                elif initial.isidentifier():               # ordinary name
+508:                    if token in ('async', 'await'):
+509:                        if async_def:
+510:                            yield (ASYNC if token == 'async' else AWAIT,
+511:                                   token, spos, epos, line)
+512:                            continue
+513:
+514:                    tok = (NAME, token, spos, epos, line)
+515:                    if token == 'async' and not stashed:
+516:                        stashed = tok
+517:                        continue
+518:
+519:                    if token == 'def':
+
+Calling tool: grepTool
+ASYNC|AWAIT
+Matched content:
+213:            if toknum in (NAME, NUMBER, ASYNC, AWAIT):
+510:                            yield (ASYNC if token == 'async' else AWAIT,
+527:                            yield (ASYNC, stashed[1],
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py
+180:    def add_whitespace(self, start):
+181:        row, col = start
+182:        assert row <= self.prev_row
+183:        col_offset = col - self.prev_col
+184:        if col_offset:
+185:            self.tokens.append(" " * col_offset)
+186:
+187:    def untokenize(self, iterable):
+188:        for t in iterable:
+189:            if len(t) == 2:
+190:                self.compat(t, iterable)
+191:                break
+192:            tok_type, token, start, end, line = t
+193:            self.add_whitespace(start)
+194:            self.tokens.append(token)
+195:            self.prev_row, self.prev_col = end
+196:            if tok_type in (NEWLINE, NL):
+197:                self.prev_row += 1
+198:                self.prev_col = 0
+199:        return "".join(self.tokens)
+200:
+201:    def compat(self, token, iterable):
+202:        startline = False
+203:        indents = []
+204:        toks_append = self.tokens.append
+205:        toknum, tokval = token
+206:        if toknum in (NAME, NUMBER):
+207:            tokval += ' '
+208:        if toknum in (NEWLINE, NL):
+209:            startline = True
+210:        for tok in iterable:
+211:            toknum, tokval = tok[:2]
+212:
+213:            if toknum in (NAME, NUMBER, ASYNC, AWAIT):
+214:                tokval += ' '
+215:
+216:            if toknum == INDENT:
+217:                indents.append(tokval)
+218:                continue
+219:            elif toknum == DEDENT:
+220:                indents.pop()
+221:                continue
+222:            elif toknum in (NEWLINE, NL):
+223:                startline = True
+224:            elif startline and indents:
+225:                toks_append(indents[-1])
+226:                startline = False
+227:            toks_append(tokval)
+228:
+229:cookie_re = re.compile(r'^[ \t\f]*#.*?coding[:=][ \t]*([-\w.]+)', re.ASCII)
+230:blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
+231:
+232:def _get_normal_name(orig_enc):
+233:    """Imitates get_normal_name in tokenizer.c."""
+234:    # Only care about the first 12 characters.
+235:    enc = orig_enc[:12].lower().replace("_", "-")
+236:    if enc == "utf-8" or enc.startswith("utf-8-"):
+237:        return "utf-8"
+238:    if enc in ("latin-1", "iso-8859-1", "iso-latin-1") or \
+239:       enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py:34:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:from concurrent.futures import ThreadPoolExecutor
+4:from contextlib import contextmanager
+5:from functools import partial
+6:from io import BytesIO, TextIOWrapper
+7:import os
+8:from pathlib import Path
+9:import re
+10:import sys
+11:from tempfile import TemporaryDirectory
+12:from typing import Any, BinaryIO, Generator, List, Tuple, Iterator
+13:import unittest
+14:from unittest.mock import patch, MagicMock
+15:
+16:from click import unstyle
+17:from click.testing import CliRunner
+18:
+19:import black
+20:
+21:
+22:ll = 88
+23:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+24:fs = partial(black.format_str, line_length=ll)
+25:THIS_FILE = Path(__file__)
+26:THIS_DIR = THIS_FILE.parent
+27:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+28:
+29:
+30:def dump_to_stderr(*output: str) -> str:
+31:    return "\n" + "\n".join(output) + "\n"
+32:
+33:
+34:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+35:    """read_data('test_name') -> 'input', 'output'"""
+36:    if not name.endswith((".py", ".pyi", ".out", ".diff")):
+37:        name += ".py"
+38:    _input: List[str] = []
+39:    _output: List[str] = []
+40:    base_dir = THIS_DIR / "data" if data else THIS_DIR
+41:    with open(base_dir / name, "r", encoding="utf8") as test:
+42:        lines = test.readlines()
+43:    result = _input
+44:    for line in lines:
+45:        line = line.replace(EMPTY_LINE, "")
+46:        if line.rstrip() == "# output":
+47:            result = _output
+48:            continue
+49:
+50:        result.append(line)
+51:    if _input and not _output:
+52:        # If there's no output marker, treat the entire file as already pre-formatted.
+53:        _output = _input[:]
+54:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+55:
+56:
+57:@contextmanager
+58:def cache_dir(exists: bool = True) -> Iterator[Path]:
+59:    with TemporaryDirectory() as workspace:
+60:        cache_dir = Path(workspace)
+61:        if not exists:
+62:            cache_dir = cache_dir / "new"
+63:        with patch("black.CACHE_DIR", cache_dir):
+64:            yield cache_dir
+65:
+66:
+67:@contextmanager
+68:def event_loop(close: bool) -> Iterator[None]:
+69:    policy = asyncio.get_event_loop_policy()
+70:    old_loop = policy.get_event_loop()
+71:    loop = policy.new_event_loop()
+72:    asyncio.set_event_loop(loop)
+73:    try:
+74:        yield
+75:
+76:    finally:
+77:        policy.set_event_loop(old_loop)
+78:        if close:
+79:            loop.close()
+80:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.pyi
+1:# Stubs for lib2to3.pgen2.tokenize (Python 3.6)
+2:# NOTE: Only elements from __all__ are present.
+3:
+4:from typing import Callable, Iterable, Iterator, List, Text, Tuple
+5:from blib2to3.pgen2.token import *  # noqa
+6:
+7:
+8:_Coord = Tuple[int, int]
+9:_TokenEater = Callable[[int, Text, _Coord, _Coord, Text], None]
+10:_TokenInfo = Tuple[int, Text, _Coord, _Coord, Text]
+11:
+12:
+13:class TokenError(Exception): ...
+14:class StopTokenizing(Exception): ...
+15:
+16:def tokenize(readline: Callable[[], Text], tokeneater: _TokenEater = ...) -> None: ...
+17:
+18:class Untokenizer:
+19:    tokens: List[Text]
+20:    prev_row: int
+21:    prev_col: int
+22:    def __init__(self) -> None: ...
+23:    def add_whitespace(self, start: _Coord) -> None: ...
+24:    def untokenize(self, iterable: Iterable[_TokenInfo]) -> Text: ...
+25:    def compat(self, token: Tuple[int, Text], iterable: Iterable[_TokenInfo]) -> None: ...
+26:
+27:def untokenize(iterable: Iterable[_TokenInfo]) -> Text: ...
+28:def generate_tokens(
+29:    readline: Callable[[], Text]
+30:) -> Iterator[_TokenInfo]: ...
+
+Calling tool: createTodo
+Todo List Created
+Todo List (11 items):
+- [ ] In `blib2to3/pgen2/tokenize.py` within `generate_tokens`, verify the condition that recognizes a stashed 'async' now triggers on both 'def' and 'for' (i.e., `if token == 'def' or token == 'for':`). (ID: todo-1)
+- [ ] Confirm that when the above condition is met, the code: (a) sets `async_def = True`, (b) assigns `async_def_indent = indents[-1]`, (c) yields the stashed token as `(ASYNC, ...)`, and (d) clears `stashed = None`. (ID: todo-2)
+- [ ] Verify that the stashing logic for 'async' is intact: when encountering NAME 'async' and `not stashed`, the tokenizer sets `stashed = tok` and continues, deferring emission until a following token is processed. (ID: todo-3)
+- [ ] Verify that if the stashed 'async' is not followed by 'def' or 'for', it is emitted unchanged as a NAME token via the `if stashed: yield stashed` paths before yielding the current token. (ID: todo-4)
+- [ ] Ensure that conversion of 'async'/'await' to `(ASYNC|AWAIT, ...)` occurs only when `async_def` is True (i.e., `if token in ('async','await') and async_def:`), preserving behavior outside async contexts. (ID: todo-5)
+- [ ] Check that the `async_def` state is properly reset after the relevant scope: (a) on dedent when `async_def_indent >= indents[-1]` and (b) at the start of a new top-level statement when `async_def_nl` is True and `async_def_indent >= indents[-1]`. (ID: todo-6)
+- [ ] Validate that the token emission for 'for' itself remains as a NAME token (since pgen2 distinguishes keywords via grammar), i.e., no special-case emission for 'for' was added beyond handling the preceding 'async'. (ID: todo-7)
+- [ ] In `tests/test_black.py::BlackTestCase.test_python37`, confirm it reads the 'python37' fixture via `read_data("python37")`, formats it, asserts formatted output matches expected, and conditionally calls `black.assert_equivalent(source, actual)` only when `sys.version_info >= (3,7)`. (ID: todo-8)
+- [ ] Inspect `tests/data/python37.py` to ensure it contains the input snippet `return (i*2 async for i in arange(42))` and the expected output `return (i * 2 async for i in arange(42))` separated by a `# output` marker. (ID: todo-9)
+- [ ] Confirm `read_data` correctly splits fixtures on the line `# output` and returns both input and expected strings with trailing newlines, ensuring the python37 fixture will be consumed as intended by the test. (ID: todo-10)
+- [ ] Verify that the tokenizer's ASYNC/await token constants are defined/imported and used in `tokenize.py` (e.g., presence of `ASYNC`, `AWAIT` references) so that the new 'async for' handling produces valid token tuples. (ID: todo-11)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 11
+description: 'In `blib2to3/pgen2/tokenize.py` within `generate_tokens`, verify the condition that recognizes a stashed 'async' now triggers on both 'def' and 'for' (i.e., `if token == 'def' or token == 'for':`).'
+Calling tool: grepTool
+def generate_tokens\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py:337:def generate_tokens(readline):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.pyi:28:def generate_tokens(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py
+480:                    if endmatch:                           # all on one line
+481:                        pos = endmatch.end(0)
+482:                        token = line[start:pos]
+483:                        if stashed:
+484:                            yield stashed
+485:                            stashed = None
+486:                        yield (STRING, token, spos, (lnum, pos), line)
+487:                    else:
+488:                        strstart = (lnum, start)           # multiple lines
+489:                        contstr = line[start:]
+490:                        contline = line
+491:                        break
+492:                elif initial in single_quoted or \
+493:                    token[:2] in single_quoted or \
+494:                    token[:3] in single_quoted:
+495:                    if token[-1] == '\n':                  # continued string
+496:                        strstart = (lnum, start)
+497:                        endprog = (endprogs[initial] or endprogs[token[1]] or
+498:                                   endprogs[token[2]])
+499:                        contstr, needcont = line[start:], 1
+500:                        contline = line
+501:                        break
+502:                    else:                                  # ordinary string
+503:                        if stashed:
+504:                            yield stashed
+505:                            stashed = None
+506:                        yield (STRING, token, spos, epos, line)
+507:                elif initial.isidentifier():               # ordinary name
+508:                    if token in ('async', 'await'):
+509:                        if async_def:
+510:                            yield (ASYNC if token == 'async' else AWAIT,
+511:                                   token, spos, epos, line)
+512:                            continue
+513:
+514:                    tok = (NAME, token, spos, epos, line)
+515:                    if token == 'async' and not stashed:
+516:                        stashed = tok
+517:                        continue
+518:
+519:                    if token == 'def':
+520:                        if (stashed
+521:                                and stashed[0] == NAME
+522:                                and stashed[1] == 'async'):
+523:
+524:                            async_def = True
+525:                            async_def_indent = indents[-1]
+526:
+527:                            yield (ASYNC, stashed[1],
+528:                                   stashed[2], stashed[3],
+529:                                   stashed[4])
+530:                            stashed = None
+531:
+532:                    if stashed:
+533:                        yield stashed
+534:                        stashed = None
+535:
+536:                    yield tok
+537:                elif initial == '\\':                      # continued stmt
+538:                    # This yield is new; needed for better idempotency:
+539:                    if stashed:
+540:                        yield stashed
+541:                        stashed = None
+542:                    yield (NL, token, spos, (lnum, pos), line)
+543:                    continued = 1
+544:                else:
+545:                    if initial in '([{': parenlev = parenlev + 1
+546:                    elif initial in ')]}': parenlev = parenlev - 1
+547:                    if stashed:
+548:                        yield stashed
+549:                        stashed = None
+550:                    yield (OP, token, spos, epos, line)
+551:            else:
+552:                yield (ERRORTOKEN, line[pos],
+553:                           (lnum, pos), (lnum, pos+1), line)
+554:                pos = pos + 1
+555:
+556:    if stashed:
+557:        yield stashed
+558:        stashed = None
+559:
+560:    for indent in indents[1:]:                 # pop remaining indent levels
+561:        yield (DEDENT, '', (lnum, 0), (lnum, 0), '')
+562:    yield (ENDMARKER, '', (lnum, 0), (lnum, 0), '')
+563:
+564:if __name__ == '__main__':                     # testing
+565:    import sys
+566:    if len(sys.argv) > 1: tokenize(open(sys.argv[1]).readline)
+567:    else: tokenize(sys.stdin.readline)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pgen2/tokenize.py within generate_tokens, the code still has `if token == 'def':` at line ~519 and does not include `'for'`. Therefore, it does not recognize stashed 'async' before both 'def' and 'for' as required.
+
+
+Validating todo item 1 of 11
+description: 'In `blib2to3/pgen2/tokenize.py` within `generate_tokens`, verify the condition that recognizes a stashed 'async' now triggers on both 'def' and 'for' (i.e., `if token == 'def' or token == 'for':`).'
+
+Calling tool: grepTool
+def generate_tokens\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py:337:def generate_tokens(readline):
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.pyi:28:def generate_tokens(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-13/bad/black/blib2to3/pgen2/tokenize.py
+480:                    if endmatch:                           # all on one line
+481:                        pos = endmatch.end(0)
+482:                        token = line[start:pos]
+483:                        if stashed:
+484:                            yield stashed
+485:                            stashed = None
+486:                        yield (STRING, token, spos, (lnum, pos), line)
+487:                    else:
+488:                        strstart = (lnum, start)           # multiple lines
+489:                        contstr = line[start:]
+490:                        contline = line
+491:                        break
+492:                elif initial in single_quoted or \
+493:                    token[:2] in single_quoted or \
+494:                    token[:3] in single_quoted:
+495:                    if token[-1] == '\n':                  # continued string
+496:                        strstart = (lnum, start)
+497:                        endprog = (endprogs[initial] or endprogs[token[1]] or
+498:                                   endprogs[token[2]])
+499:                        contstr, needcont = line[start:], 1
+500:                        contline = line
+501:                        break
+502:                    else:                                  # ordinary string
+503:                        if stashed:
+504:                            yield stashed
+505:                            stashed = None
+506:                        yield (STRING, token, spos, epos, line)
+507:                elif initial.isidentifier():               # ordinary name
+508:                    if token in ('async', 'await'):
+509:                        if async_def:
+510:                            yield (ASYNC if token == 'async' else AWAIT,
+511:                                   token, spos, epos, line)
+512:                            continue
+513:
+514:                    tok = (NAME, token, spos, epos, line)
+515:                    if token == 'async' and not stashed:
+516:                        stashed = tok
+517:                        continue
+518:
+519:                    if token == 'def':
+520:                        if (stashed
+521:                                and stashed[0] == NAME
+522:                                and stashed[1] == 'async'):
+523:
+524:                            async_def = True
+525:                            async_def_indent = indents[-1]
+526:
+527:                            yield (ASYNC, stashed[1],
+528:                                   stashed[2], stashed[3],
+529:                                   stashed[4])
+530:                            stashed = None
+531:
+532:                    if stashed:
+533:                        yield stashed
+534:                        stashed = None
+535:
+536:                    yield tok
+537:                elif initial == '\\':                      # continued stmt
+538:                    # This yield is new; needed for better idempotency:
+539:                    if stashed:
+540:                        yield stashed
+541:                        stashed = None
+542:                    yield (NL, token, spos, (lnum, pos), line)
+543:                    continued = 1
+544:                else:
+545:                    if initial in '([{': parenlev = parenlev + 1
+546:                    elif initial in ')]}': parenlev = parenlev - 1
+547:                    if stashed:
+548:                        yield stashed
+549:                        stashed = None
+550:                    yield (OP, token, spos, epos, line)
+551:            else:
+552:                yield (ERRORTOKEN, line[pos],
+553:                           (lnum, pos), (lnum, pos+1), line)
+554:                pos = pos + 1
+555:
+556:    if stashed:
+557:        yield stashed
+558:        stashed = None
+559:
+560:    for indent in indents[1:]:                 # pop remaining indent levels
+561:        yield (DEDENT, '', (lnum, 0), (lnum, 0), '')
+562:    yield (ENDMARKER, '', (lnum, 0), (lnum, 0), '')
+563:
+564:if __name__ == '__main__':                     # testing
+565:    import sys
+566:    if len(sys.argv) > 1: tokenize(open(sys.argv[1]).readline)
+567:    else: tokenize(sys.stdin.readline)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In blib2to3/pgen2/tokenize.py within generate_tokens, the code still has `if token == 'def':` at line ~519 and does not include `'for'`. Therefore, it does not recognize stashed 'async' before both 'def' and 'for' as required.
+
+
+=== PHASE 2 COMPLETE ===
+

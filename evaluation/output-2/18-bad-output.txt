@@ -1,0 +1,1945 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+
+Calling tool: globTool
+**/*test*
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/bugsinpy_run_test.sh
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py
+
+Calling tool: grepTool
+test_preserves_line_endings
+Matched content:
+1113:    def test_preserves_line_endings(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py
+1090:        empty = re.compile(r"")
+1091:        sources: List[Path] = []
+1092:        expected = [
+1093:            Path(path / "b/dont_exclude/a.py"),
+1094:            Path(path / "b/dont_exclude/a.pyi"),
+1095:            Path(path / "b/exclude/a.py"),
+1096:            Path(path / "b/exclude/a.pyi"),
+1097:            Path(path / "b/.definitely_exclude/a.py"),
+1098:            Path(path / "b/.definitely_exclude/a.pyi"),
+1099:        ]
+1100:        this_abs = THIS_DIR.resolve()
+1101:        sources.extend(
+1102:            black.gen_python_files_in_dir(
+1103:                path, this_abs, re.compile(black.DEFAULT_INCLUDES), empty, report
+1104:            )
+1105:        )
+1106:        self.assertEqual(sorted(expected), sorted(sources))
+1107:
+1108:    def test_invalid_include_exclude(self) -> None:
+1109:        for option in ["--include", "--exclude"]:
+1110:            result = CliRunner().invoke(black.main, ["-", option, "**()(!!*)"])
+1111:            self.assertEqual(result.exit_code, 2)
+1112:
+1113:    def test_preserves_line_endings(self) -> None:
+1114:        with TemporaryDirectory() as workspace:
+1115:            test_file = Path(workspace) / "test.py"
+1116:            for nl in ["\n", "\r\n"]:
+1117:                contents = nl.join(["def f(  ):", "    pass"])
+1118:                test_file.write_bytes(contents.encode())
+1119:                ff(test_file, write_back=black.WriteBack.YES)
+1120:                updated_contents: bytes = test_file.read_bytes()
+1121:                self.assertIn(nl.encode(), updated_contents)  # type: ignore
+1122:                if nl == "\n":
+1123:                    self.assertNotIn(b"\r\n", updated_contents)  # type: ignore
+1124:
+1125:
+1126:if __name__ == "__main__":
+1127:    unittest.main()
+
+Calling tool: grepTool
+ff\(
+Matched content:
+109:        self.assertFalse(ff(THIS_FILE))
+118:        self.assertFalse(ff(THIS_DIR / ".." / "black.py"))
+138:    def test_piping_diff(self) -> None:
+163:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+189:    def test_expression_ff(self) -> None:
+193:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+203:    def test_expression_diff(self) -> None:
+210:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+360:    def test_fmtonoff(self) -> None:
+814:    def test_no_cache_when_writeback_diff(self) -> None:
+1119:                ff(test_file, write_back=black.WriteBack.YES)
+
+Calling tool: grepTool
+ff\s*=\s*black\.
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+ff\s*=\s*
+Matched content:
+22:ff = partial(black.format_file_in_place, line_length=ll, fast=True)
+81:    maxDiff = None
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+440:                src = tasks.pop(task)
+441:                if task.cancelled():
+442:                    cancelled.append(task)
+443:                elif task.exception():
+444:                    report.failed(src, str(task.exception()))
+445:                else:
+446:                    formatted.append(src)
+447:                    report.done(src, Changed.YES if task.result() else Changed.NO)
+448:    if cancelled:
+449:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+450:    if write_back == WriteBack.YES and formatted:
+451:        write_cache(cache, formatted, line_length, mode)
+452:
+453:
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+554:    """Reformat contents a file and return new contents.
+555:
+556:    If `fast` is False, additionally confirm that the reformatted code is
+557:    valid by calling :func:`assert_equivalent` and :func:`assert_stable` on it.
+558:    `line_length` is passed to :func:`format_str`.
+559:    """
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+560:    if src_contents.strip() == "":
+561:        raise NothingChanged
+562:
+563:    dst_contents = format_str(src_contents, line_length=line_length, mode=mode)
+564:    if src_contents == dst_contents:
+565:        raise NothingChanged
+566:
+567:    if not fast:
+568:        assert_equivalent(src_contents, dst_contents)
+569:        assert_stable(src_contents, dst_contents, line_length=line_length, mode=mode)
+570:    return dst_contents
+571:
+572:
+573:def format_str(
+574:    src_contents: str, line_length: int, *, mode: FileMode = FileMode.AUTO_DETECT
+575:) -> FileContent:
+576:    """Reformat a string and return new contents.
+577:
+578:    `line_length` determines how many characters per line are allowed.
+579:    """
+580:    src_node = lib2to3_parse(src_contents)
+581:    dst_contents = ""
+582:    future_imports = get_future_imports(src_node)
+583:    is_pyi = bool(mode & FileMode.PYI)
+584:    py36 = bool(mode & FileMode.PYTHON36) or is_python36(src_node)
+585:    normalize_strings = not bool(mode & FileMode.NO_STRING_NORMALIZATION)
+586:    lines = LineGenerator(
+587:        remove_u_prefix=py36 or "unicode_literals" in future_imports,
+588:        is_pyi=is_pyi,
+589:        normalize_strings=normalize_strings,
+590:    )
+591:    elt = EmptyLineTracker(is_pyi=is_pyi)
+592:    empty_line = Line()
+593:    after = 0
+594:    for current_line in lines.visit(src_node):
+595:        for _ in range(after):
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+636:        except ParseError as pe:
+637:            lineno, column = pe.context[1]
+638:            lines = src_txt.splitlines()
+639:            try:
+640:                faulty_line = lines[lineno - 1]
+641:            except IndexError:
+642:                faulty_line = "<line number missing in source>"
+643:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+644:    else:
+645:        raise exc from None
+646:
+647:    if isinstance(result, Leaf):
+648:        result = Node(syms.file_input, [result])
+649:    return result
+650:
+651:
+652:def lib2to3_unparse(node: Node) -> str:
+653:    """Given a lib2to3 node, return its string representation."""
+654:    code = str(node)
+655:    return code
+656:
+657:
+658:T = TypeVar("T")
+659:
+660:
+661:class Visitor(Generic[T]):
+662:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+663:
+664:    def visit(self, node: LN) -> Iterator[T]:
+665:        """Main method to visit `node` and its children.
+666:
+667:        It tries to find a `visit_*()` method for the given `node.type`, like
+668:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+669:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+670:        instead.
+671:
+672:        Then yields objects of type `T` from the selected visitor.
+673:        """
+674:        if node.type < 256:
+675:            name = token.tok_name[node.type]
+676:        else:
+677:            name = type_repr(node.type)
+678:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+679:
+
+Calling tool: grepTool
+tokenize\.open\(
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+class WriteBack
+Matched content:
+118:class WriteBack(Enum):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+100:
+101:    def trim_prefix(self, leaf: Leaf) -> None:
+102:        leaf.prefix = leaf.prefix[self.consumed :]
+103:
+104:    def leaf_from_consumed(self, leaf: Leaf) -> Leaf:
+105:        """Returns a new Leaf from the consumed part of the prefix."""
+106:        unformatted_prefix = leaf.prefix[: self.consumed]
+107:        return Leaf(token.NEWLINE, unformatted_prefix)
+108:
+109:
+110:class FormatOn(FormatError):
+111:    """Found a comment like `# fmt: on` in the file."""
+112:
+113:
+114:class FormatOff(FormatError):
+115:    """Found a comment like `# fmt: off` in the file."""
+116:
+117:
+118:class WriteBack(Enum):
+119:    NO = 0
+120:    YES = 1
+121:    DIFF = 2
+122:
+123:    @classmethod
+124:    def from_configuration(cls, *, check: bool, diff: bool) -> "WriteBack":
+125:        if check and not diff:
+126:            return cls.NO
+127:
+128:        return cls.DIFF if diff else cls.YES
+129:
+130:
+131:class Changed(Enum):
+132:    NO = 0
+133:    CACHED = 1
+134:    YES = 2
+135:
+136:
+137:class FileMode(Flag):
+138:    AUTO_DETECT = 0
+139:    PYTHON36 = 1
+
+Calling tool: grepTool
+TextIOWrapper\(
+Matched content:
+489:            f = io.TextIOWrapper(
+526:            f = io.TextIOWrapper(
+537:            f = io.TextIOWrapper(
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+
+Calling tool: grepTool
+from typing import .*Tuple
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from typing import
+Matched content:
+17:from typing import (
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+1:import asyncio
+2:import pickle
+3:from asyncio.base_events import BaseEventLoop
+4:from concurrent.futures import Executor, ProcessPoolExecutor
+5:from enum import Enum, Flag
+6:from functools import partial, wraps
+7:import io
+8:import keyword
+9:import logging
+10:from multiprocessing import Manager
+11:import os
+12:from pathlib import Path
+13:import re
+14:import tokenize
+15:import signal
+16:import sys
+17:from typing import (
+18:    Any,
+19:    Callable,
+20:    Collection,
+21:    Dict,
+22:    Generic,
+23:    Iterable,
+24:    Iterator,
+25:    List,
+26:    Optional,
+27:    Pattern,
+28:    Sequence,
+29:    Set,
+30:    Tuple,
+31:    Type,
+32:    TypeVar,
+33:    Union,
+34:    cast,
+35:)
+36:
+37:from appdirs import user_cache_dir
+38:from attr import dataclass, Factory
+39:import click
+40:
+41:# lib2to3 fork
+42:from blib2to3.pytree import Node, Leaf, type_repr
+43:from blib2to3 import pygram, pytree
+44:from blib2to3.pgen2 import driver, token
+45:from blib2to3.pgen2.parse import ParseError
+46:
+47:
+48:__version__ = "18.5b1"
+49:DEFAULT_LINE_LENGTH = 88
+50:DEFAULT_EXCLUDES = (
+51:    r"/(\.git|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist)/"
+52:)
+53:DEFAULT_INCLUDES = r"\.pyi?$"
+54:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+55:
+56:
+57:# types
+58:FileContent = str
+59:Encoding = str
+60:Depth = int
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py
+120:    def test_piping(self) -> None:
+121:        source, expected = read_data("../black")
+122:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+123:        try:
+124:            sys.stdin = TextIOWrapper(BytesIO(source.encode("utf8")), encoding="utf8")
+125:            sys.stdout = TextIOWrapper(BytesIO(), encoding="utf8")
+126:            sys.stdin.buffer.name = "<stdin>"  # type: ignore
+127:            black.format_stdin_to_stdout(
+128:                line_length=ll, fast=True, write_back=black.WriteBack.YES
+129:            )
+130:            sys.stdout.seek(0)
+131:            actual = sys.stdout.read()
+132:        finally:
+133:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+134:        self.assertFormatEqual(expected, actual)
+135:        black.assert_equivalent(source, actual)
+136:        black.assert_stable(source, actual, line_length=ll)
+137:
+138:    def test_piping_diff(self) -> None:
+139:        source, _ = read_data("expression.py")
+140:        expected, _ = read_data("expression.diff")
+141:        hold_stdin, hold_stdout = sys.stdin, sys.stdout
+142:        try:
+143:            sys.stdin = TextIOWrapper(BytesIO(source.encode("utf8")), encoding="utf8")
+144:            sys.stdout = TextIOWrapper(BytesIO(), encoding="utf8")
+145:            sys.stdin.buffer.name = "<stdin>"  # type: ignore
+146:            black.format_stdin_to_stdout(
+147:                line_length=ll, fast=True, write_back=black.WriteBack.DIFF
+148:            )
+149:            sys.stdout.seek(0)
+150:            actual = sys.stdout.read()
+151:        finally:
+152:            sys.stdin, sys.stdout = hold_stdin, hold_stdout
+153:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+154:        self.assertEqual(expected, actual)
+155:
+156:    @patch("black.dump_to_file", dump_to_stderr)
+157:    def test_setup(self) -> None:
+158:        source, expected = read_data("../setup")
+159:        actual = fs(source)
+160:        self.assertFormatEqual(expected, actual)
+161:        black.assert_equivalent(source, actual)
+162:        black.assert_stable(source, actual, line_length=ll)
+163:        self.assertFalse(ff(THIS_DIR / ".." / "setup.py"))
+164:
+165:    @patch("black.dump_to_file", dump_to_stderr)
+166:    def test_function(self) -> None:
+167:        source, expected = read_data("function")
+168:        actual = fs(source)
+169:        self.assertFormatEqual(expected, actual)
+170:        black.assert_equivalent(source, actual)
+171:        black.assert_stable(source, actual, line_length=ll)
+172:
+173:    @patch("black.dump_to_file", dump_to_stderr)
+174:    def test_function2(self) -> None:
+175:        source, expected = read_data("function2")
+176:        actual = fs(source)
+177:        self.assertFormatEqual(expected, actual)
+178:        black.assert_equivalent(source, actual)
+179:        black.assert_stable(source, actual, line_length=ll)
+180:
+181:    @patch("black.dump_to_file", dump_to_stderr)
+182:    def test_expression(self) -> None:
+183:        source, expected = read_data("expression")
+184:        actual = fs(source)
+185:        self.assertFormatEqual(expected, actual)
+186:        black.assert_equivalent(source, actual)
+187:        black.assert_stable(source, actual, line_length=ll)
+188:
+189:    def test_expression_ff(self) -> None:
+190:        source, expected = read_data("expression")
+191:        tmp_file = Path(black.dump_to_file(source))
+192:        try:
+193:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
+194:            with open(tmp_file, encoding="utf8") as f:
+195:                actual = f.read()
+196:        finally:
+197:            os.unlink(tmp_file)
+198:        self.assertFormatEqual(expected, actual)
+199:        with patch("black.dump_to_file", dump_to_stderr):
+200:            black.assert_equivalent(source, actual)
+201:            black.assert_stable(source, actual, line_length=ll)
+202:
+203:    def test_expression_diff(self) -> None:
+204:        source, _ = read_data("expression.py")
+205:        expected, _ = read_data("expression.diff")
+206:        tmp_file = Path(black.dump_to_file(source))
+207:        hold_stdout = sys.stdout
+208:        try:
+209:            sys.stdout = TextIOWrapper(BytesIO(), encoding="utf8")
+210:            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.DIFF))
+211:            sys.stdout.seek(0)
+212:            actual = sys.stdout.read()
+213:            actual = actual.replace(str(tmp_file), "<stdin>")
+214:        finally:
+215:            sys.stdout = hold_stdout
+216:            os.unlink(tmp_file)
+217:        actual = actual.rstrip() + "\n"  # the diff output has a trailing space
+218:        if expected != actual:
+219:            dump = black.dump_to_file(actual)
+220:            msg = (
+221:                f"Expected diff isn't equal to the actual. If you made changes "
+222:                f"to expression.py and this is an anticipated difference, "
+223:                f"overwrite tests/expression.diff with {dump}"
+224:            )
+225:            self.assertEqual(expected, actual, msg)
+226:
+227:    @patch("black.dump_to_file", dump_to_stderr)
+228:    def test_fstring(self) -> None:
+229:        source, expected = read_data("fstring")
+
+Calling tool: grepTool
+if write_back == write_back\.YES
+Matched content:
+479:    if write_back == write_back.YES:
+
+Calling tool: grepTool
+== write_back\.DIFF
+Matched content:
+482:    elif write_back == write_back.DIFF:
+
+Calling tool: grepTool
+def diff\(
+Matched content:
+3090:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+3070:            f"of the formatter.  "
+3071:            f"Please report a bug on https://github.com/ambv/black/issues.  "
+3072:            f"This diff might be helpful: {log}"
+3073:        ) from None
+3074:
+3075:
+3076:def dump_to_file(*output: str) -> str:
+3077:    """Dump `output` to a temporary file. Return path to the file."""
+3078:    import tempfile
+3079:
+3080:    with tempfile.NamedTemporaryFile(
+3081:        mode="w", prefix="blk_", suffix=".log", delete=False, encoding="utf8"
+3082:    ) as f:
+3083:        for lines in output:
+3084:            f.write(lines)
+3085:            if lines and lines[-1] != "\n":
+3086:                f.write("\n")
+3087:    return f.name
+3088:
+3089:
+3090:def diff(a: str, b: str, a_name: str, b_name: str) -> str:
+3091:    """Return a unified diff string between strings `a` and `b`."""
+3092:    import difflib
+3093:
+3094:    a_lines = [line + "\n" for line in a.split("\n")]
+3095:    b_lines = [line + "\n" for line in b.split("\n")]
+3096:    return "".join(
+3097:        difflib.unified_diff(a_lines, b_lines, fromfile=a_name, tofile=b_name, n=5)
+3098:    )
+3099:
+3100:
+3101:def cancel(tasks: Iterable[asyncio.Task]) -> None:
+3102:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+3103:    err("Aborted!")
+3104:    for task in tasks:
+3105:        task.cancel()
+3106:
+3107:
+3108:def shutdown(loop: BaseEventLoop) -> None:
+3109:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+3110:    try:
+3111:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+3112:        to_cancel = [task for task in asyncio.Task.all_tasks(loop) if not task.done()]
+3113:        if not to_cancel:
+3114:            return
+3115:
+3116:        for task in to_cancel:
+3117:            task.cancel()
+3118:        loop.run_until_complete(
+3119:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+3120:        )
+3121:    finally:
+3122:        # `concurrent.futures.Future` objects cannot be cancelled once they
+3123:        # are already running. There might be some when the `shutdown()` happened.
+3124:        # Silence their logger's spew about the event loop being closed.
+3125:        cf_logger = logging.getLogger("concurrent.futures")
+3126:        cf_logger.setLevel(logging.CRITICAL)
+3127:        loop.close()
+3128:
+3129:
+
+Calling tool: createTodo
+Todo List Created
+Todo List (14 items):
+- [ ] Verify that `black.format_file_in_place` reads the file in binary mode and uses `prepare_input` to obtain `(newline, encoding, src_contents)` before formatting. (ID: todo-1)
+- [ ] Confirm that in `black.format_file_in_place`, when `write_back` is YES, the code opens the file with `open(src, "w", encoding=encoding, newline=newline)` and writes `dst_contents`, ensuring the original newline style is preserved. (ID: todo-2)
+- [ ] Confirm that in `black.format_file_in_place`, when `write_back` is DIFF, it wraps `sys.stdout.buffer` in `io.TextIOWrapper` with the detected `encoding` and `newline`, writes the diff string, and calls `detach()`; and lock acquire/release semantics are retained around the write. (ID: todo-3)
+- [ ] Check for correctness of enum comparison in `black.format_file_in_place`: ensure comparisons use `WriteBack.YES`/`WriteBack.DIFF` (not the `write_back` parameter object). Flag if code uses `write_back == write_back.YES` or similar. (ID: todo-4)
+- [ ] Verify `black.format_stdin_to_stdout` now reads from `sys.stdin.buffer.read()` (bytes) and calls `prepare_input` to detect `newline` and `encoding` and to decode the source text. (ID: todo-5)
+- [ ] Confirm `black.format_stdin_to_stdout` writes to stdout using `io.TextIOWrapper(sys.stdout.buffer, encoding=encoding, newline=newline, write_through=True)` in both YES and DIFF branches and detaches the wrapper after writing. (ID: todo-6)
+- [ ] Validate the implementation of `black.prepare_input(src: bytes) -> Tuple[str, str, str]`: it must use `tokenize.detect_encoding` to determine encoding, choose newline as "\r\n" iff the first detected line ends with CRLF, seek back to start, and decode via `io.TextIOWrapper(...).read()` so the returned text uses universal newlines (LF only). (ID: todo-7)
+- [ ] Check that `black.prepare_input` handles the file position correctly: after `detect_encoding`, it calls `srcbuf.seek(0)` before decoding to read the full contents. (ID: todo-8)
+- [ ] Assess robustness of `black.prepare_input` for empty or 1-line inputs: statically ensure that indexing `lines[0][-2:]` cannot raise (or note potential risk) and that the fallback newline becomes "\n" when CRLF isn't detected. (ID: todo-9)
+- [ ] Verify that `black.lib2to3_parse` no longer attempts to preserve CRLF when appending a missing terminal newline; it should unconditionally append "\n" if the source does not end with a newline. (ID: todo-10)
+- [ ] Ensure all necessary imports for the new functionality exist: `import io` is present; `tokenize` and `Tuple` are imported and used by `prepare_input`. (ID: todo-11)
+- [ ] Confirm no remaining uses of `tokenize.open(...)` exist after the changes (search across `black.py`). (ID: todo-12)
+- [ ] Validate that the new test `test_preserves_line_endings` writes files with both "\n" and "\r\n", invokes `ff` (a partial of `format_file_in_place`) with `write_back=black.WriteBack.YES`, and asserts the updated bytes contain the original newline sequence (and that CRLF is absent when LF was original). (ID: todo-13)
+- [ ] Cross-check other affected tests for stdout/diff paths (e.g., piping and DIFF tests) still align with updated stdout writing logic (i.e., they wrap stdout and read resulting text as expected). (ID: todo-14)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 14
+description: 'Verify that `black.format_file_in_place` reads the file in binary mode and uses `prepare_input` to obtain `(newline, encoding, src_contents)` before formatting.'
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+440:                src = tasks.pop(task)
+441:                if task.cancelled():
+442:                    cancelled.append(task)
+443:                elif task.exception():
+444:                    report.failed(src, str(task.exception()))
+445:                else:
+446:                    formatted.append(src)
+447:                    report.done(src, Changed.YES if task.result() else Changed.NO)
+448:    if cancelled:
+449:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+450:    if write_back == WriteBack.YES and formatted:
+451:        write_cache(cache, formatted, line_length, mode)
+452:
+453:
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+554:    """Reformat contents a file and return new contents.
+555:
+556:    If `fast` is False, additionally confirm that the reformatted code is
+557:    valid by calling :func:`assert_equivalent` and :func:`assert_stable` on it.
+558:    `line_length` is passed to :func:`format_str`.
+559:    """
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+636:        except ParseError as pe:
+637:            lineno, column = pe.context[1]
+638:            lines = src_txt.splitlines()
+639:            try:
+640:                faulty_line = lines[lineno - 1]
+641:            except IndexError:
+642:                faulty_line = "<line number missing in source>"
+643:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+644:    else:
+645:        raise exc from None
+646:
+647:    if isinstance(result, Leaf):
+648:        result = Node(syms.file_input, [result])
+649:    return result
+650:
+651:
+652:def lib2to3_unparse(node: Node) -> str:
+653:    """Given a lib2to3 node, return its string representation."""
+654:    code = str(node)
+655:    return code
+656:
+657:
+658:T = TypeVar("T")
+659:
+660:
+661:class Visitor(Generic[T]):
+662:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+663:
+664:    def visit(self, node: LN) -> Iterator[T]:
+665:        """Main method to visit `node` and its children.
+666:
+667:        It tries to find a `visit_*()` method for the given `node.type`, like
+668:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+669:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+670:        instead.
+671:
+672:        Then yields objects of type `T` from the selected visitor.
+673:        """
+674:        if node.type < 256:
+675:            name = token.tok_name[node.type]
+676:        else:
+677:            name = type_repr(node.type)
+678:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+679:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In `black/black.py` line 470, the file is opened in binary mode (`open(src, "rb")`) and immediately passed to `prepare_input` to obtain `newline`, `encoding`, and `src_contents` (lines 470-471). This matches the todo requirement precisely.
+
+
+Todo item 1 of 14 is correct
+description: 'Verify that `black.format_file_in_place` reads the file in binary mode and uses `prepare_input` to obtain `(newline, encoding, src_contents)` before formatting.'
+Validating todo item 2 of 14
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is YES, the code opens the file with `open(src, "w", encoding=encoding, newline=newline)` and writes `dst_contents`, ensuring the original newline style is preserved.'
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s format_file_in_place (lines 479–481), when write_back == write_back.YES, the code opens the file with open(src, "w", encoding=encoding, newline=newline) and writes dst_contents, preserving the original newline style.
+
+
+Todo item 2 of 14 is correct
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is YES, the code opens the file with `open(src, "w", encoding=encoding, newline=newline)` and writes `dst_contents`, ensuring the original newline style is preserved.'
+Validating todo item 3 of 14
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is DIFF, it wraps `sys.stdout.buffer` in `io.TextIOWrapper` with the detected `encoding` and `newline`, writes the diff string, and calls `detach()`; and lock acquire/release semantics are retained around the write.'
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+430:        pending: Iterable[asyncio.Task] = tasks.keys()
+431:        try:
+432:            loop.add_signal_handler(signal.SIGINT, cancel, pending)
+433:            loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+434:        except NotImplementedError:
+435:            # There are no good alternatives for these on Windows
+436:            pass
+437:        while pending:
+438:            done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+439:            for task in done:
+440:                src = tasks.pop(task)
+441:                if task.cancelled():
+442:                    cancelled.append(task)
+443:                elif task.exception():
+444:                    report.failed(src, str(task.exception()))
+445:                else:
+446:                    formatted.append(src)
+447:                    report.done(src, Changed.YES if task.result() else Changed.NO)
+448:    if cancelled:
+449:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+450:    if write_back == WriteBack.YES and formatted:
+451:        write_cache(cache, formatted, line_length, mode)
+452:
+453:
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In format_file_in_place, the DIFF branch acquires the lock, wraps sys.stdout.buffer in io.TextIOWrapper using the detected encoding and newline with write_through=True, writes diff_contents, then calls detach(), and finally releases the lock. The implementation matches the requirement.
+
+
+Todo item 3 of 14 is correct
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is DIFF, it wraps `sys.stdout.buffer` in `io.TextIOWrapper` with the detected `encoding` and `newline`, writes the diff string, and calls `detach()`; and lock acquire/release semantics are retained around the write.'
+Validating todo item 4 of 14
+description: 'Check for correctness of enum comparison in `black.format_file_in_place`: ensure comparisons use `WriteBack.YES`/`WriteBack.DIFF` (not the `write_back` parameter object). Flag if code uses `write_back == write_back.YES` or similar.'
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+554:    """Reformat contents a file and return new contents.
+555:
+556:    If `fast` is False, additionally confirm that the reformatted code is
+557:    valid by calling :func:`assert_equivalent` and :func:`assert_stable` on it.
+558:    `line_length` is passed to :func:`format_str`.
+559:    """
+560:    if src_contents.strip() == "":
+561:        raise NothingChanged
+562:
+563:    dst_contents = format_str(src_contents, line_length=line_length, mode=mode)
+564:    if src_contents == dst_contents:
+565:        raise NothingChanged
+566:
+567:    if not fast:
+568:        assert_equivalent(src_contents, dst_contents)
+569:        assert_stable(src_contents, dst_contents, line_length=line_length, mode=mode)
+570:    return dst_contents
+571:
+572:
+573:def format_str(
+
+Calling tool: grepTool
+write_back == write_back\.
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:479:    if write_back == write_back.YES:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:482:    elif write_back == write_back.DIFF:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.format_file_in_place, the comparisons use `write_back == write_back.YES` and `elif write_back == write_back.DIFF` (lines 479–483). They should compare against the enum class, e.g., `WriteBack.YES`/`WriteBack.DIFF`, as done in format_stdin_to_stdout (lines 525–535).
+
+
+Validating todo item 1 of 14
+description: 'Verify that `black.format_file_in_place` reads the file in binary mode and uses `prepare_input` to obtain `(newline, encoding, src_contents)` before formatting.'
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+440:                src = tasks.pop(task)
+441:                if task.cancelled():
+442:                    cancelled.append(task)
+443:                elif task.exception():
+444:                    report.failed(src, str(task.exception()))
+445:                else:
+446:                    formatted.append(src)
+447:                    report.done(src, Changed.YES if task.result() else Changed.NO)
+448:    if cancelled:
+449:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+450:    if write_back == WriteBack.YES and formatted:
+451:        write_cache(cache, formatted, line_length, mode)
+452:
+453:
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+554:    """Reformat contents a file and return new contents.
+555:
+556:    If `fast` is False, additionally confirm that the reformatted code is
+557:    valid by calling :func:`assert_equivalent` and :func:`assert_stable` on it.
+558:    `line_length` is passed to :func:`format_str`.
+559:    """
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+636:        except ParseError as pe:
+637:            lineno, column = pe.context[1]
+638:            lines = src_txt.splitlines()
+639:            try:
+640:                faulty_line = lines[lineno - 1]
+641:            except IndexError:
+642:                faulty_line = "<line number missing in source>"
+643:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+644:    else:
+645:        raise exc from None
+646:
+647:    if isinstance(result, Leaf):
+648:        result = Node(syms.file_input, [result])
+649:    return result
+650:
+651:
+652:def lib2to3_unparse(node: Node) -> str:
+653:    """Given a lib2to3 node, return its string representation."""
+654:    code = str(node)
+655:    return code
+656:
+657:
+658:T = TypeVar("T")
+659:
+660:
+661:class Visitor(Generic[T]):
+662:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+663:
+664:    def visit(self, node: LN) -> Iterator[T]:
+665:        """Main method to visit `node` and its children.
+666:
+667:        It tries to find a `visit_*()` method for the given `node.type`, like
+668:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+669:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+670:        instead.
+671:
+672:        Then yields objects of type `T` from the selected visitor.
+673:        """
+674:        if node.type < 256:
+675:            name = token.tok_name[node.type]
+676:        else:
+677:            name = type_repr(node.type)
+678:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+679:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In `black/black.py` line 470, the file is opened in binary mode (`open(src, "rb")`) and immediately passed to `prepare_input` to obtain `newline`, `encoding`, and `src_contents` (lines 470-471). This matches the todo requirement precisely.
+
+Todo item 1 of 14 is correct
+description: 'Verify that `black.format_file_in_place` reads the file in binary mode and uses `prepare_input` to obtain `(newline, encoding, src_contents)` before formatting.'
+
+Validating todo item 2 of 14
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is YES, the code opens the file with `open(src, "w", encoding=encoding, newline=newline)` and writes `dst_contents`, ensuring the original newline style is preserved.'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s format_file_in_place (lines 479–481), when write_back == write_back.YES, the code opens the file with open(src, "w", encoding=encoding, newline=newline) and writes dst_contents, preserving the original newline style.
+
+Todo item 2 of 14 is correct
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is YES, the code opens the file with `open(src, "w", encoding=encoding, newline=newline)` and writes `dst_contents`, ensuring the original newline style is preserved.'
+
+Validating todo item 3 of 14
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is DIFF, it wraps `sys.stdout.buffer` in `io.TextIOWrapper` with the detected `encoding` and `newline`, writes the diff string, and calls `detach()`; and lock acquire/release semantics are retained around the write.'
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+430:        pending: Iterable[asyncio.Task] = tasks.keys()
+431:        try:
+432:            loop.add_signal_handler(signal.SIGINT, cancel, pending)
+433:            loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+434:        except NotImplementedError:
+435:            # There are no good alternatives for these on Windows
+436:            pass
+437:        while pending:
+438:            done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+439:            for task in done:
+440:                src = tasks.pop(task)
+441:                if task.cancelled():
+442:                    cancelled.append(task)
+443:                elif task.exception():
+444:                    report.failed(src, str(task.exception()))
+445:                else:
+446:                    formatted.append(src)
+447:                    report.done(src, Changed.YES if task.result() else Changed.NO)
+448:    if cancelled:
+449:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+450:    if write_back == WriteBack.YES and formatted:
+451:        write_cache(cache, formatted, line_length, mode)
+452:
+453:
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In format_file_in_place, the DIFF branch acquires the lock, wraps sys.stdout.buffer in io.TextIOWrapper using the detected encoding and newline with write_through=True, writes diff_contents, then calls detach(), and finally releases the lock. The implementation matches the requirement.
+
+Todo item 3 of 14 is correct
+description: 'Confirm that in `black.format_file_in_place`, when `write_back` is DIFF, it wraps `sys.stdout.buffer` in `io.TextIOWrapper` with the detected `encoding` and `newline`, writes the diff string, and calls `detach()`; and lock acquire/release semantics are retained around the write.'
+
+Validating todo item 4 of 14
+description: 'Check for correctness of enum comparison in `black.format_file_in_place`: ensure comparisons use `WriteBack.YES`/`WriteBack.DIFF` (not the `write_back` parameter object). Flag if code uses `write_back == write_back.YES` or similar.'
+
+Calling tool: grepTool
+def format_file_in_place\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:454:def format_file_in_place(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+454:def format_file_in_place(
+455:    src: Path,
+456:    line_length: int,
+457:    fast: bool,
+458:    write_back: WriteBack = WriteBack.NO,
+459:    mode: FileMode = FileMode.AUTO_DETECT,
+460:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+461:) -> bool:
+462:    """Format file under `src` path. Return True if changed.
+463:
+464:    If `write_back` is True, write reformatted code back to stdout.
+465:    `line_length` and `fast` options are passed to :func:`format_file_contents`.
+466:    """
+467:    if src.suffix == ".pyi":
+468:        mode |= FileMode.PYI
+469:
+470:    with open(src, "rb") as buf:
+471:        newline, encoding, src_contents = prepare_input(buf.read())
+472:    try:
+473:        dst_contents = format_file_contents(
+474:            src_contents, line_length=line_length, fast=fast, mode=mode
+475:        )
+476:    except NothingChanged:
+477:        return False
+478:
+479:    if write_back == write_back.YES:
+480:        with open(src, "w", encoding=encoding, newline=newline) as f:
+481:            f.write(dst_contents)
+482:    elif write_back == write_back.DIFF:
+483:        src_name = f"{src}  (original)"
+484:        dst_name = f"{src}  (formatted)"
+485:        diff_contents = diff(src_contents, dst_contents, src_name, dst_name)
+486:        if lock:
+487:            lock.acquire()
+488:        try:
+489:            f = io.TextIOWrapper(
+490:                sys.stdout.buffer,
+491:                encoding=encoding,
+492:                newline=newline,
+493:                write_through=True,
+494:            )
+495:            f.write(diff_contents)
+496:            f.detach()
+497:        finally:
+498:            if lock:
+499:                lock.release()
+500:    return True
+501:
+502:
+503:def format_stdin_to_stdout(
+504:    line_length: int,
+505:    fast: bool,
+506:    write_back: WriteBack = WriteBack.NO,
+507:    mode: FileMode = FileMode.AUTO_DETECT,
+508:) -> bool:
+509:    """Format file on stdin. Return True if changed.
+510:
+511:    If `write_back` is True, write reformatted code back to stdout.
+512:    `line_length`, `fast`, `is_pyi`, and `force_py36` arguments are passed to
+513:    :func:`format_file_contents`.
+514:    """
+515:    newline, encoding, src = prepare_input(sys.stdin.buffer.read())
+516:    dst = src
+517:    try:
+518:        dst = format_file_contents(src, line_length=line_length, fast=fast, mode=mode)
+519:        return True
+520:
+521:    except NothingChanged:
+522:        return False
+523:
+524:    finally:
+525:        if write_back == WriteBack.YES:
+526:            f = io.TextIOWrapper(
+527:                sys.stdout.buffer,
+528:                encoding=encoding,
+529:                newline=newline,
+530:                write_through=True,
+531:            )
+532:            f.write(dst)
+533:            f.detach()
+534:        elif write_back == WriteBack.DIFF:
+535:            src_name = "<stdin>  (original)"
+536:            dst_name = "<stdin>  (formatted)"
+537:            f = io.TextIOWrapper(
+538:                sys.stdout.buffer,
+539:                encoding=encoding,
+540:                newline=newline,
+541:                write_through=True,
+542:            )
+543:            f.write(diff(src, dst, src_name, dst_name))
+544:            f.detach()
+545:
+546:
+547:def format_file_contents(
+548:    src_contents: str,
+549:    *,
+550:    line_length: int,
+551:    fast: bool,
+552:    mode: FileMode = FileMode.AUTO_DETECT,
+553:) -> FileContent:
+554:    """Reformat contents a file and return new contents.
+555:
+556:    If `fast` is False, additionally confirm that the reformatted code is
+557:    valid by calling :func:`assert_equivalent` and :func:`assert_stable` on it.
+558:    `line_length` is passed to :func:`format_str`.
+559:    """
+560:    if src_contents.strip() == "":
+561:        raise NothingChanged
+562:
+563:    dst_contents = format_str(src_contents, line_length=line_length, mode=mode)
+564:    if src_contents == dst_contents:
+565:        raise NothingChanged
+566:
+567:    if not fast:
+568:        assert_equivalent(src_contents, dst_contents)
+569:        assert_stable(src_contents, dst_contents, line_length=line_length, mode=mode)
+570:    return dst_contents
+571:
+572:
+573:def format_str(
+
+Calling tool: grepTool
+write_back == write_back\.
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:479:    if write_back == write_back.YES:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:482:    elif write_back == write_back.DIFF:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.format_file_in_place, the comparisons use `write_back == write_back.YES` and `elif write_back == write_back.DIFF` (lines 479–483). They should compare against the enum class, e.g., `WriteBack.YES`/`WriteBack.DIFF`, as done in format_stdin_to_stdout (lines 525–535).
+
+
+=== PHASE 2 COMPLETE ===
+

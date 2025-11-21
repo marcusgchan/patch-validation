@@ -1,0 +1,1372 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: grepTool
+def normalize_invisible_parens\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: grepTool
+test_tuple_assign
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_tuple_assign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/test_black.py:546:    def test_tuple_assign(self) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/test_black.py
+520:
+521:    @patch("black.dump_to_file", dump_to_stderr)
+522:    def test_remove_empty_parentheses_after_class(self) -> None:
+523:        source, expected = read_data("class_blank_parentheses")
+524:        actual = fs(source)
+525:        self.assertFormatEqual(expected, actual)
+526:        black.assert_equivalent(source, actual)
+527:        black.assert_stable(source, actual, black.FileMode())
+528:
+529:    @patch("black.dump_to_file", dump_to_stderr)
+530:    def test_new_line_between_class_and_code(self) -> None:
+531:        source, expected = read_data("class_methods_new_line")
+532:        actual = fs(source)
+533:        self.assertFormatEqual(expected, actual)
+534:        black.assert_equivalent(source, actual)
+535:        black.assert_stable(source, actual, black.FileMode())
+536:
+537:    @patch("black.dump_to_file", dump_to_stderr)
+538:    def test_bracket_match(self) -> None:
+539:        source, expected = read_data("bracketmatch")
+540:        actual = fs(source)
+541:        self.assertFormatEqual(expected, actual)
+542:        black.assert_equivalent(source, actual)
+543:        black.assert_stable(source, actual, black.FileMode())
+544:
+545:    @patch("black.dump_to_file", dump_to_stderr)
+546:    def test_tuple_assign(self) -> None:
+547:        source, expected = read_data("tupleassign")
+548:        actual = fs(source)
+549:        self.assertFormatEqual(expected, actual)
+550:        black.assert_equivalent(source, actual)
+551:        black.assert_stable(source, actual, black.FileMode())
+552:
+553:    def test_tab_comment_indentation(self) -> None:
+554:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t# comment\n\tpass\n"
+555:        contents_spc = "if 1:\n    if 2:\n        pass\n    # comment\n    pass\n"
+556:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+557:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+558:
+559:        contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t\t# comment\n\tpass\n"
+560:        contents_spc = "if 1:\n    if 2:\n        pass\n        # comment\n    pass\n"
+561:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+562:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+563:
+564:        # mixed tabs and spaces (valid Python 2 code)
+565:        contents_tab = "if 1:\n        if 2:\n\t\tpass\n\t# comment\n        pass\n"
+566:        contents_spc = "if 1:\n    if 2:\n        pass\n    # comment\n    pass\n"
+567:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+568:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+569:
+570:        contents_tab = "if 1:\n        if 2:\n\t\tpass\n\t\t# comment\n        pass\n"
+571:        contents_spc = "if 1:\n    if 2:\n        pass\n        # comment\n    pass\n"
+572:        self.assertFormatEqual(contents_spc, fs(contents_spc))
+573:        self.assertFormatEqual(contents_spc, fs(contents_tab))
+574:
+575:    def test_report_verbose(self) -> None:
+576:        report = black.Report(verbose=True)
+577:        out_lines = []
+578:        err_lines = []
+579:
+580:        def out(msg: str, **kwargs: Any) -> None:
+581:            out_lines.append(msg)
+582:
+583:        def err(msg: str, **kwargs: Any) -> None:
+584:            err_lines.append(msg)
+585:
+586:        with patch("black.out", out), patch("black.err", err):
+587:            report.done(Path("f1"), black.Changed.NO)
+588:            self.assertEqual(len(out_lines), 1)
+589:            self.assertEqual(len(err_lines), 0)
+590:            self.assertEqual(out_lines[-1], "f1 already well formatted, good job.")
+591:            self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
+592:            self.assertEqual(report.return_code, 0)
+593:            report.done(Path("f2"), black.Changed.YES)
+594:            self.assertEqual(len(out_lines), 2)
+595:            self.assertEqual(len(err_lines), 0)
+596:            self.assertEqual(out_lines[-1], "reformatted f2")
+597:            self.assertEqual(
+598:                unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
+599:            )
+600:            report.done(Path("f3"), black.Changed.CACHED)
+601:            self.assertEqual(len(out_lines), 3)
+602:            self.assertEqual(len(err_lines), 0)
+603:            self.assertEqual(
+604:                out_lines[-1], "f3 wasn't modified on disk since last run."
+605:            )
+606:            self.assertEqual(
+607:                unstyle(str(report)), "1 file reformatted, 2 files left unchanged."
+608:            )
+609:            self.assertEqual(report.return_code, 0)
+610:            report.check = True
+611:            self.assertEqual(report.return_code, 1)
+612:            report.check = False
+613:            report.failed(Path("e1"), "boom")
+614:            self.assertEqual(len(out_lines), 3)
+615:            self.assertEqual(len(err_lines), 1)
+616:            self.assertEqual(err_lines[-1], "error: cannot format e1: boom")
+617:            self.assertEqual(
+618:                unstyle(str(report)),
+619:                "1 file reformatted, 2 files left unchanged, "
+620:                "1 file failed to reformat.",
+621:            )
+622:            self.assertEqual(report.return_code, 123)
+623:            report.done(Path("f3"), black.Changed.YES)
+624:            self.assertEqual(len(out_lines), 4)
+625:            self.assertEqual(len(err_lines), 1)
+626:            self.assertEqual(out_lines[-1], "reformatted f3")
+627:            self.assertEqual(
+628:                unstyle(str(report)),
+629:                "2 files reformatted, 2 files left unchanged, "
+630:                "1 file failed to reformat.",
+631:            )
+632:            self.assertEqual(report.return_code, 123)
+633:            report.failed(Path("e2"), "boom")
+634:            self.assertEqual(len(out_lines), 4)
+635:            self.assertEqual(len(err_lines), 2)
+636:            self.assertEqual(err_lines[-1], "error: cannot format e2: boom")
+637:            self.assertEqual(
+638:                unstyle(str(report)),
+639:                "2 files reformatted, 2 files left unchanged, "
+
+Calling tool: grepTool
+tupleassign
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/test_black.py:547:        source, expected = read_data("tupleassign")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/bugsinpy_bug.info:4:test_file="tests/data/tupleassign.py;tests/test_black.py"
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/tupleassign.py
+1:sdfjklsdfsjldkflkjsf, sdfjsdfjlksdljkfsdlkf, sdfsdjfklsdfjlksdljkf, sdsfsdfjskdflsfsdf = 1, 2, 3
+2:
+3:
+4:# output
+5:(
+6:    sdfjklsdfsjldkflkjsf,
+7:    sdfjsdfjlksdljkfsdlkf,
+8:    sdfsdjfklsdfjlksdljkf,
+9:    sdsfsdfjskdflsfsdf,
+10:) = (1, 2, 3)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2680:        before, after = text[:2], text[2:]
+2681:        text = f"{before}{after.upper()}"
+2682:    elif "e" in text:
+2683:        before, after = text.split("e")
+2684:        sign = ""
+2685:        if after.startswith("-"):
+2686:            after = after[1:]
+2687:            sign = "-"
+2688:        elif after.startswith("+"):
+2689:            after = after[1:]
+2690:        before = format_float_or_int_string(before)
+2691:        text = f"{before}e{sign}{after}"
+2692:    elif text.endswith(("j", "l")):
+2693:        number = text[:-1]
+2694:        suffix = text[-1]
+2695:        # Capitalize in "2L" because "l" looks too similar to "1".
+2696:        if suffix == "l":
+2697:            suffix = "L"
+2698:        text = f"{format_float_or_int_string(number)}{suffix}"
+2699:    else:
+2700:        text = format_float_or_int_string(text)
+2701:    leaf.value = text
+2702:
+2703:
+2704:def format_float_or_int_string(text: str) -> str:
+2705:    """Formats a float string like "1.0"."""
+2706:    if "." not in text:
+2707:        return text
+2708:
+2709:    before, after = text.split(".")
+2710:    return f"{before or 0}.{after or 0}"
+2711:
+2712:
+2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+2714:    """Make existing optional parentheses invisible or create new ones.
+2715:
+2716:    `parens_after` is a set of string leaf values immeditely after which parens
+2717:    should be put.
+2718:
+2719:    Standardizes on visible parentheses for single-element tuples, and keeps
+2720:    existing visible parentheses for other tuples and generator expressions.
+2721:    """
+2722:    for pc in list_comments(node.prefix, is_endmarker=False):
+2723:        if pc.value in FMT_OFF:
+2724:            # This `node` has a prefix with `# fmt: off`, don't mess with parens.
+2725:            return
+2726:
+2727:    check_lpar = False
+2728:    for index, child in enumerate(list(node.children)):
+2729:        if check_lpar:
+2730:            if child.type == syms.atom:
+2731:                if maybe_make_parens_invisible_in_atom(child, parent=node):
+2732:                    lpar = Leaf(token.LPAR, "")
+2733:                    rpar = Leaf(token.RPAR, "")
+2734:                    index = child.remove() or 0
+2735:                    node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2736:            elif is_one_tuple(child):
+2737:                # wrap child in visible parentheses
+2738:                lpar = Leaf(token.LPAR, "(")
+2739:                rpar = Leaf(token.RPAR, ")")
+2740:                child.remove()
+2741:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2742:            elif node.type == syms.import_from:
+2743:                # "import from" nodes store parentheses directly as part of
+2744:                # the statement
+2745:                if child.type == token.LPAR:
+2746:                    # make parentheses invisible
+2747:                    child.value = ""  # type: ignore
+2748:                    node.children[-1].value = ""  # type: ignore
+2749:                elif child.type != token.STAR:
+2750:                    # insert invisible parentheses
+2751:                    node.insert_child(index, Leaf(token.LPAR, ""))
+2752:                    node.append_child(Leaf(token.RPAR, ""))
+2753:                break
+2754:
+2755:            elif not (isinstance(child, Leaf) and is_multiline_string(child)):
+2756:                # wrap child in invisible parentheses
+2757:                lpar = Leaf(token.LPAR, "")
+2758:                rpar = Leaf(token.RPAR, "")
+2759:                index = child.remove() or 0
+2760:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2761:
+2762:        check_lpar = isinstance(child, Leaf) and child.value in parens_after
+2763:
+2764:
+2765:def normalize_fmt_off(node: Node) -> None:
+2766:    """Convert content between `# fmt: off`/`# fmt: on` into standalone comments."""
+2767:    try_again = True
+2768:    while try_again:
+2769:        try_again = convert_one_fmt_off_pair(node)
+2770:
+2771:
+2772:def convert_one_fmt_off_pair(node: Node) -> bool:
+2773:    """Convert content of a single `# fmt: off`/`# fmt: on` into a standalone comment.
+2774:
+2775:    Returns True if a pair was converted.
+2776:    """
+2777:    for leaf in node.leaves():
+2778:        previous_consumed = 0
+2779:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+2780:            if comment.value in FMT_OFF:
+2781:                # We only want standalone comments. If there's no previous leaf or
+2782:                # the previous leaf is indentation, it's a standalone comment in
+2783:                # disguise.
+2784:                if comment.type != STANDALONE_COMMENT:
+2785:                    prev = preceding_leaf(leaf)
+2786:                    if prev and prev.type not in WHITESPACE:
+2787:                        continue
+2788:
+2789:                ignored_nodes = list(generate_ignored_nodes(leaf))
+2790:                if not ignored_nodes:
+2791:                    continue
+2792:
+2793:                first = ignored_nodes[0]  # Can be a container node with the `leaf`.
+2794:                parent = first.parent
+2795:                prefix = first.prefix
+2796:                first.prefix = prefix[comment.consumed :]
+2797:                hidden_value = (
+2798:                    comment.value + "\n" + "".join(str(n) for n in ignored_nodes)
+2799:                )
+2800:                if hidden_value.endswith("\n"):
+2801:                    # That happens when one of the `ignored_nodes` ended with a NEWLINE
+2802:                    # leaf (possibly followed by a DEDENT).
+2803:                    hidden_value = hidden_value[:-1]
+2804:                first_idx = None
+2805:                for ignored in ignored_nodes:
+2806:                    index = ignored.remove()
+2807:                    if first_idx is None:
+2808:                        first_idx = index
+2809:                assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (1)"
+2810:                assert first_idx is not None, "INTERNAL ERROR: fmt: on/off handling (2)"
+2811:                parent.insert_child(
+2812:                    first_idx,
+2813:                    Leaf(
+2814:                        STANDALONE_COMMENT,
+2815:                        hidden_value,
+2816:                        prefix=prefix[:previous_consumed] + "\n" * comment.newlines,
+2817:                    ),
+2818:                )
+2819:                return True
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+
+Calling tool: grepTool
+normalize_invisible_parens\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1582:        normalize_invisible_parens(node, parens_after=parens)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+1540:                normalize_string_prefix(node, remove_u_prefix=self.remove_u_prefix)
+1541:                normalize_string_quotes(node)
+1542:            if node.type == token.NUMBER:
+1543:                normalize_numeric_literal(node)
+1544:            if node.type not in WHITESPACE:
+1545:                self.current_line.append(node)
+1546:        yield from super().visit_default(node)
+1547:
+1548:    def visit_INDENT(self, node: Node) -> Iterator[Line]:
+1549:        """Increase indentation level, maybe yield a line."""
+1550:        # In blib2to3 INDENT never holds comments.
+1551:        yield from self.line(+1)
+1552:        yield from self.visit_default(node)
+1553:
+1554:    def visit_DEDENT(self, node: Node) -> Iterator[Line]:
+1555:        """Decrease indentation level, maybe yield a line."""
+1556:        # The current line might still wait for trailing comments.  At DEDENT time
+1557:        # there won't be any (they would be prefixes on the preceding NEWLINE).
+1558:        # Emit the line then.
+1559:        yield from self.line()
+1560:
+1561:        # While DEDENT has no value, its prefix may contain standalone comments
+1562:        # that belong to the current indentation level.  Get 'em.
+1563:        yield from self.visit_default(node)
+1564:
+1565:        # Finally, emit the dedent.
+1566:        yield from self.line(-1)
+1567:
+1568:    def visit_stmt(
+1569:        self, node: Node, keywords: Set[str], parens: Set[str]
+1570:    ) -> Iterator[Line]:
+1571:        """Visit a statement.
+1572:
+1573:        This implementation is shared for `if`, `while`, `for`, `try`, `except`,
+1574:        `def`, `with`, `class`, `assert` and assignments.
+1575:
+1576:        The relevant Python language `keywords` for a given statement will be
+1577:        NAME leaves within it. This methods puts those on a separate line.
+1578:
+1579:        `parens` holds a set of string leaf values immediately after which
+1580:        invisible parens should be put.
+1581:        """
+1582:        normalize_invisible_parens(node, parens_after=parens)
+1583:        for child in node.children:
+1584:            if child.type == token.NAME and child.value in keywords:  # type: ignore
+1585:                yield from self.line()
+1586:
+1587:            yield from self.visit(child)
+1588:
+1589:    def visit_suite(self, node: Node) -> Iterator[Line]:
+1590:        """Visit a suite."""
+1591:        if self.is_pyi and is_stub_suite(node):
+1592:            yield from self.visit(node.children[2])
+1593:        else:
+1594:            yield from self.visit_default(node)
+1595:
+1596:    def visit_simple_stmt(self, node: Node) -> Iterator[Line]:
+1597:        """Visit a statement without nested statements."""
+1598:        is_suite_like = node.parent and node.parent.type in STATEMENT
+1599:        if is_suite_like:
+1600:            if self.is_pyi and is_stub_body(node):
+1601:                yield from self.visit_default(node)
+1602:            else:
+1603:                yield from self.line(+1)
+1604:                yield from self.visit_default(node)
+1605:                yield from self.line(-1)
+1606:
+1607:        else:
+1608:            if not self.is_pyi or not node.parent or not is_stub_suite(node.parent):
+1609:                yield from self.line()
+1610:            yield from self.visit_default(node)
+1611:
+1612:    def visit_async_stmt(self, node: Node) -> Iterator[Line]:
+1613:        """Visit `async def`, `async for`, `async with`."""
+1614:        yield from self.line()
+1615:
+1616:        children = iter(node.children)
+1617:        for child in children:
+1618:            yield from self.visit(child)
+1619:
+
+Calling tool: grepTool
+visit_stmt\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1568:    def visit_stmt(
+
+Calling tool: grepTool
+def visit_[a-z_]+\(self, node: Node\) -> Iterator\[Line\]
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1589:    def visit_suite(self, node: Node) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1596:    def visit_simple_stmt(self, node: Node) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1612:    def visit_async_stmt(self, node: Node) -> Iterator[Line]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1627:    def visit_decorators(self, node: Node) -> Iterator[Line]:
+
+Calling tool: grepTool
+expr_stmt|assign|augassign|annassign
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pytree.py:644:            name: optional name assigned to this match
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:36:small_stmt: (expr_stmt | print_stmt  | del_stmt | pass_stmt | flow_stmt |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:38:expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:40:annassign: ':' test ['=' test]
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:42:augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:44:# For normal and annotated assignments, additional restrictions enforced by the interpreter
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pgen2/conv.py:20:non-terminals) are assigned by pgen based on the actual grammar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:13:    annassign: int
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:21:    augassign: int
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:44:    expr_stmt: int
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_tuple_assign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1574:        `def`, `with`, `class`, `assert` and assignments.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1664:        self.visit_expr_stmt = partial(v, keywords=Ø, parens=ASSIGNMENTS)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2852:        or (is_yield(node) and parent.type != syms.expr_stmt)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2937:        # Star expressions are also used as assignment targets in extended
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/bugsinpy_bug.info:4:test_file="tests/data/tupleassign.py;tests/test_black.py"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/composition.py:58:        assignment = (
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:41:          expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:45:            annassign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:57:            /annassign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:58:          /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:115:              expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:155:              /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:191:                  expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:219:                  /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:254:                  expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:272:                  /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:342:                  expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:360:                  /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:419:                  expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:484:                  /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:716:                expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:720:                  annassign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:750:                  /annassign
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/debug_visitor.out:751:                /expr_stmt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/test_black.py:546:    def test_tuple_assign(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/test_black.py:547:        source, expected = read_data("tupleassign")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:438:- assignments like:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1104:* fixed long trivial assignments being wrapped in unnecessary parentheses (#273)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1158:  of assignments and return statements (#140)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1186:  parentheses in long assignments (#215)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+1636:
+1637:    def visit_ENDMARKER(self, leaf: Leaf) -> Iterator[Line]:
+1638:        """End of file. Process outstanding comments and end with a newline."""
+1639:        yield from self.visit_default(leaf)
+1640:        yield from self.line()
+1641:
+1642:    def visit_STANDALONE_COMMENT(self, leaf: Leaf) -> Iterator[Line]:
+1643:        if not self.current_line.bracket_tracker.any_open_brackets():
+1644:            yield from self.line()
+1645:        yield from self.visit_default(leaf)
+1646:
+1647:    def __attrs_post_init__(self) -> None:
+1648:        """You are in a twisty little maze of passages."""
+1649:        v = self.visit_stmt
+1650:        Ø: Set[str] = set()
+1651:        self.visit_assert_stmt = partial(v, keywords={"assert"}, parens={"assert", ","})
+1652:        self.visit_if_stmt = partial(
+1653:            v, keywords={"if", "else", "elif"}, parens={"if", "elif"}
+1654:        )
+1655:        self.visit_while_stmt = partial(v, keywords={"while", "else"}, parens={"while"})
+1656:        self.visit_for_stmt = partial(v, keywords={"for", "else"}, parens={"for", "in"})
+1657:        self.visit_try_stmt = partial(
+1658:            v, keywords={"try", "except", "else", "finally"}, parens=Ø
+1659:        )
+1660:        self.visit_except_clause = partial(v, keywords={"except"}, parens=Ø)
+1661:        self.visit_with_stmt = partial(v, keywords={"with"}, parens=Ø)
+1662:        self.visit_funcdef = partial(v, keywords={"def"}, parens=Ø)
+1663:        self.visit_classdef = partial(v, keywords={"class"}, parens=Ø)
+1664:        self.visit_expr_stmt = partial(v, keywords=Ø, parens=ASSIGNMENTS)
+1665:        self.visit_return_stmt = partial(v, keywords={"return"}, parens={"return"})
+1666:        self.visit_import_from = partial(v, keywords=Ø, parens={"import"})
+1667:        self.visit_del_stmt = partial(v, keywords=Ø, parens={"del"})
+1668:        self.visit_async_funcdef = self.visit_async_stmt
+1669:        self.visit_decorated = self.visit_decorators
+1670:
+1671:
+1672:IMPLICIT_TUPLE = {syms.testlist, syms.testlist_star_expr, syms.exprlist}
+1673:BRACKET = {token.LPAR: token.RPAR, token.LSQB: token.RSQB, token.LBRACE: token.RBRACE}
+1674:OPENING_BRACKETS = set(BRACKET.keys())
+1675:CLOSING_BRACKETS = set(BRACKET.values())
+
+Calling tool: grepTool
+ASSIGNMENTS
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:911:ASSIGNMENTS = {
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1664:        self.visit_expr_stmt = partial(v, keywords=Ø, parens=ASSIGNMENTS)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+900:    syms.comparison,
+901:    syms.star_expr,
+902:    syms.expr,
+903:    syms.xor_expr,
+904:    syms.and_expr,
+905:    syms.shift_expr,
+906:    syms.arith_expr,
+907:    syms.trailer,
+908:    syms.term,
+909:    syms.power,
+910:}
+911:ASSIGNMENTS = {
+912:    "=",
+913:    "+=",
+914:    "-=",
+915:    "*=",
+916:    "@=",
+917:    "/=",
+918:    "%=",
+919:    "&=",
+920:    "|=",
+921:    "^=",
+922:    "<<=",
+923:    ">>=",
+924:    "**=",
+925:    "//=",
+926:}
+927:COMPREHENSION_PRIORITY = 20
+928:COMMA_PRIORITY = 18
+929:TERNARY_PRIORITY = 16
+930:LOGIC_PRIORITY = 14
+931:STRING_PRIORITY = 12
+932:COMPARATOR_PRIORITY = 10
+933:MATH_PRIORITIES = {
+934:    token.VBAR: 9,
+935:    token.CIRCUMFLEX: 8,
+936:    token.AMPER: 7,
+937:    token.LEFTSHIFT: 6,
+938:    token.RIGHTSHIFT: 6,
+939:    token.PLUS: 5,
+
+Calling tool: grepTool
+testlist_star_expr
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:67:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:274:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:89:    testlist_star_expr: int
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:892:    syms.testlist_star_expr,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1672:IMPLICIT_TUPLE = {syms.testlist, syms.testlist_star_expr, syms.exprlist}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:38:expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:39:                     ('=' (yield_expr|testlist_star_expr))*)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:41:testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+860:    token.LESSEQUAL,
+861:    token.GREATEREQUAL,
+862:}
+863:MATH_OPERATORS = {
+864:    token.VBAR,
+865:    token.CIRCUMFLEX,
+866:    token.AMPER,
+867:    token.LEFTSHIFT,
+868:    token.RIGHTSHIFT,
+869:    token.PLUS,
+870:    token.MINUS,
+871:    token.STAR,
+872:    token.SLASH,
+873:    token.DOUBLESLASH,
+874:    token.PERCENT,
+875:    token.AT,
+876:    token.TILDE,
+877:    token.DOUBLESTAR,
+878:}
+879:STARS = {token.STAR, token.DOUBLESTAR}
+880:VARARGS_PARENTS = {
+881:    syms.arglist,
+882:    syms.argument,  # double star in arglist
+883:    syms.trailer,  # single argument to call
+884:    syms.typedargslist,
+885:    syms.varargslist,  # lambdas
+886:}
+887:UNPACKING_PARENTS = {
+888:    syms.atom,  # single element of a list or set literal
+889:    syms.dictsetmaker,
+890:    syms.listmaker,
+891:    syms.testlist_gexp,
+892:    syms.testlist_star_expr,
+893:}
+894:TEST_DESCENDANTS = {
+895:    syms.test,
+896:    syms.lambdef,
+897:    syms.or_test,
+898:    syms.and_test,
+899:    syms.not_test,
+900:    syms.comparison,
+901:    syms.star_expr,
+902:    syms.expr,
+903:    syms.xor_expr,
+904:    syms.and_expr,
+905:    syms.shift_expr,
+906:    syms.arith_expr,
+907:    syms.trailer,
+908:    syms.term,
+909:    syms.power,
+910:}
+911:ASSIGNMENTS = {
+912:    "=",
+913:    "+=",
+914:    "-=",
+915:    "*=",
+916:    "@=",
+917:    "/=",
+918:    "%=",
+919:    "&=",
+
+Calling tool: grepTool
+unpack
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:137:# multiple (test comp_for) arguments are blocked; keyword unpackings
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:138:# that precede iterable unpackings are blocked; etc.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1027:        """In a for loop, or comprehension, the variables are often unpacks.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1100:        Trailing commas are maybe removed, unpacked for loop variables are
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1867:        # dict unpacking
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2929:    extended iterable unpacking (PEP 3132) and additional unpacking
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2938:        # iterable unpacking (PEP 3132).  See what its parent is instead.
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1022:* fixed unstable formatting when unpacking big tuples (#267)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1079:* fixed extra space in string unpacking (#305)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1191:  unpacking. This fixed non-deterministic formatting if trailing commas
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1242:* fixed placement of dictionary unpacking inside dictionary literals (#111)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1308:* omit extra space in kwarg unpacking if it's the first argument (#46)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1362:* fixed invalid splitting after comma on unpacked variables in for-loops
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+1000:        self.maybe_increment_lambda_arguments(leaf)
+1001:        self.maybe_increment_for_loop_variable(leaf)
+1002:
+1003:    def any_open_brackets(self) -> bool:
+1004:        """Return True if there is an yet unmatched open bracket on the line."""
+1005:        return bool(self.bracket_match)
+1006:
+1007:    def max_delimiter_priority(self, exclude: Iterable[LeafID] = ()) -> int:
+1008:        """Return the highest priority of a delimiter found on the line.
+1009:
+1010:        Values are consistent with what `is_split_*_delimiter()` return.
+1011:        Raises ValueError on no delimiters.
+1012:        """
+1013:        return max(v for k, v in self.delimiters.items() if k not in exclude)
+1014:
+1015:    def delimiter_count_with_priority(self, priority: int = 0) -> int:
+1016:        """Return the number of delimiters with the given `priority`.
+1017:
+1018:        If no `priority` is passed, defaults to max priority on the line.
+1019:        """
+1020:        if not self.delimiters:
+1021:            return 0
+1022:
+1023:        priority = priority or self.max_delimiter_priority()
+1024:        return sum(1 for p in self.delimiters.values() if p == priority)
+1025:
+1026:    def maybe_increment_for_loop_variable(self, leaf: Leaf) -> bool:
+1027:        """In a for loop, or comprehension, the variables are often unpacks.
+1028:
+1029:        To avoid splitting on the comma in this situation, increase the depth of
+1030:        tokens between `for` and `in`.
+1031:        """
+1032:        if leaf.type == token.NAME and leaf.value == "for":
+1033:            self.depth += 1
+1034:            self._for_loop_depths.append(self.depth)
+1035:            return True
+1036:
+1037:        return False
+1038:
+1039:    def maybe_decrement_after_for_loop_variable(self, leaf: Leaf) -> bool:
+1040:        """See `maybe_increment_for_loop_variable` above for explanation."""
+1041:        if (
+1042:            self._for_loop_depths
+1043:            and self._for_loop_depths[-1] == self.depth
+1044:            and leaf.type == token.NAME
+1045:            and leaf.value == "in"
+1046:        ):
+1047:            self.depth -= 1
+1048:            self._for_loop_depths.pop()
+1049:            return True
+1050:
+1051:        return False
+1052:
+1053:    def maybe_increment_lambda_arguments(self, leaf: Leaf) -> bool:
+1054:        """In a lambda expression, there might be more than one argument.
+1055:
+1056:        To avoid splitting on the comma in this situation, increase the depth of
+1057:        tokens between `lambda` and `:`.
+1058:        """
+1059:        if leaf.type == token.NAME and leaf.value == "lambda":
+1060:            self.depth += 1
+1061:            self._lambda_argument_depths.append(self.depth)
+1062:            return True
+1063:
+1064:        return False
+1065:
+1066:    def maybe_decrement_after_lambda_arguments(self, leaf: Leaf) -> bool:
+1067:        """See `maybe_increment_lambda_arguments` above for explanation."""
+1068:        if (
+1069:            self._lambda_argument_depths
+1070:            and self._lambda_argument_depths[-1] == self.depth
+1071:            and leaf.type == token.COLON
+1072:        ):
+1073:            self.depth -= 1
+1074:            self._lambda_argument_depths.pop()
+1075:            return True
+1076:
+1077:        return False
+1078:
+1079:    def get_open_lsqb(self) -> Optional[Leaf]:
+1080:        """Return the most recent opening square bracket (if any)."""
+1081:        return self.bracket_match.get((self.depth - 1, token.RSQB))
+1082:
+1083:
+1084:@dataclass
+1085:class Line:
+1086:    """Holds leaves and comments. Can be printed with `str(line)`."""
+1087:
+1088:    depth: int = 0
+1089:    leaves: List[Leaf] = Factory(list)
+1090:    comments: Dict[LeafID, List[Leaf]] = Factory(dict)  # keys ordered like `leaves`
+1091:    bracket_tracker: BracketTracker = Factory(BracketTracker)
+1092:    inside_brackets: bool = False
+1093:    should_explode: bool = False
+1094:
+1095:    def append(self, leaf: Leaf, preformatted: bool = False) -> None:
+1096:        """Add a new `leaf` to the end of the line.
+1097:
+1098:        Unless `preformatted` is True, the `leaf` will receive a new consistent
+1099:        whitespace prefix and metadata applied by :class:`BracketTracker`.
+1100:        Trailing commas are maybe removed, unpacked for loop variables are
+1101:        demoted from being delimiters.
+1102:
+1103:        Inline comments are put aside.
+1104:        """
+1105:        has_value = leaf.type in BRACKETS or bool(leaf.value.strip())
+1106:        if not has_value:
+1107:            return
+1108:
+1109:        if token.COLON == leaf.type and self.is_class_paren_empty:
+1110:            del self.leaves[-2:]
+1111:        if self.leaves and not preformatted:
+1112:            # Note: at this point leaf.prefix should be empty except for
+1113:            # imports, for which we only preserve newlines.
+1114:            leaf.prefix += whitespace(
+1115:                leaf, complex_subscript=self.is_complex_subscript(leaf)
+1116:            )
+1117:        if self.inside_brackets or not preformatted:
+1118:            self.bracket_tracker.mark(leaf)
+1119:            self.maybe_remove_trailing_comma(leaf)
+
+Calling tool: grepTool
+def maybe_make_parens_invisible_in_atom\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2842:def maybe_make_parens_invisible_in_atom(node: LN, parent: LN) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2820:
+2821:            previous_consumed = comment.consumed
+2822:
+2823:    return False
+2824:
+2825:
+2826:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+2827:    """Starting from the container of `leaf`, generate all leaves until `# fmt: on`.
+2828:
+2829:    Stops at the end of the block.
+2830:    """
+2831:    container: Optional[LN] = container_of(leaf)
+2832:    while container is not None and container.type != token.ENDMARKER:
+2833:        for comment in list_comments(container.prefix, is_endmarker=False):
+2834:            if comment.value in FMT_ON:
+2835:                return
+2836:
+2837:        yield container
+2838:
+2839:        container = container.next_sibling
+2840:
+2841:
+2842:def maybe_make_parens_invisible_in_atom(node: LN, parent: LN) -> bool:
+2843:    """If it's safe, make the parens in the atom `node` invisible, recursively.
+2844:
+2845:    Returns whether the node should itself be wrapped in invisible parentheses.
+2846:
+2847:    """
+2848:    if (
+2849:        node.type != syms.atom
+2850:        or is_empty_tuple(node)
+2851:        or is_one_tuple(node)
+2852:        or (is_yield(node) and parent.type != syms.expr_stmt)
+2853:        or max_delimiter_priority_in_atom(node) >= COMMA_PRIORITY
+2854:    ):
+2855:        return False
+2856:
+2857:    first = node.children[0]
+2858:    last = node.children[-1]
+2859:    if first.type == token.LPAR and last.type == token.RPAR:
+2860:        # make parentheses invisible
+2861:        first.value = ""  # type: ignore
+2862:        last.value = ""  # type: ignore
+2863:        if len(node.children) > 1:
+2864:            maybe_make_parens_invisible_in_atom(node.children[1], parent=parent)
+2865:        return False
+2866:
+2867:    return True
+2868:
+2869:
+2870:def is_empty_tuple(node: LN) -> bool:
+2871:    """Return True if `node` holds an empty tuple."""
+2872:    return (
+2873:        node.type == syms.atom
+2874:        and len(node.children) == 2
+2875:        and node.children[0].type == token.LPAR
+2876:        and node.children[1].type == token.RPAR
+2877:    )
+2878:
+2879:
+2880:def is_one_tuple(node: LN) -> bool:
+2881:    """Return True if `node` holds a tuple with one element, with or without parens."""
+2882:    if node.type == syms.atom:
+2883:        if len(node.children) != 3:
+2884:            return False
+2885:
+2886:        lpar, gexp, rpar = node.children
+2887:        if not (
+2888:            lpar.type == token.LPAR
+2889:            and gexp.type == syms.testlist_gexp
+2890:            and rpar.type == token.RPAR
+2891:        ):
+2892:            return False
+2893:
+2894:        return len(gexp.children) == 2 and gexp.children[1].type == token.COMMA
+2895:
+2896:    return (
+2897:        node.type in IMPLICIT_TUPLE
+2898:        and len(node.children) == 2
+2899:        and node.children[1].type == token.COMMA
+2900:    )
+2901:
+2902:
+2903:def is_yield(node: LN) -> bool:
+2904:    """Return True if `node` holds a `yield` or `yield from` expression."""
+2905:    if node.type == syms.yield_expr:
+2906:        return True
+2907:
+2908:    if node.type == token.NAME and node.value == "yield":  # type: ignore
+2909:        return True
+2910:
+2911:    if node.type != syms.atom:
+2912:        return False
+2913:
+2914:    if len(node.children) != 3:
+2915:        return False
+2916:
+2917:    lpar, expr, rpar = node.children
+2918:    if lpar.type == token.LPAR and rpar.type == token.RPAR:
+2919:        return is_yield(expr)
+2920:
+2921:    return False
+2922:
+2923:
+2924:def is_vararg(leaf: Leaf, within: Set[NodeType]) -> bool:
+2925:    """Return True if `leaf` is a star or double star in a vararg or kwarg.
+2926:
+2927:    If `within` includes VARARGS_PARENTS, this applies to function signatures.
+2928:    If `within` includes UNPACKING_PARENTS, it applies to right hand-side
+2929:    extended iterable unpacking (PEP 3132) and additional unpacking
+2930:    generalizations (PEP 448).
+2931:    """
+2932:    if leaf.type not in STARS or not leaf.parent:
+2933:        return False
+2934:
+2935:    p = leaf.parent
+2936:    if p.type == syms.star_expr:
+2937:        # Star expressions are also used as assignment targets in extended
+2938:        # iterable unpacking (PEP 3132).  See what its parent is instead.
+2939:        if not p.parent:
+2940:            return False
+2941:
+2942:        p = p.parent
+2943:
+2944:    return p.type in within
+2945:
+2946:
+2947:def is_multiline_string(leaf: Leaf) -> bool:
+2948:    """Return True if `leaf` is a multiline string that actually spans many lines."""
+2949:    value = leaf.value.lstrip("furbFURB")
+2950:    return value[:3] in {'"""', "'''"} and "\n" in value
+2951:
+2952:
+2953:def is_stub_suite(node: Node) -> bool:
+2954:    """Return True if `node` is a suite with a stub body."""
+2955:    if (
+2956:        len(node.children) != 4
+2957:        or node.children[0].type != token.NEWLINE
+2958:        or node.children[1].type != token.INDENT
+2959:        or node.children[3].type != token.DEDENT
+2960:    ):
+2961:        return False
+2962:
+2963:    return is_stub_body(node.children[2])
+2964:
+2965:
+2966:def is_stub_body(node: LN) -> bool:
+2967:    """Return True if `node` is a simple statement containing an ellipsis."""
+2968:    if not isinstance(node, Node) or node.type != syms.simple_stmt:
+2969:        return False
+2970:
+2971:    if len(node.children) != 2:
+2972:        return False
+2973:
+2974:    child = node.children[0]
+2975:    return (
+2976:        child.type == syms.atom
+2977:        and len(child.children) == 3
+2978:        and all(leaf == Leaf(token.DOT, ".") for leaf in child.children)
+2979:    )
+
+Calling tool: grepTool
+should_explode|explode
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1152:  now also always exploded like imports when they don't fit in a single
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/README.md:1177:* fixed trailers (content with brackets) being unnecessarily exploded
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/docs/reference/reference_functions.rst:172:.. autofunction:: black.should_explode
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1093:    should_explode: bool = False
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2189:        and not line.should_explode
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2322:        # the body shouldn't be exploded
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2323:        not body.should_explode
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2425:        result.should_explode = should_explode(result, opening_bracket)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:3022:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2960:    ):
+2961:        return False
+2962:
+2963:    return is_stub_body(node.children[2])
+2964:
+2965:
+2966:def is_stub_body(node: LN) -> bool:
+2967:    """Return True if `node` is a simple statement containing an ellipsis."""
+2968:    if not isinstance(node, Node) or node.type != syms.simple_stmt:
+2969:        return False
+2970:
+2971:    if len(node.children) != 2:
+2972:        return False
+2973:
+2974:    child = node.children[0]
+2975:    return (
+2976:        child.type == syms.atom
+2977:        and len(child.children) == 3
+2978:        and all(leaf == Leaf(token.DOT, ".") for leaf in child.children)
+2979:    )
+2980:
+2981:
+2982:def max_delimiter_priority_in_atom(node: LN) -> int:
+2983:    """Return maximum delimiter priority inside `node`.
+2984:
+2985:    This is specific to atoms with contents contained in a pair of parentheses.
+2986:    If `node` isn't an atom or there are no enclosing parentheses, returns 0.
+2987:    """
+2988:    if node.type != syms.atom:
+2989:        return 0
+2990:
+2991:    first = node.children[0]
+2992:    last = node.children[-1]
+2993:    if not (first.type == token.LPAR and last.type == token.RPAR):
+2994:        return 0
+2995:
+2996:    bt = BracketTracker()
+2997:    for c in node.children[1:-1]:
+2998:        if isinstance(c, Leaf):
+2999:            bt.mark(c)
+3000:        else:
+3001:            for leaf in c.leaves():
+3002:                bt.mark(leaf)
+3003:    try:
+3004:        return bt.max_delimiter_priority()
+3005:
+3006:    except ValueError:
+3007:        return 0
+3008:
+3009:
+3010:def ensure_visible(leaf: Leaf) -> None:
+3011:    """Make sure parentheses are visible.
+3012:
+3013:    They could be invisible as part of some statements (see
+3014:    :func:`normalize_invible_parens` and :func:`visit_import_from`).
+3015:    """
+3016:    if leaf.type == token.LPAR:
+3017:        leaf.value = "("
+3018:    elif leaf.type == token.RPAR:
+3019:        leaf.value = ")"
+3020:
+3021:
+3022:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+3023:    """Should `line` immediately be split with `delimiter_split()` after RHS?"""
+3024:
+3025:    if not (
+3026:        opening_bracket.parent
+3027:        and opening_bracket.parent.type in {syms.atom, syms.import_from}
+3028:        and opening_bracket.value in "[{("
+3029:    ):
+3030:        return False
+3031:
+3032:    try:
+3033:        last_leaf = line.leaves[-1]
+3034:        exclude = {id(last_leaf)} if last_leaf.type == token.COMMA else set()
+3035:        max_priority = line.bracket_tracker.max_delimiter_priority(exclude=exclude)
+3036:    except (IndexError, ValueError):
+3037:        return False
+3038:
+3039:    return max_priority == COMMA_PRIORITY
+3040:
+3041:
+3042:def get_features_used(node: Node) -> Set[Feature]:
+3043:    """Return a set of (relatively) new Python features used in this file.
+3044:
+3045:    Currently looking for:
+3046:    - f-strings;
+3047:    - underscores in numeric literals; and
+3048:    - trailing commas after * or ** in function signatures and calls.
+3049:    """
+3050:    features: Set[Feature] = set()
+3051:    for n in node.pre_order():
+3052:        if n.type == token.STRING:
+3053:            value_head = n.value[:2]  # type: ignore
+3054:            if value_head in {'f"', 'F"', "f'", "F'", "rf", "fr", "RF", "FR"}:
+3055:                features.add(Feature.F_STRINGS)
+3056:
+3057:        elif n.type == token.NUMBER:
+3058:            if "_" in n.value:  # type: ignore
+3059:                features.add(Feature.NUMERIC_UNDERSCORES)
+3060:
+3061:        elif (
+3062:            n.type in {syms.typedargslist, syms.arglist}
+3063:            and n.children
+3064:            and n.children[-1].type == token.COMMA
+3065:        ):
+3066:            if n.type == syms.typedargslist:
+3067:                feature = Feature.TRAILING_COMMA_IN_DEF
+3068:            else:
+3069:                feature = Feature.TRAILING_COMMA_IN_CALL
+3070:
+3071:            for ch in n.children:
+3072:                if ch.type in STARS:
+3073:                    features.add(feature)
+3074:
+3075:                if ch.type == syms.argument:
+3076:                    for argch in ch.children:
+3077:                        if argch.type in STARS:
+3078:                            features.add(feature)
+3079:
+
+Calling tool: createTodo
+Todo List Created
+Todo List (7 items):
+- [ ] Open `black/black.py` and locate `normalize_invisible_parens(node: Node, parens_after: Set[str])`. Verify a new conditional was added at the start of the loop over `node.children` specifically checking `index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr` with an accompanying comment about adding parentheses around long tuple unpacking in assignments. (ID: todo-1)
+- [ ] Within `normalize_invisible_parens`, confirm there is a code path that, when the first child is a `syms.testlist_star_expr` (i.e., LHS of an assignment), wraps that child in a new `Node(syms.atom, [Leaf(token.LPAR, '(' or ''), child, Leaf(token.RPAR, ')' or '')])`, effectively adding parentheses around the left-hand tuple. (If invisible parens are used, ensure there is logic elsewhere in this function/context that will make them visible for the LHS case.) (ID: todo-2)
+- [ ] In the code that wraps a `child` with a new `Node(syms.atom, [lpar, child, rpar])` inside `normalize_invisible_parens`, verify the implementation preserves prefixes exactly as in the diff: save `prefix = child.prefix`, set `child.prefix = ''`, set `new_child.prefix = prefix`, and then insert `new_child` at the correct index. (ID: todo-3)
+- [ ] Verify that at the end of each iteration in `normalize_invisible_parens`, `check_lpar` is set to `False` (as per the diff), replacing the older behavior `check_lpar = isinstance(child, Leaf) and child.value in parens_after`. (ID: todo-4)
+- [ ] Confirm that `visit_expr_stmt` is still configured to call `normalize_invisible_parens(node, parens_after=ASSIGNMENTS)` (see `__attrs_post_init__`), so that assignment statements (including the new LHS tuple handling) are processed by this normalization. (ID: todo-5)
+- [ ] Validate that the unit test `tests/test_black.py::BlackTestCase.test_tuple_assign` exists and calls `read_data('tupleassign')` and asserts the formatted output equals the expected fixture via `self.assertFormatEqual(expected, actual)` (and equivalence/stability checks). (ID: todo-6)
+- [ ] Open `tests/data/tupleassign.py` and verify the expected output part shows the LHS tuple is parenthesized across multiple lines with a trailing comma and the RHS is also parenthesized, matching the PR’s intent (visible parentheses around tuple unpack assignment). (ID: todo-7)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 7
+description: 'Open `black/black.py` and locate `normalize_invisible_parens(node: Node, parens_after: Set[str])`. Verify a new conditional was added at the start of the loop over `node.children` specifically checking `index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr` with an accompanying comment about adding parentheses around long tuple unpacking in assignments.'
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+
+Calling tool: globTool
+**/black/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+
+Calling tool: grepTool
+def normalize_invisible_parens\(node: Node, parens_after: Set\[str\]\)
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2706:    if "." not in text:
+2707:        return text
+2708:
+2709:    before, after = text.split(".")
+2710:    return f"{before or 0}.{after or 0}"
+2711:
+2712:
+2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+2714:    """Make existing optional parentheses invisible or create new ones.
+2715:
+2716:    `parens_after` is a set of string leaf values immeditely after which parens
+2717:    should be put.
+2718:
+2719:    Standardizes on visible parentheses for single-element tuples, and keeps
+2720:    existing visible parentheses for other tuples and generator expressions.
+2721:    """
+2722:    for pc in list_comments(node.prefix, is_endmarker=False):
+2723:        if pc.value in FMT_OFF:
+2724:            # This `node` has a prefix with `# fmt: off`, don't mess with parens.
+2725:            return
+2726:
+2727:    check_lpar = False
+2728:    for index, child in enumerate(list(node.children)):
+2729:        if check_lpar:
+2730:            if child.type == syms.atom:
+2731:                if maybe_make_parens_invisible_in_atom(child, parent=node):
+2732:                    lpar = Leaf(token.LPAR, "")
+2733:                    rpar = Leaf(token.RPAR, "")
+2734:                    index = child.remove() or 0
+2735:                    node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2736:            elif is_one_tuple(child):
+2737:                # wrap child in visible parentheses
+2738:                lpar = Leaf(token.LPAR, "(")
+2739:                rpar = Leaf(token.RPAR, ")")
+2740:                child.remove()
+2741:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2742:            elif node.type == syms.import_from:
+2743:                # "import from" nodes store parentheses directly as part of
+2744:                # the statement
+2745:                if child.type == token.LPAR:
+2746:                    # make parentheses invisible
+2747:                    child.value = ""  # type: ignore
+2748:                    node.children[-1].value = ""  # type: ignore
+2749:                elif child.type != token.STAR:
+2750:                    # insert invisible parentheses
+2751:                    node.insert_child(index, Leaf(token.LPAR, ""))
+2752:                    node.append_child(Leaf(token.RPAR, ""))
+2753:                break
+2754:
+2755:            elif not (isinstance(child, Leaf) and is_multiline_string(child)):
+2756:                # wrap child in invisible parentheses
+2757:                lpar = Leaf(token.LPAR, "")
+2758:                rpar = Leaf(token.RPAR, "")
+2759:                index = child.remove() or 0
+2760:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2761:
+2762:        check_lpar = isinstance(child, Leaf) and child.value in parens_after
+2763:
+2764:
+2765:def normalize_fmt_off(node: Node) -> None:
+2766:    """Convert content between `# fmt: off`/`# fmt: on` into standalone comments."""
+2767:    try_again = True
+2768:    while try_again:
+2769:        try_again = convert_one_fmt_off_pair(node)
+2770:
+2771:
+2772:def convert_one_fmt_off_pair(node: Node) -> bool:
+2773:    """Convert content of a single `# fmt: off`/`# fmt: on` into a standalone comment.
+2774:
+2775:    Returns True if a pair was converted.
+2776:    """
+2777:    for leaf in node.leaves():
+2778:        previous_consumed = 0
+2779:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+2780:            if comment.value in FMT_OFF:
+2781:                # We only want standalone comments. If there's no previous leaf or
+2782:                # the previous leaf is indentation, it's a standalone comment in
+2783:                # disguise.
+2784:                if comment.type != STANDALONE_COMMENT:
+2785:                    prev = preceding_leaf(leaf)
+2786:                    if prev and prev.type not in WHITESPACE:
+2787:                        continue
+2788:
+2789:                ignored_nodes = list(generate_ignored_nodes(leaf))
+2790:                if not ignored_nodes:
+2791:                    continue
+2792:
+2793:                first = ignored_nodes[0]  # Can be a container node with the `leaf`.
+2794:                parent = first.parent
+2795:                prefix = first.prefix
+2796:                first.prefix = prefix[comment.consumed :]
+2797:                hidden_value = (
+2798:                    comment.value + "\n" + "".join(str(n) for n in ignored_nodes)
+2799:                )
+2800:                if hidden_value.endswith("\n"):
+2801:                    # That happens when one of the `ignored_nodes` ended with a NEWLINE
+2802:                    # leaf (possibly followed by a DEDENT).
+2803:                    hidden_value = hidden_value[:-1]
+2804:                first_idx = None
+2805:                for ignored in ignored_nodes:
+2806:                    index = ignored.remove()
+2807:                    if first_idx is None:
+2808:                        first_idx = index
+2809:                assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (1)"
+2810:                assert first_idx is not None, "INTERNAL ERROR: fmt: on/off handling (2)"
+2811:                parent.insert_child(
+2812:                    first_idx,
+2813:                    Leaf(
+2814:                        STANDALONE_COMMENT,
+2815:                        hidden_value,
+2816:                        prefix=prefix[:previous_consumed] + "\n" * comment.newlines,
+2817:                    ),
+2818:                )
+2819:                return True
+2820:
+2821:            previous_consumed = comment.consumed
+2822:
+2823:    return False
+2824:
+2825:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black/black.py’s normalize_invisible_parens, the loop over node.children lacks the new conditional and comment. The code does not check index == 0 and child.type == syms.testlist_star_expr nor include the comment about adding parentheses for long tuple unpacking; it proceeds directly to if check_lpar without the added condition.
+
+
+Validating todo item 1 of 7
+description: 'Open `black/black.py` and locate `normalize_invisible_parens(node: Node, parens_after: Set[str])`. Verify a new conditional was added at the start of the loop over `node.children` specifically checking `index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr` with an accompanying comment about adding parentheses around long tuple unpacking in assignments.'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+
+Calling tool: globTool
+**/black/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+
+Calling tool: grepTool
+def normalize_invisible_parens\(node: Node, parens_after: Set\[str\]\)
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2706:    if "." not in text:
+2707:        return text
+2708:
+2709:    before, after = text.split(".")
+2710:    return f"{before or 0}.{after or 0}"
+2711:
+2712:
+2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+2714:    """Make existing optional parentheses invisible or create new ones.
+2715:
+2716:    `parens_after` is a set of string leaf values immeditely after which parens
+2717:    should be put.
+2718:
+2719:    Standardizes on visible parentheses for single-element tuples, and keeps
+2720:    existing visible parentheses for other tuples and generator expressions.
+2721:    """
+2722:    for pc in list_comments(node.prefix, is_endmarker=False):
+2723:        if pc.value in FMT_OFF:
+2724:            # This `node` has a prefix with `# fmt: off`, don't mess with parens.
+2725:            return
+2726:
+2727:    check_lpar = False
+2728:    for index, child in enumerate(list(node.children)):
+2729:        if check_lpar:
+2730:            if child.type == syms.atom:
+2731:                if maybe_make_parens_invisible_in_atom(child, parent=node):
+2732:                    lpar = Leaf(token.LPAR, "")
+2733:                    rpar = Leaf(token.RPAR, "")
+2734:                    index = child.remove() or 0
+2735:                    node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2736:            elif is_one_tuple(child):
+2737:                # wrap child in visible parentheses
+2738:                lpar = Leaf(token.LPAR, "(")
+2739:                rpar = Leaf(token.RPAR, ")")
+2740:                child.remove()
+2741:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2742:            elif node.type == syms.import_from:
+2743:                # "import from" nodes store parentheses directly as part of
+2744:                # the statement
+2745:                if child.type == token.LPAR:
+2746:                    # make parentheses invisible
+2747:                    child.value = ""  # type: ignore
+2748:                    node.children[-1].value = ""  # type: ignore
+2749:                elif child.type != token.STAR:
+2750:                    # insert invisible parentheses
+2751:                    node.insert_child(index, Leaf(token.LPAR, ""))
+2752:                    node.append_child(Leaf(token.RPAR, ""))
+2753:                break
+2754:
+2755:            elif not (isinstance(child, Leaf) and is_multiline_string(child)):
+2756:                # wrap child in invisible parentheses
+2757:                lpar = Leaf(token.LPAR, "")
+2758:                rpar = Leaf(token.RPAR, "")
+2759:                index = child.remove() or 0
+2760:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2761:
+2762:        check_lpar = isinstance(child, Leaf) and child.value in parens_after
+2763:
+2764:
+2765:def normalize_fmt_off(node: Node) -> None:
+2766:    """Convert content between `# fmt: off`/`# fmt: on` into standalone comments."""
+2767:    try_again = True
+2768:    while try_again:
+2769:        try_again = convert_one_fmt_off_pair(node)
+2770:
+2771:
+2772:def convert_one_fmt_off_pair(node: Node) -> bool:
+2773:    """Convert content of a single `# fmt: off`/`# fmt: on` into a standalone comment.
+2774:
+2775:    Returns True if a pair was converted.
+2776:    """
+2777:    for leaf in node.leaves():
+2778:        previous_consumed = 0
+2779:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+2780:            if comment.value in FMT_OFF:
+2781:                # We only want standalone comments. If there's no previous leaf or
+2782:                # the previous leaf is indentation, it's a standalone comment in
+2783:                # disguise.
+2784:                if comment.type != STANDALONE_COMMENT:
+2785:                    prev = preceding_leaf(leaf)
+2786:                    if prev and prev.type not in WHITESPACE:
+2787:                        continue
+2788:
+2789:                ignored_nodes = list(generate_ignored_nodes(leaf))
+2790:                if not ignored_nodes:
+2791:                    continue
+2792:
+2793:                first = ignored_nodes[0]  # Can be a container node with the `leaf`.
+2794:                parent = first.parent
+2795:                prefix = first.prefix
+2796:                first.prefix = prefix[comment.consumed :]
+2797:                hidden_value = (
+2798:                    comment.value + "\n" + "".join(str(n) for n in ignored_nodes)
+2799:                )
+2800:                if hidden_value.endswith("\n"):
+2801:                    # That happens when one of the `ignored_nodes` ended with a NEWLINE
+2802:                    # leaf (possibly followed by a DEDENT).
+2803:                    hidden_value = hidden_value[:-1]
+2804:                first_idx = None
+2805:                for ignored in ignored_nodes:
+2806:                    index = ignored.remove()
+2807:                    if first_idx is None:
+2808:                        first_idx = index
+2809:                assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (1)"
+2810:                assert first_idx is not None, "INTERNAL ERROR: fmt: on/off handling (2)"
+2811:                parent.insert_child(
+2812:                    first_idx,
+2813:                    Leaf(
+2814:                        STANDALONE_COMMENT,
+2815:                        hidden_value,
+2816:                        prefix=prefix[:previous_consumed] + "\n" * comment.newlines,
+2817:                    ),
+2818:                )
+2819:                return True
+2820:
+2821:            previous_consumed = comment.consumed
+2822:
+2823:    return False
+2824:
+2825:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black/black.py’s normalize_invisible_parens, the loop over node.children lacks the new conditional and comment. The code does not check index == 0 and child.type == syms.testlist_star_expr nor include the comment about adding parentheses for long tuple unpacking; it proceeds directly to if check_lpar without the added condition.
+
+
+=== PHASE 2 COMPLETE ===
+

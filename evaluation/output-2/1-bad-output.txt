@@ -1,0 +1,916 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: grepTool
+test_works_in_mono_process_only_environment
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_works_in_mono_process_only_environment
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py:1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py
+1260:            one = (workspace / "one.py").resolve()
+1261:            with one.open("w") as fobj:
+1262:                fobj.write("print('hello')")
+1263:            two = (workspace / "two.py").resolve()
+1264:            with two.open("w") as fobj:
+1265:                fobj.write("print('hello')")
+1266:            black.write_cache({}, [one], mode)
+1267:            self.invokeBlack([str(workspace)])
+1268:            with one.open("r") as fobj:
+1269:                self.assertEqual(fobj.read(), "print('hello')")
+1270:            with two.open("r") as fobj:
+1271:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1272:            cache = black.read_cache(mode)
+1273:            self.assertIn(one, cache)
+1274:            self.assertIn(two, cache)
+1275:
+1276:    @patch("black.ProcessPoolExecutor", autospec=True)
+1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+1278:        mock_executor.side_effect = OSError()
+1279:        mode = black.FileMode()
+1280:        with cache_dir() as workspace:
+1281:            one = (workspace / "one.py").resolve()
+1282:            with one.open("w") as fobj:
+1283:                fobj.write("print('hello')")
+1284:            two = (workspace / "two.py").resolve()
+1285:            with two.open("w") as fobj:
+1286:                fobj.write("print('hello')")
+1287:            black.write_cache({}, [one], mode)
+1288:            self.invokeBlack([str(workspace)])
+1289:            with one.open("r") as fobj:
+1290:                self.assertEqual(fobj.read(), "print('hello')")
+1291:            with two.open("r") as fobj:
+1292:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1293:            cache = black.read_cache(mode)
+1294:            self.assertIn(one, cache)
+1295:            self.assertIn(two, cache)
+1296:
+1297:    def test_no_cache_when_writeback_diff(self) -> None:
+1298:        mode = black.FileMode()
+1299:        with cache_dir() as workspace:
+1300:            src = (workspace / "test.py").resolve()
+1301:            with src.open("w") as fobj:
+1302:                fobj.write("print('hello')")
+1303:            self.invokeBlack([str(src), "--diff"])
+1304:            cache_file = black.get_cache_file(mode)
+1305:            self.assertFalse(cache_file.exists())
+1306:
+1307:    def test_no_cache_when_stdin(self) -> None:
+1308:        mode = black.FileMode()
+1309:        with cache_dir():
+1310:            result = CliRunner().invoke(
+1311:                black.main, ["-"], input=BytesIO(b"print('hello')")
+1312:            )
+1313:            self.assertEqual(result.exit_code, 0)
+1314:            cache_file = black.get_cache_file(mode)
+1315:            self.assertFalse(cache_file.exists())
+1316:
+1317:    def test_read_cache_no_cachefile(self) -> None:
+1318:        mode = black.FileMode()
+1319:        with cache_dir():
+1320:            self.assertEqual(black.read_cache(mode), {})
+1321:
+1322:    def test_write_cache_read_cache(self) -> None:
+1323:        mode = black.FileMode()
+1324:        with cache_dir() as workspace:
+1325:            src = (workspace / "test.py").resolve()
+1326:            src.touch()
+1327:            black.write_cache({}, [src], mode)
+1328:            cache = black.read_cache(mode)
+1329:            self.assertIn(src, cache)
+1330:            self.assertEqual(cache[src], black.get_cache_info(src))
+1331:
+1332:    def test_filter_cached(self) -> None:
+1333:        with TemporaryDirectory() as workspace:
+1334:            path = Path(workspace)
+1335:            uncached = (path / "uncached").resolve()
+1336:            cached = (path / "cached").resolve()
+1337:            cached_but_changed = (path / "changed").resolve()
+1338:            uncached.touch()
+1339:            cached.touch()
+1340:            cached_but_changed.touch()
+1341:            cache = {cached: black.get_cache_info(cached), cached_but_changed: (0.0, 0)}
+1342:            todo, done = black.filter_cached(
+1343:                cache, {uncached, cached, cached_but_changed}
+1344:            )
+1345:            self.assertEqual(todo, {uncached, cached_but_changed})
+1346:            self.assertEqual(done, {cached})
+1347:
+1348:    def test_write_cache_creates_directory_if_needed(self) -> None:
+1349:        mode = black.FileMode()
+1350:        with cache_dir(exists=False) as workspace:
+1351:            self.assertFalse(workspace.exists())
+1352:            black.write_cache({}, [], mode)
+1353:            self.assertTrue(workspace.exists())
+1354:
+1355:    @event_loop(close=False)
+1356:    def test_failed_formatting_does_not_get_cached(self) -> None:
+1357:        mode = black.FileMode()
+1358:        with cache_dir() as workspace, patch(
+1359:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+1360:        ):
+1361:            failing = (workspace / "failing.py").resolve()
+1362:            with failing.open("w") as fobj:
+1363:                fobj.write("not actually python")
+1364:            clean = (workspace / "clean.py").resolve()
+1365:            with clean.open("w") as fobj:
+1366:                fobj.write('print("hello")\n')
+1367:            self.invokeBlack([str(workspace)], exit_code=123)
+1368:            cache = black.read_cache(mode)
+1369:            self.assertNotIn(failing, cache)
+1370:            self.assertIn(clean, cache)
+1371:
+1372:    def test_write_cache_write_fail(self) -> None:
+1373:        mode = black.FileMode()
+1374:        with cache_dir(), patch.object(Path, "open") as mock:
+1375:            mock.side_effect = OSError
+1376:            black.write_cache({}, [], mode)
+1377:
+1378:    @event_loop(close=False)
+1379:    def test_check_diff_use_together(self) -> None:
+
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+600:                src, fast=fast, write_back=write_back, mode=mode
+601:            ):
+602:                changed = Changed.YES
+603:            if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
+604:                write_back is WriteBack.CHECK and changed is Changed.NO
+605:            ):
+606:                write_cache(cache, [src], mode)
+607:        report.done(src, changed)
+608:    except Exception as exc:
+609:        report.failed(src, str(exc))
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+
+Calling tool: grepTool
+from typing import .*Optional|Optional\[|Optional,
+Matched content:
+33:    Optional,
+269:def find_pyproject_toml(path_search_start: str) -> Optional[str]:
+287:    ctx: click.Context, param: click.Parameter, value: Optional[str]
+288:) -> Optional[str]:
+471:    code: Optional[str],
+486:    config: Optional[str],
+654:    executor: Optional[Executor],
+1212:    previous: Optional[Leaf] = None
+1332:    def get_open_lsqb(self) -> Optional[Leaf]:
+1497:            second_leaf: Optional[Leaf] = self.leaves[1]
+1753:    previous_line: Optional[Line] = None
+2309:def preceding_leaf(node: Optional[LN]) -> Optional[Leaf]:
+2327:def prev_siblings_are(node: Optional[LN], tokens: List[Optional[NodeType]]) -> bool:
+2343:def child_towards(ancestor: Node, descendant: LN) -> Optional[LN]:
+2345:    node: Optional[LN] = descendant
+2376:def is_split_after_delimiter(leaf: Leaf, previous: Optional[Leaf] = None) -> Priority:
+2390:def is_split_before_delimiter(leaf: Leaf, previous: Optional[Leaf] = None) -> Priority:
+3760:    def __get_break_idx(self, string: str, max_break_idx: int) -> Optional[int]:
+3789:        _fexpr_slices: Optional[List[Tuple[Index, Index]]] = None
+3968:    def _return_match(LL: List[Leaf]) -> Optional[int]:
+3993:    def _else_match(LL: List[Leaf]) -> Optional[int]:
+4020:    def _assert_match(LL: List[Leaf]) -> Optional[int]:
+4055:    def _assign_match(LL: List[Leaf]) -> Optional[int]:
+4102:    def _dict_match(LL: List[Leaf]) -> Optional[int]:
+4470:def parent_type(node: Optional[LN]) -> Optional[NodeType]:
+4636:    matching_bracket: Optional[Leaf] = None
+4679:    opening_bracket: Optional[Leaf] = None
+4680:    closing_bracket: Optional[Leaf] = None
+5206:                first_idx: Optional[int] = None
+5233:    container: Optional[LN] = container_of(leaf)
+5273:def first_leaf_column(node: Node) -> Optional[int]:
+5344:def unwrap_singleton_parenthesis(node: LN) -> Optional[LN]:
+5607:    opening_bracket: Optional[Leaf] = None
+5608:    closing_bracket: Optional[Leaf] = None
+
+Calling tool: grepTool
+from concurrent\.futures import .*Executor|Executor|ProcessPoolExecutor
+Matched content:
+5:from concurrent.futures import Executor, ProcessPoolExecutor
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+654:    executor: Optional[Executor],
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+
+Calling tool: grepTool
+schedule_formatting\(
+Matched content:
+631:            schedule_formatting(
+647:async def schedule_formatting(
+
+Calling tool: grepTool
+def shutdown\(
+Matched content:
+6056:def shutdown(loop: asyncio.AbstractEventLoop) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+6050:    """asyncio signal handler that cancels all `tasks` and reports to stderr."""
+6051:    err("Aborted!")
+6052:    for task in tasks:
+6053:        task.cancel()
+6054:
+6055:
+6056:def shutdown(loop: asyncio.AbstractEventLoop) -> None:
+6057:    """Cancel all pending tasks on `loop`, wait for them, and close the loop."""
+6058:    try:
+6059:        if sys.version_info[:2] >= (3, 7):
+6060:            all_tasks = asyncio.all_tasks
+6061:        else:
+6062:            all_tasks = asyncio.Task.all_tasks
+6063:        # This part is borrowed from asyncio/runners.py in Python 3.7b2.
+6064:        to_cancel = [task for task in all_tasks(loop) if not task.done()]
+6065:        if not to_cancel:
+6066:            return
+6067:
+6068:        for task in to_cancel:
+6069:            task.cancel()
+6070:        loop.run_until_complete(
+6071:            asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+6072:        )
+6073:    finally:
+6074:        # `concurrent.futures.Future` objects cannot be cancelled once they
+6075:        # are already running. There might be some when the `shutdown()` happened.
+6076:        # Silence their logger's spew about the event loop being closed.
+6077:        cf_logger = logging.getLogger("concurrent.futures")
+6078:        cf_logger.setLevel(logging.CRITICAL)
+6079:        loop.close()
+6080:
+6081:
+6082:def sub_twice(regex: Pattern[str], replacement: str, original: str) -> str:
+6083:    """Replace `regex` with `replacement` twice on `original`.
+6084:
+6085:    This is used by string normalization to perform replaces on
+6086:    overlapping matches.
+6087:    """
+6088:    return regex.sub(replacement, regex.sub(replacement, original))
+6089:
+
+Calling tool: createTodo
+Todo List Created
+Todo List (12 items):
+- [ ] In black.py reformat_many(), verify ProcessPoolExecutor creation is wrapped in try/except OSError and that the fallback sets executor to None (monoprocess via default loop executor), not to another ProcessPoolExecutor instance. (ID: todo-1)
+- [ ] In black.py reformat_many(), ensure the except OSError block does not attempt a second instantiation of ProcessPoolExecutor that could also raise OSError. (ID: todo-2)
+- [ ] In black.py reformat_many(), check that on normal path executor is created with max_workers=worker_count and worker_count is capped to 61 on win32. (ID: todo-3)
+- [ ] In black.py reformat_many(), confirm that schedule_formatting() is called with the possibly None executor variable (not an always-initialized executor). (ID: todo-4)
+- [ ] In black.py schedule_formatting() signature, verify the type of executor parameter is Optional[Executor] and that Optional and Executor are correctly imported from typing and concurrent.futures, respectively. (ID: todo-5)
+- [ ] In black.py schedule_formatting(), verify loop.run_in_executor() is invoked with the executor parameter (which may be None) so asyncio uses the default thread pool when executor is None. (ID: todo-6)
+- [ ] In black.py reformat_many() finally block, verify that executor.shutdown() is called when an explicit executor was created and that no-op code (e.g., 'if executor is not None: pass') is not present; if executor is None, shutdown must be skipped safely. (ID: todo-7)
+- [ ] Confirm that the new error handling only catches OSError around ProcessPoolExecutor construction and does not broadly swallow unrelated exceptions. (ID: todo-8)
+- [ ] Ensure no other call sites invoke schedule_formatting() with a non-Optional type inconsistent with its new Optional[Executor] annotation. (ID: todo-9)
+- [ ] Verify that the multiprocessing Manager() lock is only created when write_back == WriteBack.DIFF so that the mono-process fallback path (non-diff) avoids additional multiprocessing primitives. (ID: todo-10)
+- [ ] Validate that the caching logic in schedule_formatting() still adds successfully processed sources to sources_to_cache for write_back YES and for CHECK when unchanged, and that write_cache() is called accordingly. (ID: todo-11)
+- [ ] In tests/test_black.py::test_works_in_mono_process_only_environment, verify the patch target string 'black.ProcessPoolExecutor' matches the symbol used in black.py (imported at module level), so the OSError injection affects executor construction in reformat_many(). (ID: todo-12)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 12
+description: 'In black.py reformat_many(), verify ProcessPoolExecutor creation is wrapped in try/except OSError and that the fallback sets executor to None (monoprocess via default loop executor), not to another ProcessPoolExecutor instance.'
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py:612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+590:            if format_stdin_to_stdout(fast=fast, write_back=write_back, mode=mode):
+591:                changed = Changed.YES
+592:        else:
+593:            cache: Cache = {}
+594:            if write_back != WriteBack.DIFF:
+595:                cache = read_cache(mode)
+596:                res_src = src.resolve()
+597:                if res_src in cache and cache[res_src] == get_cache_info(res_src):
+598:                    changed = Changed.CACHED
+599:            if changed is not Changed.CACHED and format_file_in_place(
+600:                src, fast=fast, write_back=write_back, mode=mode
+601:            ):
+602:                changed = Changed.YES
+603:            if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
+604:                write_back is WriteBack.CHECK and changed is Changed.NO
+605:            ):
+606:                write_cache(cache, [src], mode)
+607:        report.done(src, changed)
+608:    except Exception as exc:
+609:        report.failed(src, str(exc))
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+
+Calling tool: grepTool
+test_works_in_mono_process_only_environment
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_works_in_mono_process_only_environment
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py:1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py
+1240:            cache = black.read_cache(mode)
+1241:            self.assertIn(src, cache)
+1242:
+1243:    def test_cache_single_file_already_cached(self) -> None:
+1244:        mode = black.FileMode()
+1245:        with cache_dir() as workspace:
+1246:            src = (workspace / "test.py").resolve()
+1247:            with src.open("w") as fobj:
+1248:                fobj.write("print('hello')")
+1249:            black.write_cache({}, [src], mode)
+1250:            self.invokeBlack([str(src)])
+1251:            with src.open("r") as fobj:
+1252:                self.assertEqual(fobj.read(), "print('hello')")
+1253:
+1254:    @event_loop(close=False)
+1255:    def test_cache_multiple_files(self) -> None:
+1256:        mode = black.FileMode()
+1257:        with cache_dir() as workspace, patch(
+1258:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+1259:        ):
+1260:            one = (workspace / "one.py").resolve()
+1261:            with one.open("w") as fobj:
+1262:                fobj.write("print('hello')")
+1263:            two = (workspace / "two.py").resolve()
+1264:            with two.open("w") as fobj:
+1265:                fobj.write("print('hello')")
+1266:            black.write_cache({}, [one], mode)
+1267:            self.invokeBlack([str(workspace)])
+1268:            with one.open("r") as fobj:
+1269:                self.assertEqual(fobj.read(), "print('hello')")
+1270:            with two.open("r") as fobj:
+1271:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1272:            cache = black.read_cache(mode)
+1273:            self.assertIn(one, cache)
+1274:            self.assertIn(two, cache)
+1275:
+1276:    @patch("black.ProcessPoolExecutor", autospec=True)
+1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+1278:        mock_executor.side_effect = OSError()
+1279:        mode = black.FileMode()
+1280:        with cache_dir() as workspace:
+1281:            one = (workspace / "one.py").resolve()
+1282:            with one.open("w") as fobj:
+1283:                fobj.write("print('hello')")
+1284:            two = (workspace / "two.py").resolve()
+1285:            with two.open("w") as fobj:
+1286:                fobj.write("print('hello')")
+1287:            black.write_cache({}, [one], mode)
+1288:            self.invokeBlack([str(workspace)])
+1289:            with one.open("r") as fobj:
+1290:                self.assertEqual(fobj.read(), "print('hello')")
+1291:            with two.open("r") as fobj:
+1292:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1293:            cache = black.read_cache(mode)
+1294:            self.assertIn(one, cache)
+1295:            self.assertIn(two, cache)
+1296:
+1297:    def test_no_cache_when_writeback_diff(self) -> None:
+1298:        mode = black.FileMode()
+1299:        with cache_dir() as workspace:
+1300:            src = (workspace / "test.py").resolve()
+1301:            with src.open("w") as fobj:
+1302:                fobj.write("print('hello')")
+1303:            self.invokeBlack([str(src), "--diff"])
+1304:            cache_file = black.get_cache_file(mode)
+1305:            self.assertFalse(cache_file.exists())
+1306:
+1307:    def test_no_cache_when_stdin(self) -> None:
+1308:        mode = black.FileMode()
+1309:        with cache_dir():
+1310:            result = CliRunner().invoke(
+1311:                black.main, ["-"], input=BytesIO(b"print('hello')")
+1312:            )
+1313:            self.assertEqual(result.exit_code, 0)
+1314:            cache_file = black.get_cache_file(mode)
+1315:            self.assertFalse(cache_file.exists())
+1316:
+1317:    def test_read_cache_no_cachefile(self) -> None:
+1318:        mode = black.FileMode()
+1319:        with cache_dir():
+1320:            self.assertEqual(black.read_cache(mode), {})
+1321:
+1322:    def test_write_cache_read_cache(self) -> None:
+1323:        mode = black.FileMode()
+1324:        with cache_dir() as workspace:
+1325:            src = (workspace / "test.py").resolve()
+1326:            src.touch()
+1327:            black.write_cache({}, [src], mode)
+1328:            cache = black.read_cache(mode)
+1329:            self.assertIn(src, cache)
+1330:            self.assertEqual(cache[src], black.get_cache_info(src))
+1331:
+1332:    def test_filter_cached(self) -> None:
+1333:        with TemporaryDirectory() as workspace:
+1334:            path = Path(workspace)
+1335:            uncached = (path / "uncached").resolve()
+1336:            cached = (path / "cached").resolve()
+1337:            cached_but_changed = (path / "changed").resolve()
+1338:            uncached.touch()
+1339:            cached.touch()
+1340:            cached_but_changed.touch()
+1341:            cache = {cached: black.get_cache_info(cached), cached_but_changed: (0.0, 0)}
+1342:            todo, done = black.filter_cached(
+1343:                cache, {uncached, cached, cached_but_changed}
+1344:            )
+1345:            self.assertEqual(todo, {uncached, cached_but_changed})
+1346:            self.assertEqual(done, {cached})
+1347:
+1348:    def test_write_cache_creates_directory_if_needed(self) -> None:
+1349:        mode = black.FileMode()
+1350:        with cache_dir(exists=False) as workspace:
+1351:            self.assertFalse(workspace.exists())
+1352:            black.write_cache({}, [], mode)
+1353:            self.assertTrue(workspace.exists())
+1354:
+1355:    @event_loop(close=False)
+1356:    def test_failed_formatting_does_not_get_cached(self) -> None:
+1357:        mode = black.FileMode()
+1358:        with cache_dir() as workspace, patch(
+1359:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In reformat_many(), ProcessPoolExecutor creation is wrapped in try/except OSError, but the fallback assigns executor = ProcessPoolExecutor() instead of None. This will still raise under the test’s patch and does not use the loop’s default executor for monoprocess execution.
+
+
+Validating todo item 1 of 12
+description: 'In black.py reformat_many(), verify ProcessPoolExecutor creation is wrapped in try/except OSError and that the fallback sets executor to None (monoprocess via default loop executor), not to another ProcessPoolExecutor instance.'
+
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py:612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+590:            if format_stdin_to_stdout(fast=fast, write_back=write_back, mode=mode):
+591:                changed = Changed.YES
+592:        else:
+593:            cache: Cache = {}
+594:            if write_back != WriteBack.DIFF:
+595:                cache = read_cache(mode)
+596:                res_src = src.resolve()
+597:                if res_src in cache and cache[res_src] == get_cache_info(res_src):
+598:                    changed = Changed.CACHED
+599:            if changed is not Changed.CACHED and format_file_in_place(
+600:                src, fast=fast, write_back=write_back, mode=mode
+601:            ):
+602:                changed = Changed.YES
+603:            if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
+604:                write_back is WriteBack.CHECK and changed is Changed.NO
+605:            ):
+606:                write_cache(cache, [src], mode)
+607:        report.done(src, changed)
+608:    except Exception as exc:
+609:        report.failed(src, str(exc))
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+
+Calling tool: grepTool
+test_works_in_mono_process_only_environment
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_works_in_mono_process_only_environment
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py:1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/tests/test_black.py
+1240:            cache = black.read_cache(mode)
+1241:            self.assertIn(src, cache)
+1242:
+1243:    def test_cache_single_file_already_cached(self) -> None:
+1244:        mode = black.FileMode()
+1245:        with cache_dir() as workspace:
+1246:            src = (workspace / "test.py").resolve()
+1247:            with src.open("w") as fobj:
+1248:                fobj.write("print('hello')")
+1249:            black.write_cache({}, [src], mode)
+1250:            self.invokeBlack([str(src)])
+1251:            with src.open("r") as fobj:
+1252:                self.assertEqual(fobj.read(), "print('hello')")
+1253:
+1254:    @event_loop(close=False)
+1255:    def test_cache_multiple_files(self) -> None:
+1256:        mode = black.FileMode()
+1257:        with cache_dir() as workspace, patch(
+1258:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+1259:        ):
+1260:            one = (workspace / "one.py").resolve()
+1261:            with one.open("w") as fobj:
+1262:                fobj.write("print('hello')")
+1263:            two = (workspace / "two.py").resolve()
+1264:            with two.open("w") as fobj:
+1265:                fobj.write("print('hello')")
+1266:            black.write_cache({}, [one], mode)
+1267:            self.invokeBlack([str(workspace)])
+1268:            with one.open("r") as fobj:
+1269:                self.assertEqual(fobj.read(), "print('hello')")
+1270:            with two.open("r") as fobj:
+1271:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1272:            cache = black.read_cache(mode)
+1273:            self.assertIn(one, cache)
+1274:            self.assertIn(two, cache)
+1275:
+1276:    @patch("black.ProcessPoolExecutor", autospec=True)
+1277:    def test_works_in_mono_process_only_environment(self, mock_executor) -> None:
+1278:        mock_executor.side_effect = OSError()
+1279:        mode = black.FileMode()
+1280:        with cache_dir() as workspace:
+1281:            one = (workspace / "one.py").resolve()
+1282:            with one.open("w") as fobj:
+1283:                fobj.write("print('hello')")
+1284:            two = (workspace / "two.py").resolve()
+1285:            with two.open("w") as fobj:
+1286:                fobj.write("print('hello')")
+1287:            black.write_cache({}, [one], mode)
+1288:            self.invokeBlack([str(workspace)])
+1289:            with one.open("r") as fobj:
+1290:                self.assertEqual(fobj.read(), "print('hello')")
+1291:            with two.open("r") as fobj:
+1292:                self.assertEqual(fobj.read(), 'print("hello")\n')
+1293:            cache = black.read_cache(mode)
+1294:            self.assertIn(one, cache)
+1295:            self.assertIn(two, cache)
+1296:
+1297:    def test_no_cache_when_writeback_diff(self) -> None:
+1298:        mode = black.FileMode()
+1299:        with cache_dir() as workspace:
+1300:            src = (workspace / "test.py").resolve()
+1301:            with src.open("w") as fobj:
+1302:                fobj.write("print('hello')")
+1303:            self.invokeBlack([str(src), "--diff"])
+1304:            cache_file = black.get_cache_file(mode)
+1305:            self.assertFalse(cache_file.exists())
+1306:
+1307:    def test_no_cache_when_stdin(self) -> None:
+1308:        mode = black.FileMode()
+1309:        with cache_dir():
+1310:            result = CliRunner().invoke(
+1311:                black.main, ["-"], input=BytesIO(b"print('hello')")
+1312:            )
+1313:            self.assertEqual(result.exit_code, 0)
+1314:            cache_file = black.get_cache_file(mode)
+1315:            self.assertFalse(cache_file.exists())
+1316:
+1317:    def test_read_cache_no_cachefile(self) -> None:
+1318:        mode = black.FileMode()
+1319:        with cache_dir():
+1320:            self.assertEqual(black.read_cache(mode), {})
+1321:
+1322:    def test_write_cache_read_cache(self) -> None:
+1323:        mode = black.FileMode()
+1324:        with cache_dir() as workspace:
+1325:            src = (workspace / "test.py").resolve()
+1326:            src.touch()
+1327:            black.write_cache({}, [src], mode)
+1328:            cache = black.read_cache(mode)
+1329:            self.assertIn(src, cache)
+1330:            self.assertEqual(cache[src], black.get_cache_info(src))
+1331:
+1332:    def test_filter_cached(self) -> None:
+1333:        with TemporaryDirectory() as workspace:
+1334:            path = Path(workspace)
+1335:            uncached = (path / "uncached").resolve()
+1336:            cached = (path / "cached").resolve()
+1337:            cached_but_changed = (path / "changed").resolve()
+1338:            uncached.touch()
+1339:            cached.touch()
+1340:            cached_but_changed.touch()
+1341:            cache = {cached: black.get_cache_info(cached), cached_but_changed: (0.0, 0)}
+1342:            todo, done = black.filter_cached(
+1343:                cache, {uncached, cached, cached_but_changed}
+1344:            )
+1345:            self.assertEqual(todo, {uncached, cached_but_changed})
+1346:            self.assertEqual(done, {cached})
+1347:
+1348:    def test_write_cache_creates_directory_if_needed(self) -> None:
+1349:        mode = black.FileMode()
+1350:        with cache_dir(exists=False) as workspace:
+1351:            self.assertFalse(workspace.exists())
+1352:            black.write_cache({}, [], mode)
+1353:            self.assertTrue(workspace.exists())
+1354:
+1355:    @event_loop(close=False)
+1356:    def test_failed_formatting_does_not_get_cached(self) -> None:
+1357:        mode = black.FileMode()
+1358:        with cache_dir() as workspace, patch(
+1359:            "black.ProcessPoolExecutor", new=ThreadPoolExecutor
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In reformat_many(), ProcessPoolExecutor creation is wrapped in try/except OSError, but the fallback assigns executor = ProcessPoolExecutor() instead of None. This will still raise under the test’s patch and does not use the loop’s default executor for monoprocess execution.
+
+
+=== PHASE 2 COMPLETE ===
+
