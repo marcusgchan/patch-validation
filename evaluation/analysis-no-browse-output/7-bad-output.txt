@@ -1,0 +1,330 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: createTodo
+Todo List Created
+Todo List (12 items):
+- [ ] In `black.py::normalize_invisible_parens`, confirm the new early-loop condition exists: `if index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr:` and that it is accompanied by the comment about tuple unpacking in assignments. (ID: todo-1)
+- [ ] Trace the control flow to ensure there is a reachable code path that wraps a non-`syms.atom` child with parentheses (constructing `Leaf(token.LPAR, "")` and `Leaf(token.RPAR, "")` and inserting a `Node(syms.atom, [...])`) for a `testlist_star_expr` child at `index == 0` (assignment LHS). (ID: todo-2)
+- [ ] Verify that when wrapping a child with parentheses, the child's original prefix is preserved on the new wrapper node: `prefix = child.prefix; child.prefix = ""; new_child = Node(syms.atom, [lpar, child, rpar]); new_child.prefix = prefix`. (ID: todo-3)
+- [ ] Ensure that the `LPAR`/`RPAR` leaves used for wrapping are created with empty prefixes, and that only the wrapper node (`new_child`) holds the original prefix to avoid duplicate or lost whitespace/backslashes. (ID: todo-4)
+- [ ] Confirm that the child replacement uses the correct index from `child.remove()` and reinserts at that exact position: `index = child.remove() or 0; node.insert_child(index, new_child)`; verify the contract of `Node.remove()` returns the original index. (ID: todo-5)
+- [ ] Check that names used in the modified code are in scope/imported: `Node`, `Leaf`, `token`, `syms`, and `maybe_make_parens_invisible_in_atom` are available in `black.py`. (ID: todo-6)
+- [ ] Validate that the wrapper logic does not double-wrap when the child is already an atom with parentheses: confirm the guard path via `if child.type == syms.atom:` and `maybe_make_parens_invisible_in_atom(child, parent=node)` prevents redundant wrapping. (ID: todo-7)
+- [ ] Review the change of `check_lpar` handling: it is set to `False` at loop end instead of `isinstance(child, Leaf) and child.value in parens_after`. Verify whether `check_lpar` is set to `True` elsewhere in the function; otherwise, the `if check_lpar:` block may be dead code. (ID: todo-8)
+- [ ] Assess whether the function parameter `parens_after` is still used after these changes. If unused, note it as a dead parameter and verify call sites to ensure no assumptions depend on it. (ID: todo-9)
+- [ ] Confirm the new tuple-unpack handling is scoped to the assignment LHS only (by virtue of `index == 0`) and does not unintentionally affect the RHS or unrelated nodes. (ID: todo-10)
+- [ ] Open the `test_tuple_assign` test and verify it covers a backslash-continued tuple unpack assignment on the LHS and expects parentheses around the LHS after formatting, matching the issue/PR intent. (ID: todo-11)
+- [ ] Check that the added comment "Add parentheses around long tuple unpacking in assignments." matches the actual behavior implemented in the surrounding code (i.e., there is real wrapping logic for that case). (ID: todo-12)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 12
+description: 'In `black.py::normalize_invisible_parens`, confirm the new early-loop condition exists: `if index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr:` and that it is accompanied by the comment about tuple unpacking in assignments.'
+Calling tool: grepTool
+def normalize_invisible_parens\(node: Node, parens_after: Set\[str\]\) -> None:
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2708:
+2709:    before, after = text.split(".")
+2710:    return f"{before or 0}.{after or 0}"
+2711:
+2712:
+2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+2714:    """Make existing optional parentheses invisible or create new ones.
+2715:
+2716:    `parens_after` is a set of string leaf values immeditely after which parens
+2717:    should be put.
+2718:
+2719:    Standardizes on visible parentheses for single-element tuples, and keeps
+2720:    existing visible parentheses for other tuples and generator expressions.
+2721:    """
+2722:    for pc in list_comments(node.prefix, is_endmarker=False):
+2723:        if pc.value in FMT_OFF:
+2724:            # This `node` has a prefix with `# fmt: off`, don't mess with parens.
+2725:            return
+2726:
+2727:    check_lpar = False
+2728:    for index, child in enumerate(list(node.children)):
+2729:        if check_lpar:
+2730:            if child.type == syms.atom:
+2731:                if maybe_make_parens_invisible_in_atom(child, parent=node):
+2732:                    lpar = Leaf(token.LPAR, "")
+2733:                    rpar = Leaf(token.RPAR, "")
+2734:                    index = child.remove() or 0
+2735:                    node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2736:            elif is_one_tuple(child):
+2737:                # wrap child in visible parentheses
+2738:                lpar = Leaf(token.LPAR, "(")
+2739:                rpar = Leaf(token.RPAR, ")")
+2740:                child.remove()
+2741:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2742:            elif node.type == syms.import_from:
+2743:                # "import from" nodes store parentheses directly as part of
+2744:                # the statement
+2745:                if child.type == token.LPAR:
+2746:                    # make parentheses invisible
+2747:                    child.value = ""  # type: ignore
+2748:                    node.children[-1].value = ""  # type: ignore
+2749:                elif child.type != token.STAR:
+2750:                    # insert invisible parentheses
+2751:                    node.insert_child(index, Leaf(token.LPAR, ""))
+2752:                    node.append_child(Leaf(token.RPAR, ""))
+2753:                break
+2754:
+2755:            elif not (isinstance(child, Leaf) and is_multiline_string(child)):
+2756:                # wrap child in invisible parentheses
+2757:                lpar = Leaf(token.LPAR, "")
+2758:                rpar = Leaf(token.RPAR, "")
+2759:                index = child.remove() or 0
+2760:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2761:
+2762:        check_lpar = isinstance(child, Leaf) and child.value in parens_after
+2763:
+2764:
+2765:def normalize_fmt_off(node: Node) -> None:
+2766:    """Convert content between `# fmt: off`/`# fmt: on` into standalone comments."""
+2767:    try_again = True
+2768:    while try_again:
+2769:        try_again = convert_one_fmt_off_pair(node)
+2770:
+2771:
+2772:def convert_one_fmt_off_pair(node: Node) -> bool:
+2773:    """Convert content of a single `# fmt: off`/`# fmt: on` into a standalone comment.
+2774:
+2775:    Returns True if a pair was converted.
+2776:    """
+2777:    for leaf in node.leaves():
+2778:        previous_consumed = 0
+2779:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+2780:            if comment.value in FMT_OFF:
+2781:                # We only want standalone comments. If there's no previous leaf or
+2782:                # the previous leaf is indentation, it's a standalone comment in
+2783:                # disguise.
+2784:                if comment.type != STANDALONE_COMMENT:
+2785:                    prev = preceding_leaf(leaf)
+2786:                    if prev and prev.type not in WHITESPACE:
+2787:                        continue
+2788:
+2789:                ignored_nodes = list(generate_ignored_nodes(leaf))
+2790:                if not ignored_nodes:
+2791:                    continue
+2792:
+2793:                first = ignored_nodes[0]  # Can be a container node with the `leaf`.
+2794:                parent = first.parent
+2795:                prefix = first.prefix
+2796:                first.prefix = prefix[comment.consumed :]
+2797:                hidden_value = (
+2798:                    comment.value + "\n" + "".join(str(n) for n in ignored_nodes)
+2799:                )
+2800:                if hidden_value.endswith("\n"):
+2801:                    # That happens when one of the `ignored_nodes` ended with a NEWLINE
+2802:                    # leaf (possibly followed by a DEDENT).
+2803:                    hidden_value = hidden_value[:-1]
+2804:                first_idx = None
+2805:                for ignored in ignored_nodes:
+2806:                    index = ignored.remove()
+2807:                    if first_idx is None:
+2808:                        first_idx = index
+2809:                assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (1)"
+2810:                assert first_idx is not None, "INTERNAL ERROR: fmt: on/off handling (2)"
+2811:                parent.insert_child(
+2812:                    first_idx,
+2813:                    Leaf(
+2814:                        STANDALONE_COMMENT,
+2815:                        hidden_value,
+2816:                        prefix=prefix[:previous_consumed] + "\n" * comment.newlines,
+2817:                    ),
+2818:                )
+2819:                return True
+2820:
+2821:            previous_consumed = comment.consumed
+2822:
+2823:    return False
+2824:
+2825:
+2826:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+2827:    """Starting from the container of `leaf`, generate all leaves until `# fmt: on`.
+
+Calling tool: grepTool
+testlist_star_expr
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:38:expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:39:                     ('=' (yield_expr|testlist_star_expr))*)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:41:testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:892:    syms.testlist_star_expr,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1672:IMPLICIT_TUPLE = {syms.testlist, syms.testlist_star_expr, syms.exprlist}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:67:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:274:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:89:    testlist_star_expr: int
+
+Calling tool: grepTool
+Add parentheses around long tuple unpacking in assignments\.
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py::normalize_invisible_parens, the early-loop condition for testlist_star_expr and its accompanying comment are missing. Reading lines 2708–2765 shows no such condition or comment; only the original check_lpar logic is present.
+
+
+Validating todo item 1 of 12
+description: 'In `black.py::normalize_invisible_parens`, confirm the new early-loop condition exists: `if index == 0 and isinstance(child, Node) and child.type == syms.testlist_star_expr:` and that it is accompanied by the comment about tuple unpacking in assignments.'
+
+Calling tool: grepTool
+def normalize_invisible_parens\(node: Node, parens_after: Set\[str\]\) -> None:
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py
+2708:
+2709:    before, after = text.split(".")
+2710:    return f"{before or 0}.{after or 0}"
+2711:
+2712:
+2713:def normalize_invisible_parens(node: Node, parens_after: Set[str]) -> None:
+2714:    """Make existing optional parentheses invisible or create new ones.
+2715:
+2716:    `parens_after` is a set of string leaf values immeditely after which parens
+2717:    should be put.
+2718:
+2719:    Standardizes on visible parentheses for single-element tuples, and keeps
+2720:    existing visible parentheses for other tuples and generator expressions.
+2721:    """
+2722:    for pc in list_comments(node.prefix, is_endmarker=False):
+2723:        if pc.value in FMT_OFF:
+2724:            # This `node` has a prefix with `# fmt: off`, don't mess with parens.
+2725:            return
+2726:
+2727:    check_lpar = False
+2728:    for index, child in enumerate(list(node.children)):
+2729:        if check_lpar:
+2730:            if child.type == syms.atom:
+2731:                if maybe_make_parens_invisible_in_atom(child, parent=node):
+2732:                    lpar = Leaf(token.LPAR, "")
+2733:                    rpar = Leaf(token.RPAR, "")
+2734:                    index = child.remove() or 0
+2735:                    node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2736:            elif is_one_tuple(child):
+2737:                # wrap child in visible parentheses
+2738:                lpar = Leaf(token.LPAR, "(")
+2739:                rpar = Leaf(token.RPAR, ")")
+2740:                child.remove()
+2741:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2742:            elif node.type == syms.import_from:
+2743:                # "import from" nodes store parentheses directly as part of
+2744:                # the statement
+2745:                if child.type == token.LPAR:
+2746:                    # make parentheses invisible
+2747:                    child.value = ""  # type: ignore
+2748:                    node.children[-1].value = ""  # type: ignore
+2749:                elif child.type != token.STAR:
+2750:                    # insert invisible parentheses
+2751:                    node.insert_child(index, Leaf(token.LPAR, ""))
+2752:                    node.append_child(Leaf(token.RPAR, ""))
+2753:                break
+2754:
+2755:            elif not (isinstance(child, Leaf) and is_multiline_string(child)):
+2756:                # wrap child in invisible parentheses
+2757:                lpar = Leaf(token.LPAR, "")
+2758:                rpar = Leaf(token.RPAR, "")
+2759:                index = child.remove() or 0
+2760:                node.insert_child(index, Node(syms.atom, [lpar, child, rpar]))
+2761:
+2762:        check_lpar = isinstance(child, Leaf) and child.value in parens_after
+2763:
+2764:
+2765:def normalize_fmt_off(node: Node) -> None:
+2766:    """Convert content between `# fmt: off`/`# fmt: on` into standalone comments."""
+2767:    try_again = True
+2768:    while try_again:
+2769:        try_again = convert_one_fmt_off_pair(node)
+2770:
+2771:
+2772:def convert_one_fmt_off_pair(node: Node) -> bool:
+2773:    """Convert content of a single `# fmt: off`/`# fmt: on` into a standalone comment.
+2774:
+2775:    Returns True if a pair was converted.
+2776:    """
+2777:    for leaf in node.leaves():
+2778:        previous_consumed = 0
+2779:        for comment in list_comments(leaf.prefix, is_endmarker=False):
+2780:            if comment.value in FMT_OFF:
+2781:                # We only want standalone comments. If there's no previous leaf or
+2782:                # the previous leaf is indentation, it's a standalone comment in
+2783:                # disguise.
+2784:                if comment.type != STANDALONE_COMMENT:
+2785:                    prev = preceding_leaf(leaf)
+2786:                    if prev and prev.type not in WHITESPACE:
+2787:                        continue
+2788:
+2789:                ignored_nodes = list(generate_ignored_nodes(leaf))
+2790:                if not ignored_nodes:
+2791:                    continue
+2792:
+2793:                first = ignored_nodes[0]  # Can be a container node with the `leaf`.
+2794:                parent = first.parent
+2795:                prefix = first.prefix
+2796:                first.prefix = prefix[comment.consumed :]
+2797:                hidden_value = (
+2798:                    comment.value + "\n" + "".join(str(n) for n in ignored_nodes)
+2799:                )
+2800:                if hidden_value.endswith("\n"):
+2801:                    # That happens when one of the `ignored_nodes` ended with a NEWLINE
+2802:                    # leaf (possibly followed by a DEDENT).
+2803:                    hidden_value = hidden_value[:-1]
+2804:                first_idx = None
+2805:                for ignored in ignored_nodes:
+2806:                    index = ignored.remove()
+2807:                    if first_idx is None:
+2808:                        first_idx = index
+2809:                assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (1)"
+2810:                assert first_idx is not None, "INTERNAL ERROR: fmt: on/off handling (2)"
+2811:                parent.insert_child(
+2812:                    first_idx,
+2813:                    Leaf(
+2814:                        STANDALONE_COMMENT,
+2815:                        hidden_value,
+2816:                        prefix=prefix[:previous_consumed] + "\n" * comment.newlines,
+2817:                    ),
+2818:                )
+2819:                return True
+2820:
+2821:            previous_consumed = comment.consumed
+2822:
+2823:    return False
+2824:
+2825:
+2826:def generate_ignored_nodes(leaf: Leaf) -> Iterator[LN]:
+2827:    """Starting from the container of `leaf`, generate all leaves until `# fmt: on`.
+
+Calling tool: grepTool
+testlist_star_expr
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:38:expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:39:                     ('=' (yield_expr|testlist_star_expr))*)
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/Grammar.txt:41:testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:892:    syms.testlist_star_expr,
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/black.py:1672:IMPLICIT_TUPLE = {syms.testlist, syms.testlist_star_expr, syms.exprlist}
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:67:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/tests/data/fmtonoff.py:274:def testlist_star_expr():
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-7/bad/black/blib2to3/pygram.pyi:89:    testlist_star_expr: int
+
+Calling tool: grepTool
+Add parentheses around long tuple unpacking in assignments\.
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py::normalize_invisible_parens, the early-loop condition for testlist_star_expr and its accompanying comment are missing. Reading lines 2708–2765 shows no such condition or comment; only the original check_lpar logic is present.
+
+
+=== PHASE 2 COMPLETE ===
+

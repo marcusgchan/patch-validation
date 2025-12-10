@@ -1,0 +1,1104 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: createTodo
+Todo List Created
+Todo List (16 items):
+- [ ] Verify that the new function `prepare_input(src: bytes) -> Tuple[str, str, str]` exists and returns a 3-tuple (newline, encoding, decoded_contents) as documented, with `decoded_contents` being text (str). (ID: todo-1)
+- [ ] Check that `Tuple` is imported from `typing` (or otherwise available) to satisfy the return type annotation of `prepare_input`. (ID: todo-2)
+- [ ] Confirm `prepare_input` uses `tokenize.detect_encoding(srcbuf.readline)` and then `srcbuf.seek(0)` followed by `io.TextIOWrapper(srcbuf, encoding).read()` so that decoding applies universal newlines (CRLF translated to LF). (ID: todo-3)
+- [ ] Confirm `prepare_input` determines `newline` strictly as '\r\n' when the first line in `lines[0]` ends with CRLF, otherwise '\n', and that only those two values are possible. (ID: todo-4)
+- [ ] Validate `prepare_input` does not raise on empty input: indexing `lines[0]` must be safe; if not, note the potential `IndexError` and whether the PR intends to support empty files. (ID: todo-5)
+- [ ] In `format_file_in_place()`, verify that reading now uses `open(src, 'rb')` and `prepare_input(buf.read())` to get `newline`, `encoding`, and `src_contents`. (ID: todo-6)
+- [ ] In `format_file_in_place()`, verify that the write-back path (`write_back == write_back.YES`) opens the file with `open(src, 'w', encoding=encoding, newline=newline)` so the original line endings are preserved on disk. (ID: todo-7)
+- [ ] Verify that `lib2to3_parse()` no longer tries to preserve CRLF when appending a missing trailing newline and now always appends '\n' (internal normalization), consistent with preserving original newlines only at write time. (ID: todo-8)
+- [ ] Verify that the diff/STDOUT code path in `format_file_in_place()` wraps `sys.stdout.buffer` with `io.TextIOWrapper(..., encoding=encoding, newline=newline, write_through=True)`, writes `diff_contents`, and calls `f.detach()` inside the lock. (ID: todo-9)
+- [ ] Verify that `format_stdin_to_stdout()` now reads from `sys.stdin.buffer.read()` and calls `prepare_input(...)` to detect `newline` and `encoding`, producing universal-newline text for formatting. (ID: todo-10)
+- [ ] Verify that in `format_stdin_to_stdout()`, both `WriteBack.YES` and `WriteBack.DIFF` paths wrap `sys.stdout.buffer` with `io.TextIOWrapper(..., encoding=encoding, newline=newline, write_through=True)`, write the string, and `detach()` the wrapper. (ID: todo-11)
+- [ ] Check that locks around stdout writing (in the DIFF path of `format_file_in_place`) still acquire before any write and release in a `finally` block, and that the entire write (including wrapper creation and detach) occurs while the lock is held. (ID: todo-12)
+- [ ] Ensure that after introducing universal newlines internally (via `prepare_input`) and always appending '\n' in `lib2to3_parse`, the only point at which CRLF can reappear is the write-back (and now stdout/diff) layer where `newline` is applied. (ID: todo-13)
+- [ ] Validate that `encoding` used for writing (file and stdout) is exactly what `prepare_input` detected (i.e., do not reuse any previous `src_buffer.encoding`). (ID: todo-14)
+- [ ] Cross-check PR scope consistency: the PR description claims behavior change only when writing back to file, but code also adjusts stdout and diff outputs to use the detected `encoding` and `newline`. Flag this discrepancy. (ID: todo-15)
+- [ ] Review the test `test_preserves_line_endings` to confirm it exercises the in-place write path (WriteBack.YES) and verifies that the output file retains the original CRLF/LF style; also check if it covers both CRLF and LF inputs. (ID: todo-16)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 16
+description: 'Verify that the new function `prepare_input(src: bytes) -> Tuple[str, str, str]` exists and returns a 3-tuple (newline, encoding, decoded_contents) as documented, with `decoded_contents` being text (str).'
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: grepTool
+from typing import .*Tuple
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/grammar.pyi:5:from typing import Any, Dict, List, Optional, Text, Tuple, TypeVar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/driver.pyi:5:from typing import Any, Callable, IO, Iterable, List, Optional, Text, Tuple, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/tokenize.pyi:4:from typing import Callable, Iterable, Iterator, List, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/pgen.pyi:3:from typing import Any, Dict, IO, Iterable, Iterator, List, Optional, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/parse.pyi:3:from typing import Any, Dict, List, Optional, Sequence, Set, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py:11:from typing import Any, List, Tuple, Iterator
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pytree.pyi:4:from typing import Any, Callable, Dict, Iterator, List, Optional, Text, Tuple, TypeVar, Union
+
+Calling tool: grepTool
+from typing import .*Tuple
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from typing import .*
+Matched content:
+17:from typing import (
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+1:import asyncio
+2:import pickle
+3:from asyncio.base_events import BaseEventLoop
+4:from concurrent.futures import Executor, ProcessPoolExecutor
+5:from enum import Enum, Flag
+6:from functools import partial, wraps
+7:import io
+8:import keyword
+9:import logging
+10:from multiprocessing import Manager
+11:import os
+12:from pathlib import Path
+13:import re
+14:import tokenize
+15:import signal
+16:import sys
+17:from typing import (
+18:    Any,
+19:    Callable,
+20:    Collection,
+21:    Dict,
+22:    Generic,
+23:    Iterable,
+24:    Iterator,
+25:    List,
+26:    Optional,
+27:    Pattern,
+28:    Sequence,
+29:    Set,
+30:    Tuple,
+31:    Type,
+32:    TypeVar,
+33:    Union,
+34:    cast,
+35:)
+36:
+37:from appdirs import user_cache_dir
+38:from attr import dataclass, Factory
+39:import click
+40:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The function prepare_input is implemented in black.py with signature def prepare_input(src: bytes) -> Tuple[str, str, str]. It computes newline as a string, determines encoding via tokenize.detect_encoding, and returns (newline, encoding, io.TextIOWrapper(...).read()), where the read() yields a str and uses universal newline translation by default.
+
+
+Todo item 1 of 16 is correct
+description: 'Verify that the new function `prepare_input(src: bytes) -> Tuple[str, str, str]` exists and returns a 3-tuple (newline, encoding, decoded_contents) as documented, with `decoded_contents` being text (str).'
+Validating todo item 2 of 16
+description: 'Check that `Tuple` is imported from `typing` (or otherwise available) to satisfy the return type annotation of `prepare_input`.'
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: grepTool
+from typing import .*
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pygram.pyi:4:from typing import Any, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:17:from typing import (
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pytree.pyi:4:from typing import Any, Callable, Dict, Iterator, List, Optional, Text, Tuple, TypeVar, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/__init__.pyi:5:from typing import Text, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/tokenize.pyi:4:from typing import Callable, Iterable, Iterator, List, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/parse.pyi:3:from typing import Any, Dict, List, Optional, Sequence, Set, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/token.pyi:4:from typing import Dict, Text
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/literals.pyi:3:from typing import Dict, Match, Text
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/pgen.pyi:3:from typing import Any, Dict, IO, Iterable, Iterator, List, Optional, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/grammar.pyi:5:from typing import Any, Dict, List, Optional, Text, Tuple, TypeVar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/driver.pyi:5:from typing import Any, Callable, IO, Iterable, List, Optional, Text, Tuple, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py:11:from typing import Any, List, Tuple, Iterator
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+1:import asyncio
+2:import pickle
+3:from asyncio.base_events import BaseEventLoop
+4:from concurrent.futures import Executor, ProcessPoolExecutor
+5:from enum import Enum, Flag
+6:from functools import partial, wraps
+7:import io
+8:import keyword
+9:import logging
+10:from multiprocessing import Manager
+11:import os
+12:from pathlib import Path
+13:import re
+14:import tokenize
+15:import signal
+16:import sys
+17:from typing import (
+18:    Any,
+19:    Callable,
+20:    Collection,
+21:    Dict,
+22:    Generic,
+23:    Iterable,
+24:    Iterator,
+25:    List,
+26:    Optional,
+27:    Pattern,
+28:    Sequence,
+29:    Set,
+30:    Tuple,
+31:    Type,
+32:    TypeVar,
+33:    Union,
+34:    cast,
+35:)
+36:
+37:from appdirs import user_cache_dir
+38:from attr import dataclass, Factory
+39:import click
+40:
+41:# lib2to3 fork
+42:from blib2to3.pytree import Node, Leaf, type_repr
+43:from blib2to3 import pygram, pytree
+44:from blib2to3.pgen2 import driver, token
+45:from blib2to3.pgen2.parse import ParseError
+46:
+47:
+48:__version__ = "18.5b1"
+49:DEFAULT_LINE_LENGTH = 88
+50:DEFAULT_EXCLUDES = (
+51:    r"/(\.git|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist)/"
+52:)
+53:DEFAULT_INCLUDES = r"\.pyi?$"
+54:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+55:
+56:
+57:# types
+58:FileContent = str
+59:Encoding = str
+60:Depth = int
+61:NodeType = int
+62:LeafID = int
+63:Priority = int
+64:Index = int
+65:LN = Union[Leaf, Node]
+66:SplitFunc = Callable[["Line", bool], Iterator["Line"]]
+67:Timestamp = float
+68:FileSize = int
+69:CacheInfo = Tuple[Timestamp, FileSize]
+70:Cache = Dict[Path, CacheInfo]
+71:out = partial(click.secho, bold=True, err=True)
+72:err = partial(click.secho, fg="red", err=True)
+73:
+74:pygram.initialize(CACHE_DIR)
+75:syms = pygram.python_symbols
+76:
+77:
+78:class NothingChanged(UserWarning):
+79:    """Raised by :func:`format_file` when reformatted code is the same as source."""
+80:
+81:
+82:class CannotSplit(Exception):
+83:    """A readable split that fits the allotted line length is impossible.
+84:
+85:    Raised by :func:`left_hand_split`, :func:`right_hand_split`, and
+86:    :func:`delimiter_split`.
+87:    """
+88:
+89:
+90:class FormatError(Exception):
+91:    """Base exception for `# fmt: on` and `# fmt: off` handling.
+92:
+93:    It holds the number of bytes of the prefix consumed before the format
+94:    control comment appeared.
+95:    """
+96:
+97:    def __init__(self, consumed: int) -> None:
+98:        super().__init__(consumed)
+99:        self.consumed = consumed
+100:
+101:    def trim_prefix(self, leaf: Leaf) -> None:
+102:        leaf.prefix = leaf.prefix[self.consumed :]
+103:
+104:    def leaf_from_consumed(self, leaf: Leaf) -> Leaf:
+105:        """Returns a new Leaf from the consumed part of the prefix."""
+106:        unformatted_prefix = leaf.prefix[: self.consumed]
+107:        return Leaf(token.NEWLINE, unformatted_prefix)
+108:
+109:
+110:class FormatOn(FormatError):
+111:    """Found a comment like `# fmt: on` in the file."""
+112:
+113:
+114:class FormatOff(FormatError):
+115:    """Found a comment like `# fmt: off` in the file."""
+116:
+117:
+118:class WriteBack(Enum):
+119:    NO = 0
+120:    YES = 1
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: `prepare_input` is defined with return type `Tuple[str, str, str]` and `Tuple` is imported at the top of `black.py` via `from typing import (..., Tuple, ...)`, so the annotation is satisfied.
+
+
+Todo item 2 of 16 is correct
+description: 'Check that `Tuple` is imported from `typing` (or otherwise available) to satisfy the return type annotation of `prepare_input`.'
+Validating todo item 3 of 16
+description: 'Confirm `prepare_input` uses `tokenize.detect_encoding(srcbuf.readline)` and then `srcbuf.seek(0)` followed by `io.TextIOWrapper(srcbuf, encoding).read()` so that decoding applies universal newlines (CRLF translated to LF).'
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+590:    )
+591:    elt = EmptyLineTracker(is_pyi=is_pyi)
+592:    empty_line = Line()
+593:    after = 0
+594:    for current_line in lines.visit(src_node):
+595:        for _ in range(after):
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+636:        except ParseError as pe:
+637:            lineno, column = pe.context[1]
+638:            lines = src_txt.splitlines()
+639:            try:
+640:                faulty_line = lines[lineno - 1]
+641:            except IndexError:
+642:                faulty_line = "<line number missing in source>"
+643:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+644:    else:
+645:        raise exc from None
+646:
+647:    if isinstance(result, Leaf):
+648:        result = Node(syms.file_input, [result])
+649:    return result
+650:
+651:
+652:def lib2to3_unparse(node: Node) -> str:
+653:    """Given a lib2to3 node, return its string representation."""
+654:    code = str(node)
+655:    return code
+656:
+657:
+658:T = TypeVar("T")
+659:
+660:
+661:class Visitor(Generic[T]):
+662:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+663:
+664:    def visit(self, node: LN) -> Iterator[T]:
+665:        """Main method to visit `node` and its children.
+666:
+667:        It tries to find a `visit_*()` method for the given `node.type`, like
+668:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+669:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+
+Calling tool: grepTool
+^import io
+Matched content:
+7:import io
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The function `prepare_input` creates a BytesIO, calls `tokenize.detect_encoding(srcbuf.readline)`, then `srcbuf.seek(0)`, and finally reads via `io.TextIOWrapper(srcbuf, encoding).read()`, which uses universal newlines by default (CRLF translated to LF).
+
+
+Todo item 3 of 16 is correct
+description: 'Confirm `prepare_input` uses `tokenize.detect_encoding(srcbuf.readline)` and then `srcbuf.seek(0)` followed by `io.TextIOWrapper(srcbuf, encoding).read()` so that decoding applies universal newlines (CRLF translated to LF).'
+Validating todo item 4 of 16
+description: 'Confirm `prepare_input` determines `newline` strictly as '\r\n' when the first line in `lines[0]` ends with CRLF, otherwise '\n', and that only those two values are possible.'
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, prepare_input sets newline using `newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"`, which returns CRLF only when the first line ends with CRLF and otherwise LF. No other values are possible, satisfying the requirement.
+
+
+Todo item 4 of 16 is correct
+description: 'Confirm `prepare_input` determines `newline` strictly as '\r\n' when the first line in `lines[0]` ends with CRLF, otherwise '\n', and that only those two values are possible.'
+Validating todo item 5 of 16
+description: 'Validate `prepare_input` does not raise on empty input: indexing `lines[0]` must be safe; if not, note the potential `IndexError` and whether the PR intends to support empty files.'
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+594:    for current_line in lines.visit(src_node):
+595:        for _ in range(after):
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: prepare_input indexes lines[0] without checking for emptiness. tokenize.detect_encoding returns an empty list for empty input, so lines[0] raises IndexError on empty files or empty stdin. Thus, empty inputs are not safely supported by this implementation.
+
+
+Validating todo item 1 of 16
+description: 'Verify that the new function `prepare_input(src: bytes) -> Tuple[str, str, str]` exists and returns a 3-tuple (newline, encoding, decoded_contents) as documented, with `decoded_contents` being text (str).'
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: grepTool
+from typing import .*Tuple
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/grammar.pyi:5:from typing import Any, Dict, List, Optional, Text, Tuple, TypeVar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/driver.pyi:5:from typing import Any, Callable, IO, Iterable, List, Optional, Text, Tuple, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/tokenize.pyi:4:from typing import Callable, Iterable, Iterator, List, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/pgen.pyi:3:from typing import Any, Dict, IO, Iterable, Iterator, List, Optional, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/parse.pyi:3:from typing import Any, Dict, List, Optional, Sequence, Set, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py:11:from typing import Any, List, Tuple, Iterator
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pytree.pyi:4:from typing import Any, Callable, Dict, Iterator, List, Optional, Text, Tuple, TypeVar, Union
+
+Calling tool: grepTool
+from typing import .*Tuple
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+from typing import .*
+Matched content:
+17:from typing import (
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+1:import asyncio
+2:import pickle
+3:from asyncio.base_events import BaseEventLoop
+4:from concurrent.futures import Executor, ProcessPoolExecutor
+5:from enum import Enum, Flag
+6:from functools import partial, wraps
+7:import io
+8:import keyword
+9:import logging
+10:from multiprocessing import Manager
+11:import os
+12:from pathlib import Path
+13:import re
+14:import tokenize
+15:import signal
+16:import sys
+17:from typing import (
+18:    Any,
+19:    Callable,
+20:    Collection,
+21:    Dict,
+22:    Generic,
+23:    Iterable,
+24:    Iterator,
+25:    List,
+26:    Optional,
+27:    Pattern,
+28:    Sequence,
+29:    Set,
+30:    Tuple,
+31:    Type,
+32:    TypeVar,
+33:    Union,
+34:    cast,
+35:)
+36:
+37:from appdirs import user_cache_dir
+38:from attr import dataclass, Factory
+39:import click
+40:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The function prepare_input is implemented in black.py with signature def prepare_input(src: bytes) -> Tuple[str, str, str]. It computes newline as a string, determines encoding via tokenize.detect_encoding, and returns (newline, encoding, io.TextIOWrapper(...).read()), where the read() yields a str and uses universal newline translation by default.
+
+Todo item 1 of 16 is correct
+description: 'Verify that the new function `prepare_input(src: bytes) -> Tuple[str, str, str]` exists and returns a 3-tuple (newline, encoding, decoded_contents) as documented, with `decoded_contents` being text (str).'
+
+Validating todo item 2 of 16
+description: 'Check that `Tuple` is imported from `typing` (or otherwise available) to satisfy the return type annotation of `prepare_input`.'
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: grepTool
+from typing import .*
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pygram.pyi:4:from typing import Any, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:17:from typing import (
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pytree.pyi:4:from typing import Any, Callable, Dict, Iterator, List, Optional, Text, Tuple, TypeVar, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/__init__.pyi:5:from typing import Text, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/tokenize.pyi:4:from typing import Callable, Iterable, Iterator, List, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/parse.pyi:3:from typing import Any, Dict, List, Optional, Sequence, Set, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/token.pyi:4:from typing import Dict, Text
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/literals.pyi:3:from typing import Dict, Match, Text
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/pgen.pyi:3:from typing import Any, Dict, IO, Iterable, Iterator, List, Optional, Text, Tuple
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/grammar.pyi:5:from typing import Any, Dict, List, Optional, Text, Tuple, TypeVar
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/blib2to3/pgen2/driver.pyi:5:from typing import Any, Callable, IO, Iterable, List, Optional, Text, Tuple, Union
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/tests/test_black.py:11:from typing import Any, List, Tuple, Iterator
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+1:import asyncio
+2:import pickle
+3:from asyncio.base_events import BaseEventLoop
+4:from concurrent.futures import Executor, ProcessPoolExecutor
+5:from enum import Enum, Flag
+6:from functools import partial, wraps
+7:import io
+8:import keyword
+9:import logging
+10:from multiprocessing import Manager
+11:import os
+12:from pathlib import Path
+13:import re
+14:import tokenize
+15:import signal
+16:import sys
+17:from typing import (
+18:    Any,
+19:    Callable,
+20:    Collection,
+21:    Dict,
+22:    Generic,
+23:    Iterable,
+24:    Iterator,
+25:    List,
+26:    Optional,
+27:    Pattern,
+28:    Sequence,
+29:    Set,
+30:    Tuple,
+31:    Type,
+32:    TypeVar,
+33:    Union,
+34:    cast,
+35:)
+36:
+37:from appdirs import user_cache_dir
+38:from attr import dataclass, Factory
+39:import click
+40:
+41:# lib2to3 fork
+42:from blib2to3.pytree import Node, Leaf, type_repr
+43:from blib2to3 import pygram, pytree
+44:from blib2to3.pgen2 import driver, token
+45:from blib2to3.pgen2.parse import ParseError
+46:
+47:
+48:__version__ = "18.5b1"
+49:DEFAULT_LINE_LENGTH = 88
+50:DEFAULT_EXCLUDES = (
+51:    r"/(\.git|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist)/"
+52:)
+53:DEFAULT_INCLUDES = r"\.pyi?$"
+54:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+55:
+56:
+57:# types
+58:FileContent = str
+59:Encoding = str
+60:Depth = int
+61:NodeType = int
+62:LeafID = int
+63:Priority = int
+64:Index = int
+65:LN = Union[Leaf, Node]
+66:SplitFunc = Callable[["Line", bool], Iterator["Line"]]
+67:Timestamp = float
+68:FileSize = int
+69:CacheInfo = Tuple[Timestamp, FileSize]
+70:Cache = Dict[Path, CacheInfo]
+71:out = partial(click.secho, bold=True, err=True)
+72:err = partial(click.secho, fg="red", err=True)
+73:
+74:pygram.initialize(CACHE_DIR)
+75:syms = pygram.python_symbols
+76:
+77:
+78:class NothingChanged(UserWarning):
+79:    """Raised by :func:`format_file` when reformatted code is the same as source."""
+80:
+81:
+82:class CannotSplit(Exception):
+83:    """A readable split that fits the allotted line length is impossible.
+84:
+85:    Raised by :func:`left_hand_split`, :func:`right_hand_split`, and
+86:    :func:`delimiter_split`.
+87:    """
+88:
+89:
+90:class FormatError(Exception):
+91:    """Base exception for `# fmt: on` and `# fmt: off` handling.
+92:
+93:    It holds the number of bytes of the prefix consumed before the format
+94:    control comment appeared.
+95:    """
+96:
+97:    def __init__(self, consumed: int) -> None:
+98:        super().__init__(consumed)
+99:        self.consumed = consumed
+100:
+101:    def trim_prefix(self, leaf: Leaf) -> None:
+102:        leaf.prefix = leaf.prefix[self.consumed :]
+103:
+104:    def leaf_from_consumed(self, leaf: Leaf) -> Leaf:
+105:        """Returns a new Leaf from the consumed part of the prefix."""
+106:        unformatted_prefix = leaf.prefix[: self.consumed]
+107:        return Leaf(token.NEWLINE, unformatted_prefix)
+108:
+109:
+110:class FormatOn(FormatError):
+111:    """Found a comment like `# fmt: on` in the file."""
+112:
+113:
+114:class FormatOff(FormatError):
+115:    """Found a comment like `# fmt: off` in the file."""
+116:
+117:
+118:class WriteBack(Enum):
+119:    NO = 0
+120:    YES = 1
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: `prepare_input` is defined with return type `Tuple[str, str, str]` and `Tuple` is imported at the top of `black.py` via `from typing import (..., Tuple, ...)`, so the annotation is satisfied.
+
+Todo item 2 of 16 is correct
+description: 'Check that `Tuple` is imported from `typing` (or otherwise available) to satisfy the return type annotation of `prepare_input`.'
+
+Validating todo item 3 of 16
+description: 'Confirm `prepare_input` uses `tokenize.detect_encoding(srcbuf.readline)` and then `srcbuf.seek(0)` followed by `io.TextIOWrapper(srcbuf, encoding).read()` so that decoding applies universal newlines (CRLF translated to LF).'
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+590:    )
+591:    elt = EmptyLineTracker(is_pyi=is_pyi)
+592:    empty_line = Line()
+593:    after = 0
+594:    for current_line in lines.visit(src_node):
+595:        for _ in range(after):
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+636:        except ParseError as pe:
+637:            lineno, column = pe.context[1]
+638:            lines = src_txt.splitlines()
+639:            try:
+640:                faulty_line = lines[lineno - 1]
+641:            except IndexError:
+642:                faulty_line = "<line number missing in source>"
+643:            exc = ValueError(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+644:    else:
+645:        raise exc from None
+646:
+647:    if isinstance(result, Leaf):
+648:        result = Node(syms.file_input, [result])
+649:    return result
+650:
+651:
+652:def lib2to3_unparse(node: Node) -> str:
+653:    """Given a lib2to3 node, return its string representation."""
+654:    code = str(node)
+655:    return code
+656:
+657:
+658:T = TypeVar("T")
+659:
+660:
+661:class Visitor(Generic[T]):
+662:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+663:
+664:    def visit(self, node: LN) -> Iterator[T]:
+665:        """Main method to visit `node` and its children.
+666:
+667:        It tries to find a `visit_*()` method for the given `node.type`, like
+668:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+669:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+
+Calling tool: grepTool
+^import io
+Matched content:
+7:import io
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The function `prepare_input` creates a BytesIO, calls `tokenize.detect_encoding(srcbuf.readline)`, then `srcbuf.seek(0)`, and finally reads via `io.TextIOWrapper(srcbuf, encoding).read()`, which uses universal newlines by default (CRLF translated to LF).
+
+Todo item 3 of 16 is correct
+description: 'Confirm `prepare_input` uses `tokenize.detect_encoding(srcbuf.readline)` and then `srcbuf.seek(0)` followed by `io.TextIOWrapper(srcbuf, encoding).read()` so that decoding applies universal newlines (CRLF translated to LF).'
+
+Validating todo item 4 of 16
+description: 'Confirm `prepare_input` determines `newline` strictly as '\r\n' when the first line in `lines[0]` ends with CRLF, otherwise '\n', and that only those two values are possible.'
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+634:            break
+635:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, prepare_input sets newline using `newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"`, which returns CRLF only when the first line ends with CRLF and otherwise LF. No other values are possible, satisfying the requirement.
+
+Todo item 4 of 16 is correct
+description: 'Confirm `prepare_input` determines `newline` strictly as '\r\n' when the first line in `lines[0]` ends with CRLF, otherwise '\n', and that only those two values are possible.'
+
+Validating todo item 5 of 16
+description: 'Validate `prepare_input` does not raise on empty input: indexing `lines[0]` must be safe; if not, note the potential `IndexError` and whether the PR intends to support empty files.'
+
+Calling tool: grepTool
+def prepare_input\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py:605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-18/bad/black/black.py
+594:    for current_line in lines.visit(src_node):
+595:        for _ in range(after):
+596:            dst_contents += str(empty_line)
+597:        before, after = elt.maybe_empty_lines(current_line)
+598:        for _ in range(before):
+599:            dst_contents += str(empty_line)
+600:        for line in split_line(current_line, line_length=line_length, py36=py36):
+601:            dst_contents += str(line)
+602:    return dst_contents
+603:
+604:
+605:def prepare_input(src: bytes) -> Tuple[str, str, str]:
+606:    """Analyze `src` and return a tuple of (newline, encoding, decoded_contents)
+607:
+608:    Where `newline` is either CRLF or LF, and `decoded_contents` is decoded with
+609:    universal newlines (i.e. only LF).
+610:    """
+611:    srcbuf = io.BytesIO(src)
+612:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+613:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+614:    srcbuf.seek(0)
+615:    return newline, encoding, io.TextIOWrapper(srcbuf, encoding).read()
+616:
+617:
+618:GRAMMARS = [
+619:    pygram.python_grammar_no_print_statement_no_exec_statement,
+620:    pygram.python_grammar_no_print_statement,
+621:    pygram.python_grammar,
+622:]
+623:
+624:
+625:def lib2to3_parse(src_txt: str) -> Node:
+626:    """Given a string with source, return the lib2to3 Node."""
+627:    grammar = pygram.python_grammar_no_print_statement
+628:    if src_txt[-1] != "\n":
+629:        src_txt += "\n"
+630:    for grammar in GRAMMARS:
+631:        drv = driver.Driver(grammar, pytree.convert)
+632:        try:
+633:            result = drv.parse_string(src_txt, True)
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: prepare_input indexes lines[0] without checking for emptiness. tokenize.detect_encoding returns an empty list for empty input, so lines[0] raises IndexError on empty files or empty stdin. Thus, empty inputs are not safely supported by this implementation.
+
+
+=== PHASE 2 COMPLETE ===
+

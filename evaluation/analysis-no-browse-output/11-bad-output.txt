@@ -1,0 +1,850 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: createTodo
+Todo List Created
+Todo List (12 items):
+- [ ] In `black.py` function `split_line()`, verify that the original early-return condition `if not line.should_explode and is_line_short_enough(...)` was replaced with a condition gated by `has_special_comment`. Confirm whether an equivalent early-return (or logic) for non-special lines exists elsewhere to preserve previous behavior for short lines. If not present, flag as potential regression. (ID: todo-1)
+- [ ] Validate that `has_special_comment` is correctly computed: iterate over `line.leaves`, for each leaf iterate `line.comments_after(leaf)`, and set True only when `leaf.type == token.COMMA` and `is_special_comment(comment)` is True. Ensure the flag is never reset to False and that the loop logic cannot miss multiple inline type comments. (ID: todo-2)
+- [ ] Confirm that `is_special_comment()` returns True only for leafs with `type` equal to `token.COMMENT` or `STANDALONE_COMMENT` and whose `value` starts with `"# type:"`. Verify that non-type comments (e.g., `# noqa`, `# fmt: off`) are not matched. (ID: todo-3)
+- [ ] Check that `STANDALONE_COMMENT` is defined/imported in `black.py` prior to use in `is_special_comment()`. If it is a module-level constant, locate its definition to avoid NameError at runtime. (ID: todo-4)
+- [ ] Verify that the `token` module is imported and that `Leaf` type is available in scope for the `is_special_comment(leaf: Leaf)` signature (consistent with other functions using `Leaf`). (ID: todo-5)
+- [ ] Ensure that the special-comment detection meets the PR intent for PEP 484 multiline type comments: it detects inline parameter type comments placed after commas as in `a,  # type: int`. Confirm that this matches the example in the issue. (ID: todo-6)
+- [ ] Assess coverage of return-type comments at end of the parameters line (e.g., `):  # type: (...) -> None`). The current detection checks only comments after commas; verify whether return-type-only cases would be missed and note this as a limitation versus the PR description if unhandled. (ID: todo-7)
+- [ ] Verify that when `has_special_comment` is True and the line is short (`is_line_short_enough(...)`) and `not line.should_explode`, `split_line()` yields the original `line` unchanged, thus preserving the multiline structure and avoiding malformed concatenated type comments. (ID: todo-8)
+- [ ] Review `test_comments6` to ensure it exercises a function with per-parameter `# type:` comments and a trailing return type comment, and that the expected output keeps parameters on separate lines (i.e., does not combine into a single line with multiple `# type:` comments). (ID: todo-9)
+- [ ] Check that `is_special_comment()` is only used where a comment leaf is passed (from `line.comments_after(...)`), and that no other call sites pass non-comment leaves. (ID: todo-10)
+- [ ] Verify that the added logic does not introduce performance hotspots: the double loop over `line.leaves` and `line.comments_after(leaf)` should be bounded by the line size and consistent with surrounding patterns in `split_line()`. (ID: todo-11)
+- [ ] Confirm that surrounding unchanged logic (`line.should_explode`, `is_line_short_enough`, and later splitting behavior) remains consistent with the PR intent: special comments should prevent splitting/merging that would produce invalid type comment formatting. (ID: todo-12)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 12
+description: 'In `black.py` function `split_line()`, verify that the original early-return condition `if not line.should_explode and is_line_short_enough(...)` was replaced with a condition gated by `has_special_comment`. Confirm whether an equivalent early-return (or logic) for non-special lines exists elsewhere to preserve previous behavior for short lines. If not present, flag as potential regression.'
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+
+Calling tool: grepTool
+def split_line\(
+Matched content:
+2097:def split_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:
+2116:    # we don't want to split special comments like type annotations
+2117:    # https://github.com/python/typing/issues/186
+2118:    has_special_comment = False
+2119:    for leaf in line.leaves:
+2120:        for comment in line.comments_after(leaf):
+2121:            if leaf.type == token.COMMA and is_special_comment(comment):
+2122:                has_special_comment = True
+2123:
+2124:    if (
+2125:        has_special_comment
+2126:        and not line.should_explode
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2128:    ):
+2129:        yield line
+2130:        return
+2131:
+2132:    split_funcs: List[SplitFunc]
+2133:    if line.is_def:
+2134:        split_funcs = [left_hand_split]
+2135:    else:
+2136:
+2137:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2138:            for omit in generate_trailers_to_omit(line, line_length):
+2139:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2141:                    yield from lines
+2142:                    return
+2143:
+2144:            # All splits failed, best effort split with no omits.
+2145:            # This mostly happens to multiline strings that are by definition
+2146:            # reported as not fitting a single line.
+2147:            yield from right_hand_split(line, py36)
+2148:
+2149:        if line.inside_brackets:
+2150:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2151:        else:
+2152:            split_funcs = [rhs]
+2153:    for split_func in split_funcs:
+2154:        # We are accumulating lines in `result` because we might want to abort
+2155:        # mission and return the original line in the end, or attempt a different
+2156:        # split altogether.
+2157:        result: List[Line] = []
+2158:        try:
+2159:            for l in split_func(line, py36):
+2160:                if str(l).strip("\n") == line_str:
+2161:                    raise CannotSplit("Split function returned an unchanged result")
+2162:
+2163:                result.extend(
+2164:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2165:                )
+2166:        except CannotSplit:
+2167:            continue
+2168:
+2169:        else:
+2170:            yield from result
+2171:            break
+2172:
+2173:    else:
+2174:        yield line
+2175:
+2176:
+2177:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2178:    """Split line into many lines, starting with the first matching bracket pair.
+2179:
+2180:    Note: this usually looks weird, only use this for function definitions.
+2181:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2182:    :func:`right_hand_split` which also handles optional parentheses.
+2183:    """
+2184:    tail_leaves: List[Leaf] = []
+2185:    body_leaves: List[Leaf] = []
+2186:    head_leaves: List[Leaf] = []
+2187:    current_leaves = head_leaves
+2188:    matching_bracket = None
+2189:    for leaf in line.leaves:
+2190:        if (
+2191:            current_leaves is body_leaves
+2192:            and leaf.type in CLOSING_BRACKETS
+2193:            and leaf.opening_bracket is matching_bracket
+2194:        ):
+2195:            current_leaves = tail_leaves if body_leaves else head_leaves
+2196:        current_leaves.append(leaf)
+2197:        if current_leaves is head_leaves:
+2198:            if leaf.type in OPENING_BRACKETS:
+2199:                matching_bracket = leaf
+2200:                current_leaves = body_leaves
+2201:    if not matching_bracket:
+2202:        raise CannotSplit("No brackets found")
+2203:
+2204:    head = bracket_split_build_line(head_leaves, line, matching_bracket)
+2205:    body = bracket_split_build_line(body_leaves, line, matching_bracket, is_body=True)
+2206:    tail = bracket_split_build_line(tail_leaves, line, matching_bracket)
+2207:    bracket_split_succeeded_or_raise(head, body, tail)
+2208:    for result in (head, body, tail):
+2209:        if result:
+2210:            yield result
+2211:
+2212:
+2213:def right_hand_split(
+2214:    line: Line, line_length: int, py36: bool = False, omit: Collection[LeafID] = ()
+2215:) -> Iterator[Line]:
+2216:    """Split line into many lines, starting with the last matching bracket pair.
+
+Calling tool: grepTool
+is_line_short_enough\(
+Matched content:
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2278:                or is_line_short_enough(body, line_length=line_length)
+3464:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2220:    this split.
+2221:
+2222:    Note: running this function modifies `bracket_depth` on the leaves of `line`.
+2223:    """
+2224:    tail_leaves: List[Leaf] = []
+2225:    body_leaves: List[Leaf] = []
+2226:    head_leaves: List[Leaf] = []
+2227:    current_leaves = tail_leaves
+2228:    opening_bracket = None
+2229:    closing_bracket = None
+2230:    for leaf in reversed(line.leaves):
+2231:        if current_leaves is body_leaves:
+2232:            if leaf is opening_bracket:
+2233:                current_leaves = head_leaves if body_leaves else tail_leaves
+2234:        current_leaves.append(leaf)
+2235:        if current_leaves is tail_leaves:
+2236:            if leaf.type in CLOSING_BRACKETS and id(leaf) not in omit:
+2237:                opening_bracket = leaf.opening_bracket
+2238:                closing_bracket = leaf
+2239:                current_leaves = body_leaves
+2240:    if not (opening_bracket and closing_bracket and head_leaves):
+2241:        # If there is no opening or closing_bracket that means the split failed and
+2242:        # all content is in the tail.  Otherwise, if `head_leaves` are empty, it means
+2243:        # the matching `opening_bracket` wasn't available on `line` anymore.
+2244:        raise CannotSplit("No brackets found")
+2245:
+2246:    tail_leaves.reverse()
+2247:    body_leaves.reverse()
+2248:    head_leaves.reverse()
+2249:    head = bracket_split_build_line(head_leaves, line, opening_bracket)
+2250:    body = bracket_split_build_line(body_leaves, line, opening_bracket, is_body=True)
+2251:    tail = bracket_split_build_line(tail_leaves, line, opening_bracket)
+2252:    bracket_split_succeeded_or_raise(head, body, tail)
+2253:    if (
+2254:        # the body shouldn't be exploded
+2255:        not body.should_explode
+2256:        # the opening bracket is an optional paren
+2257:        and opening_bracket.type == token.LPAR
+2258:        and not opening_bracket.value
+2259:        # the closing bracket is an optional paren
+2260:        and closing_bracket.type == token.RPAR
+2261:        and not closing_bracket.value
+2262:        # it's not an import (optional parens are the only thing we can split on
+2263:        # in this case; attempting a split without them is a waste of time)
+2264:        and not line.is_import
+2265:        # there are no standalone comments in the body
+2266:        and not body.contains_standalone_comments(0)
+2267:        # and we can actually remove the parens
+2268:        and can_omit_invisible_parens(body, line_length)
+2269:    ):
+2270:        omit = {id(closing_bracket), *omit}
+2271:        try:
+2272:            yield from right_hand_split(line, line_length, py36=py36, omit=omit)
+2273:            return
+2274:
+2275:        except CannotSplit:
+2276:            if not (
+2277:                can_be_split(body)
+2278:                or is_line_short_enough(body, line_length=line_length)
+2279:            ):
+2280:                raise CannotSplit(
+2281:                    "Splitting failed, body is still too long and can't be split."
+2282:                )
+2283:
+2284:            elif head.contains_multiline_strings() or tail.contains_multiline_strings():
+2285:                raise CannotSplit(
+2286:                    "The current optional pair of parentheses is bound to fail to "
+2287:                    "satisfy the splitting algorithm because the head or the tail "
+2288:                    "contains multiline strings which by definition never fit one "
+2289:                    "line."
+2290:                )
+2291:
+2292:    ensure_visible(opening_bracket)
+2293:    ensure_visible(closing_bracket)
+2294:    for result in (head, body, tail):
+2295:        if result:
+2296:            yield result
+2297:
+2298:
+2299:def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None:
+2300:    """Raise :exc:`CannotSplit` if the last left- or right-hand split failed.
+2301:
+2302:    Do nothing otherwise.
+2303:
+2304:    A left- or right-hand split is based on a pair of brackets. Content before
+2305:    (and including) the opening bracket is left on one line, content inside the
+2306:    brackets is put on a separate line, and finally content starting with and
+2307:    following the closing bracket is put on a separate line.
+2308:
+2309:    Those are called `head`, `body`, and `tail`, respectively. If the split
+2310:    produced the same line (all content in `head`) or ended up with an empty `body`
+2311:    and the `tail` is just the closing bracket, then it's considered failed.
+2312:    """
+2313:    tail_len = len(str(tail).strip())
+2314:    if not body:
+2315:        if tail_len == 0:
+2316:            raise CannotSplit("Splitting brackets produced the same line")
+2317:
+2318:        elif tail_len < 3:
+2319:            raise CannotSplit(
+2320:                f"Splitting brackets on an empty body to save "
+2321:                f"{tail_len} characters is not worth it"
+2322:            )
+2323:
+2324:
+2325:def bracket_split_build_line(
+2326:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2327:) -> Line:
+2328:    """Return a new line with given `leaves` and respective comments from `original`.
+2329:
+2330:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2331:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2332:    """
+2333:    result = Line(depth=original.depth)
+2334:    if is_body:
+2335:        result.inside_brackets = True
+2336:        result.depth += 1
+2337:        if leaves:
+2338:            # Since body is a new indent level, remove spurious leading whitespace.
+2339:            normalize_prefix(leaves[0], inside_brackets=True)
+
+Calling tool: grepTool
+should_explode
+Matched content:
+1036:    should_explode: bool = False
+2126:        and not line.should_explode
+2255:        not body.should_explode
+2350:        result.should_explode = should_explode(result, opening_bracket)
+2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2937:    If `node` isn't an atom or there are no enclosing parentheses, returns 0.
+2938:    """
+2939:    if node.type != syms.atom:
+2940:        return 0
+2941:
+2942:    first = node.children[0]
+2943:    last = node.children[-1]
+2944:    if not (first.type == token.LPAR and last.type == token.RPAR):
+2945:        return 0
+2946:
+2947:    bt = BracketTracker()
+2948:    for c in node.children[1:-1]:
+2949:        if isinstance(c, Leaf):
+2950:            bt.mark(c)
+2951:        else:
+2952:            for leaf in c.leaves():
+2953:                bt.mark(leaf)
+2954:    try:
+2955:        return bt.max_delimiter_priority()
+2956:
+2957:    except ValueError:
+2958:        return 0
+2959:
+2960:
+2961:def ensure_visible(leaf: Leaf) -> None:
+2962:    """Make sure parentheses are visible.
+2963:
+2964:    They could be invisible as part of some statements (see
+2965:    :func:`normalize_invible_parens` and :func:`visit_import_from`).
+2966:    """
+2967:    if leaf.type == token.LPAR:
+2968:        leaf.value = "("
+2969:    elif leaf.type == token.RPAR:
+2970:        leaf.value = ")"
+2971:
+2972:
+2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+2974:    """Should `line` immediately be split with `delimiter_split()` after RHS?"""
+2975:
+2976:    if not (
+2977:        opening_bracket.parent
+2978:        and opening_bracket.parent.type in {syms.atom, syms.import_from}
+2979:        and opening_bracket.value in "[{("
+2980:    ):
+2981:        return False
+2982:
+2983:    try:
+2984:        last_leaf = line.leaves[-1]
+2985:        exclude = {id(last_leaf)} if last_leaf.type == token.COMMA else set()
+2986:        max_priority = line.bracket_tracker.max_delimiter_priority(exclude=exclude)
+2987:    except (IndexError, ValueError):
+2988:        return False
+2989:
+2990:    return max_priority == COMMA_PRIORITY
+2991:
+2992:
+2993:def is_python36(node: Node) -> bool:
+2994:    """Return True if the current file is using Python 3.6+ features.
+2995:
+2996:    Currently looking for:
+2997:    - f-strings;
+2998:    - underscores in numeric literals; and
+2999:    - trailing commas after * or ** in function signatures and calls.
+3000:    """
+3001:    for n in node.pre_order():
+3002:        if n.type == token.STRING:
+3003:            value_head = n.value[:2]  # type: ignore
+3004:            if value_head in {'f"', 'F"', "f'", "F'", "rf", "fr", "RF", "FR"}:
+3005:                return True
+3006:
+3007:        elif n.type == token.NUMBER:
+3008:            if "_" in n.value:  # type: ignore
+3009:                return True
+3010:
+3011:        elif (
+3012:            n.type in {syms.typedargslist, syms.arglist}
+3013:            and n.children
+3014:            and n.children[-1].type == token.COMMA
+3015:        ):
+3016:            for ch in n.children:
+
+Calling tool: grepTool
+def is_special_comment\(
+Matched content:
+2476:def is_special_comment(leaf: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2468:        t == token.NAME
+2469:        and (
+2470:            (v == "import" and p and p.type == syms.import_name)
+2471:            or (v == "from" and p and p.type == syms.import_from)
+2472:        )
+2473:    )
+2474:
+2475:
+2476:def is_special_comment(leaf: Leaf) -> bool:
+2477:    """Return True if the given leaf is a special comment.
+2478:    Only returns true for type comments for now."""
+2479:    t = leaf.type
+2480:    v = leaf.value
+2481:    return bool(
+2482:        (t == token.COMMENT or t == STANDALONE_COMMENT) and (v.startswith("# type:"))
+2483:    )
+2484:
+2485:
+2486:def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+2487:    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+2488:    else.
+2489:
+2490:    Note: don't use backslashes for formatting or you'll lose your voting rights.
+2491:    """
+2492:    if not inside_brackets:
+2493:        spl = leaf.prefix.split("#")
+2494:        if "\\" not in spl[0]:
+2495:            nl_count = spl[-1].count("\n")
+2496:            if len(spl) > 1:
+2497:                nl_count -= 1
+2498:            leaf.prefix = "\n" * nl_count
+2499:            return
+2500:
+2501:    leaf.prefix = ""
+2502:
+2503:
+2504:def normalize_string_prefix(leaf: Leaf, remove_u_prefix: bool = False) -> None:
+2505:    """Make all string prefixes lowercase.
+2506:
+2507:    If remove_u_prefix is given, also removes any u prefix from the string.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py:split_line (starting at line 2097), the original early-return was replaced with a gated condition using has_special_comment (lines 2124-2131). There is no equivalent early-return for non-special short lines elsewhere; the function proceeds to splitting logic and only yields the original line at the end (line 2174), which is not the same pre-check. This is a potential regression for short non-special lines.
+
+
+Validating todo item 1 of 12
+description: 'In `black.py` function `split_line()`, verify that the original early-return condition `if not line.should_explode and is_line_short_enough(...)` was replaced with a condition gated by `has_special_comment`. Confirm whether an equivalent early-return (or logic) for non-special lines exists elsewhere to preserve previous behavior for short lines. If not present, flag as potential regression.'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+
+Calling tool: grepTool
+def split_line\(
+Matched content:
+2097:def split_line(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2097:def split_line(
+2098:    line: Line, line_length: int, inner: bool = False, py36: bool = False
+2099:) -> Iterator[Line]:
+2100:    """Split a `line` into potentially many lines.
+2101:
+2102:    They should fit in the allotted `line_length` but might not be able to.
+2103:    `inner` signifies that there were a pair of brackets somewhere around the
+2104:    current `line`, possibly transitively. This means we can fallback to splitting
+2105:    by delimiters if the LHS/RHS don't yield any results.
+2106:
+2107:    If `py36` is True, splitting may generate syntax that is only compatible
+2108:    with Python 3.6 and later.
+2109:    """
+2110:    if line.is_comment:
+2111:        yield line
+2112:        return
+2113:
+2114:    line_str = str(line).strip("\n")
+2115:
+2116:    # we don't want to split special comments like type annotations
+2117:    # https://github.com/python/typing/issues/186
+2118:    has_special_comment = False
+2119:    for leaf in line.leaves:
+2120:        for comment in line.comments_after(leaf):
+2121:            if leaf.type == token.COMMA and is_special_comment(comment):
+2122:                has_special_comment = True
+2123:
+2124:    if (
+2125:        has_special_comment
+2126:        and not line.should_explode
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2128:    ):
+2129:        yield line
+2130:        return
+2131:
+2132:    split_funcs: List[SplitFunc]
+2133:    if line.is_def:
+2134:        split_funcs = [left_hand_split]
+2135:    else:
+2136:
+2137:        def rhs(line: Line, py36: bool = False) -> Iterator[Line]:
+2138:            for omit in generate_trailers_to_omit(line, line_length):
+2139:                lines = list(right_hand_split(line, line_length, py36, omit=omit))
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2141:                    yield from lines
+2142:                    return
+2143:
+2144:            # All splits failed, best effort split with no omits.
+2145:            # This mostly happens to multiline strings that are by definition
+2146:            # reported as not fitting a single line.
+2147:            yield from right_hand_split(line, py36)
+2148:
+2149:        if line.inside_brackets:
+2150:            split_funcs = [delimiter_split, standalone_comment_split, rhs]
+2151:        else:
+2152:            split_funcs = [rhs]
+2153:    for split_func in split_funcs:
+2154:        # We are accumulating lines in `result` because we might want to abort
+2155:        # mission and return the original line in the end, or attempt a different
+2156:        # split altogether.
+2157:        result: List[Line] = []
+2158:        try:
+2159:            for l in split_func(line, py36):
+2160:                if str(l).strip("\n") == line_str:
+2161:                    raise CannotSplit("Split function returned an unchanged result")
+2162:
+2163:                result.extend(
+2164:                    split_line(l, line_length=line_length, inner=True, py36=py36)
+2165:                )
+2166:        except CannotSplit:
+2167:            continue
+2168:
+2169:        else:
+2170:            yield from result
+2171:            break
+2172:
+2173:    else:
+2174:        yield line
+2175:
+2176:
+2177:def left_hand_split(line: Line, py36: bool = False) -> Iterator[Line]:
+2178:    """Split line into many lines, starting with the first matching bracket pair.
+2179:
+2180:    Note: this usually looks weird, only use this for function definitions.
+2181:    Prefer RHS otherwise.  This is why this function is not symmetrical with
+2182:    :func:`right_hand_split` which also handles optional parentheses.
+2183:    """
+2184:    tail_leaves: List[Leaf] = []
+2185:    body_leaves: List[Leaf] = []
+2186:    head_leaves: List[Leaf] = []
+2187:    current_leaves = head_leaves
+2188:    matching_bracket = None
+2189:    for leaf in line.leaves:
+2190:        if (
+2191:            current_leaves is body_leaves
+2192:            and leaf.type in CLOSING_BRACKETS
+2193:            and leaf.opening_bracket is matching_bracket
+2194:        ):
+2195:            current_leaves = tail_leaves if body_leaves else head_leaves
+2196:        current_leaves.append(leaf)
+2197:        if current_leaves is head_leaves:
+2198:            if leaf.type in OPENING_BRACKETS:
+2199:                matching_bracket = leaf
+2200:                current_leaves = body_leaves
+2201:    if not matching_bracket:
+2202:        raise CannotSplit("No brackets found")
+2203:
+2204:    head = bracket_split_build_line(head_leaves, line, matching_bracket)
+2205:    body = bracket_split_build_line(body_leaves, line, matching_bracket, is_body=True)
+2206:    tail = bracket_split_build_line(tail_leaves, line, matching_bracket)
+2207:    bracket_split_succeeded_or_raise(head, body, tail)
+2208:    for result in (head, body, tail):
+2209:        if result:
+2210:            yield result
+2211:
+2212:
+2213:def right_hand_split(
+2214:    line: Line, line_length: int, py36: bool = False, omit: Collection[LeafID] = ()
+2215:) -> Iterator[Line]:
+2216:    """Split line into many lines, starting with the last matching bracket pair.
+
+Calling tool: grepTool
+is_line_short_enough\(
+Matched content:
+2127:        and is_line_short_enough(line, line_length=line_length, line_str=line_str)
+2140:                if is_line_short_enough(lines[0], line_length=line_length):
+2278:                or is_line_short_enough(body, line_length=line_length)
+3464:def is_line_short_enough(line: Line, *, line_length: int, line_str: str = "") -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2220:    this split.
+2221:
+2222:    Note: running this function modifies `bracket_depth` on the leaves of `line`.
+2223:    """
+2224:    tail_leaves: List[Leaf] = []
+2225:    body_leaves: List[Leaf] = []
+2226:    head_leaves: List[Leaf] = []
+2227:    current_leaves = tail_leaves
+2228:    opening_bracket = None
+2229:    closing_bracket = None
+2230:    for leaf in reversed(line.leaves):
+2231:        if current_leaves is body_leaves:
+2232:            if leaf is opening_bracket:
+2233:                current_leaves = head_leaves if body_leaves else tail_leaves
+2234:        current_leaves.append(leaf)
+2235:        if current_leaves is tail_leaves:
+2236:            if leaf.type in CLOSING_BRACKETS and id(leaf) not in omit:
+2237:                opening_bracket = leaf.opening_bracket
+2238:                closing_bracket = leaf
+2239:                current_leaves = body_leaves
+2240:    if not (opening_bracket and closing_bracket and head_leaves):
+2241:        # If there is no opening or closing_bracket that means the split failed and
+2242:        # all content is in the tail.  Otherwise, if `head_leaves` are empty, it means
+2243:        # the matching `opening_bracket` wasn't available on `line` anymore.
+2244:        raise CannotSplit("No brackets found")
+2245:
+2246:    tail_leaves.reverse()
+2247:    body_leaves.reverse()
+2248:    head_leaves.reverse()
+2249:    head = bracket_split_build_line(head_leaves, line, opening_bracket)
+2250:    body = bracket_split_build_line(body_leaves, line, opening_bracket, is_body=True)
+2251:    tail = bracket_split_build_line(tail_leaves, line, opening_bracket)
+2252:    bracket_split_succeeded_or_raise(head, body, tail)
+2253:    if (
+2254:        # the body shouldn't be exploded
+2255:        not body.should_explode
+2256:        # the opening bracket is an optional paren
+2257:        and opening_bracket.type == token.LPAR
+2258:        and not opening_bracket.value
+2259:        # the closing bracket is an optional paren
+2260:        and closing_bracket.type == token.RPAR
+2261:        and not closing_bracket.value
+2262:        # it's not an import (optional parens are the only thing we can split on
+2263:        # in this case; attempting a split without them is a waste of time)
+2264:        and not line.is_import
+2265:        # there are no standalone comments in the body
+2266:        and not body.contains_standalone_comments(0)
+2267:        # and we can actually remove the parens
+2268:        and can_omit_invisible_parens(body, line_length)
+2269:    ):
+2270:        omit = {id(closing_bracket), *omit}
+2271:        try:
+2272:            yield from right_hand_split(line, line_length, py36=py36, omit=omit)
+2273:            return
+2274:
+2275:        except CannotSplit:
+2276:            if not (
+2277:                can_be_split(body)
+2278:                or is_line_short_enough(body, line_length=line_length)
+2279:            ):
+2280:                raise CannotSplit(
+2281:                    "Splitting failed, body is still too long and can't be split."
+2282:                )
+2283:
+2284:            elif head.contains_multiline_strings() or tail.contains_multiline_strings():
+2285:                raise CannotSplit(
+2286:                    "The current optional pair of parentheses is bound to fail to "
+2287:                    "satisfy the splitting algorithm because the head or the tail "
+2288:                    "contains multiline strings which by definition never fit one "
+2289:                    "line."
+2290:                )
+2291:
+2292:    ensure_visible(opening_bracket)
+2293:    ensure_visible(closing_bracket)
+2294:    for result in (head, body, tail):
+2295:        if result:
+2296:            yield result
+2297:
+2298:
+2299:def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None:
+2300:    """Raise :exc:`CannotSplit` if the last left- or right-hand split failed.
+2301:
+2302:    Do nothing otherwise.
+2303:
+2304:    A left- or right-hand split is based on a pair of brackets. Content before
+2305:    (and including) the opening bracket is left on one line, content inside the
+2306:    brackets is put on a separate line, and finally content starting with and
+2307:    following the closing bracket is put on a separate line.
+2308:
+2309:    Those are called `head`, `body`, and `tail`, respectively. If the split
+2310:    produced the same line (all content in `head`) or ended up with an empty `body`
+2311:    and the `tail` is just the closing bracket, then it's considered failed.
+2312:    """
+2313:    tail_len = len(str(tail).strip())
+2314:    if not body:
+2315:        if tail_len == 0:
+2316:            raise CannotSplit("Splitting brackets produced the same line")
+2317:
+2318:        elif tail_len < 3:
+2319:            raise CannotSplit(
+2320:                f"Splitting brackets on an empty body to save "
+2321:                f"{tail_len} characters is not worth it"
+2322:            )
+2323:
+2324:
+2325:def bracket_split_build_line(
+2326:    leaves: List[Leaf], original: Line, opening_bracket: Leaf, *, is_body: bool = False
+2327:) -> Line:
+2328:    """Return a new line with given `leaves` and respective comments from `original`.
+2329:
+2330:    If `is_body` is True, the result line is one-indented inside brackets and as such
+2331:    has its first leaf's prefix normalized and a trailing comma added when expected.
+2332:    """
+2333:    result = Line(depth=original.depth)
+2334:    if is_body:
+2335:        result.inside_brackets = True
+2336:        result.depth += 1
+2337:        if leaves:
+2338:            # Since body is a new indent level, remove spurious leading whitespace.
+2339:            normalize_prefix(leaves[0], inside_brackets=True)
+
+Calling tool: grepTool
+should_explode
+Matched content:
+1036:    should_explode: bool = False
+2126:        and not line.should_explode
+2255:        not body.should_explode
+2350:        result.should_explode = should_explode(result, opening_bracket)
+2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2937:    If `node` isn't an atom or there are no enclosing parentheses, returns 0.
+2938:    """
+2939:    if node.type != syms.atom:
+2940:        return 0
+2941:
+2942:    first = node.children[0]
+2943:    last = node.children[-1]
+2944:    if not (first.type == token.LPAR and last.type == token.RPAR):
+2945:        return 0
+2946:
+2947:    bt = BracketTracker()
+2948:    for c in node.children[1:-1]:
+2949:        if isinstance(c, Leaf):
+2950:            bt.mark(c)
+2951:        else:
+2952:            for leaf in c.leaves():
+2953:                bt.mark(leaf)
+2954:    try:
+2955:        return bt.max_delimiter_priority()
+2956:
+2957:    except ValueError:
+2958:        return 0
+2959:
+2960:
+2961:def ensure_visible(leaf: Leaf) -> None:
+2962:    """Make sure parentheses are visible.
+2963:
+2964:    They could be invisible as part of some statements (see
+2965:    :func:`normalize_invible_parens` and :func:`visit_import_from`).
+2966:    """
+2967:    if leaf.type == token.LPAR:
+2968:        leaf.value = "("
+2969:    elif leaf.type == token.RPAR:
+2970:        leaf.value = ")"
+2971:
+2972:
+2973:def should_explode(line: Line, opening_bracket: Leaf) -> bool:
+2974:    """Should `line` immediately be split with `delimiter_split()` after RHS?"""
+2975:
+2976:    if not (
+2977:        opening_bracket.parent
+2978:        and opening_bracket.parent.type in {syms.atom, syms.import_from}
+2979:        and opening_bracket.value in "[{("
+2980:    ):
+2981:        return False
+2982:
+2983:    try:
+2984:        last_leaf = line.leaves[-1]
+2985:        exclude = {id(last_leaf)} if last_leaf.type == token.COMMA else set()
+2986:        max_priority = line.bracket_tracker.max_delimiter_priority(exclude=exclude)
+2987:    except (IndexError, ValueError):
+2988:        return False
+2989:
+2990:    return max_priority == COMMA_PRIORITY
+2991:
+2992:
+2993:def is_python36(node: Node) -> bool:
+2994:    """Return True if the current file is using Python 3.6+ features.
+2995:
+2996:    Currently looking for:
+2997:    - f-strings;
+2998:    - underscores in numeric literals; and
+2999:    - trailing commas after * or ** in function signatures and calls.
+3000:    """
+3001:    for n in node.pre_order():
+3002:        if n.type == token.STRING:
+3003:            value_head = n.value[:2]  # type: ignore
+3004:            if value_head in {'f"', 'F"', "f'", "F'", "rf", "fr", "RF", "FR"}:
+3005:                return True
+3006:
+3007:        elif n.type == token.NUMBER:
+3008:            if "_" in n.value:  # type: ignore
+3009:                return True
+3010:
+3011:        elif (
+3012:            n.type in {syms.typedargslist, syms.arglist}
+3013:            and n.children
+3014:            and n.children[-1].type == token.COMMA
+3015:        ):
+3016:            for ch in n.children:
+
+Calling tool: grepTool
+def is_special_comment\(
+Matched content:
+2476:def is_special_comment(leaf: Leaf) -> bool:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-11/bad/black/black.py
+2468:        t == token.NAME
+2469:        and (
+2470:            (v == "import" and p and p.type == syms.import_name)
+2471:            or (v == "from" and p and p.type == syms.import_from)
+2472:        )
+2473:    )
+2474:
+2475:
+2476:def is_special_comment(leaf: Leaf) -> bool:
+2477:    """Return True if the given leaf is a special comment.
+2478:    Only returns true for type comments for now."""
+2479:    t = leaf.type
+2480:    v = leaf.value
+2481:    return bool(
+2482:        (t == token.COMMENT or t == STANDALONE_COMMENT) and (v.startswith("# type:"))
+2483:    )
+2484:
+2485:
+2486:def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+2487:    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+2488:    else.
+2489:
+2490:    Note: don't use backslashes for formatting or you'll lose your voting rights.
+2491:    """
+2492:    if not inside_brackets:
+2493:        spl = leaf.prefix.split("#")
+2494:        if "\\" not in spl[0]:
+2495:            nl_count = spl[-1].count("\n")
+2496:            if len(spl) > 1:
+2497:                nl_count -= 1
+2498:            leaf.prefix = "\n" * nl_count
+2499:            return
+2500:
+2501:    leaf.prefix = ""
+2502:
+2503:
+2504:def normalize_string_prefix(leaf: Leaf, remove_u_prefix: bool = False) -> None:
+2505:    """Make all string prefixes lowercase.
+2506:
+2507:    If remove_u_prefix is given, also removes any u prefix from the string.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In black.py:split_line (starting at line 2097), the original early-return was replaced with a gated condition using has_special_comment (lines 2124-2131). There is no equivalent early-return for non-special short lines elsewhere; the function proceeds to splitting logic and only yields the original line at the end (line 2174), which is not the same pre-check. This is a potential regression for short non-special lines.
+
+
+=== PHASE 2 COMPLETE ===
+

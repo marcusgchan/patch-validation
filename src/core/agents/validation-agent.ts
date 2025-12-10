@@ -23,8 +23,8 @@ The todo item contains one of the PR requirements summarized in a systematic way
 <goal>
 Your goal is to verify the correctness of code using the todo item as the requirements.
 Use the bug description, code diff, test case as additional context information.
-Use tool calls to to gather infomration.
-Finally, call \`updateTodo\` tool when you to mark the todo item as correct or incorrect based on you analysis.
+Use tool calls to gather information.
+Finally, call \`updateTodo\` tool to mark the todo item as correct or incorrect based on your analysis.
 </goal>
 
 <env>

@@ -1,0 +1,3431 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: createTodo
+Todo List Created
+Todo List (9 items):
+- [ ] In black.py, verify that get_grammars returns only [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement] when target_versions is non-empty and all(not v.is_python2() for v in target_versions) is True (i.e., Python 3-only targets). (ID: todo-1)
+- [ ] Confirm the updated comment in the Python 3-only branch (“Python 3-compatible code, so don't try Python 2 grammar”) accurately reflects the branch condition and returned grammars. (ID: todo-2)
+- [ ] Verify that when any Python 2 target is present (i.e., the else branch), get_grammars returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] in that exact order (Python 3 grammar first, then Python 2 grammar). (ID: todo-3)
+- [ ] Check that pygram.python_grammar_no_print_statement and pygram.python_grammar attributes exist and are of the expected Grammar type (compatible with the get_grammars return type annotation List[Grammar]). (ID: todo-4)
+- [ ] Confirm that lib2to3_parse (in the same file) obtains grammars via get_grammars(target_versions) and tries them sequentially in the list order, so that the 'no_print_statement' grammar is attempted before the Python 2 grammar for Python 2 targets. (ID: todo-5)
+- [ ] Ensure the get_grammars branch for empty target_versions remains unchanged and still returns GRAMMARS; no unintended modifications in this PR for that path. (ID: todo-6)
+- [ ] Search for all call sites of get_grammars and confirm none assumes a single grammar for Python 2 targets (e.g., direct indexing [0] without iteration), since the else branch now returns two grammars. (ID: todo-7)
+- [ ] Validate that TargetVersion exposes an is_python2() method used in get_grammars and that the method is imported/available where get_grammars is defined. (ID: todo-8)
+- [ ] Locate the test case named test_python2_print_function and verify that it configures target_version to py27 and uses input containing 'from __future__ import print_function' and 'print("hello world")', asserting that no space is inserted between 'print' and '(' in the formatted output. (ID: todo-9)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 9
+description: 'In black.py, verify that get_grammars returns only [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement] when target_versions is non-empty and all(not v.is_python2() for v in target_versions) is True (i.e., Python 3-only targets).'
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py lines 726–733, get_grammars checks non-empty target_versions and if all(not v.is_python2()) is True, it returns exactly [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement], satisfying the requirement.
+
+
+Todo item 1 of 9 is correct
+description: 'In black.py, verify that get_grammars returns only [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement] when target_versions is non-empty and all(not v.is_python2() for v in target_versions) is True (i.e., Python 3-only targets).'
+Validating todo item 2 of 9
+description: 'Confirm the updated comment in the Python 3-only branch (“Python 3-compatible code, so don't try Python 2 grammar”) accurately reflects the branch condition and returned grammars.'
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The branch condition checks that no target version is Python 2 (all(not version.is_python2()...)), i.e., Python 3-only. It returns only Python 3 grammars (no_print_statement*), avoiding the Python 2 grammar. The updated comment precisely matches both the condition and the returned grammars.
+
+
+Todo item 2 of 9 is correct
+description: 'Confirm the updated comment in the Python 3-only branch (“Python 3-compatible code, so don't try Python 2 grammar”) accurately reflects the branch condition and returned grammars.'
+Validating todo item 3 of 9
+description: 'Verify that when any Python 2 target is present (i.e., the else branch), get_grammars returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] in that exact order (Python 3 grammar first, then Python 2 grammar).'
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s get_grammars, the else branch (triggered when any target version is Python 2) returns [pygram.python_grammar_no_print_statement, pygram.python_grammar]. This order places the Python 3 grammar first, then the Python 2 grammar, matching the todo requirement.
+
+
+Todo item 3 of 9 is correct
+description: 'Verify that when any Python 2 target is present (i.e., the else branch), get_grammars returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] in that exact order (Python 3 grammar first, then Python 2 grammar).'
+Validating todo item 4 of 9
+description: 'Check that pygram.python_grammar_no_print_statement and pygram.python_grammar attributes exist and are of the expected Grammar type (compatible with the get_grammars return type annotation List[Grammar]).'
+Calling tool: grepTool
+def get_grammars\(
+Grep command failed with exit code 2: rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: grepTool
+GRAMMARS\s*=
+Matched content:
+718:GRAMMARS = [
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+712:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+713:    srcbuf.seek(0)
+714:    with io.TextIOWrapper(srcbuf, encoding) as tiow:
+715:        return tiow.read(), encoding, newline
+716:
+717:
+718:GRAMMARS = [
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+
+Calling tool: grepTool
+from lib2to3 import pygram
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+pygram\.
+Matched content:
+79:pygram.initialize(CACHE_DIR)
+80:syms = pygram.python_symbols
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+60:
+61:# types
+62:FileContent = str
+63:Encoding = str
+64:NewLine = str
+65:Depth = int
+66:NodeType = int
+67:LeafID = int
+68:Priority = int
+69:Index = int
+70:LN = Union[Leaf, Node]
+71:SplitFunc = Callable[["Line", bool], Iterator["Line"]]
+72:Timestamp = float
+73:FileSize = int
+74:CacheInfo = Tuple[Timestamp, FileSize]
+75:Cache = Dict[Path, CacheInfo]
+76:out = partial(click.secho, bold=True, err=True)
+77:err = partial(click.secho, fg="red", err=True)
+78:
+79:pygram.initialize(CACHE_DIR)
+80:syms = pygram.python_symbols
+81:
+82:
+83:class NothingChanged(UserWarning):
+84:    """Raised when reformatted code is the same as source."""
+85:
+86:
+87:class CannotSplit(Exception):
+88:    """A readable split that fits the allotted line length is impossible."""
+89:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+1:import asyncio
+2:from asyncio.base_events import BaseEventLoop
+3:from concurrent.futures import Executor, ProcessPoolExecutor
+4:from datetime import datetime
+5:from enum import Enum
+6:from functools import lru_cache, partial, wraps
+7:import io
+8:import itertools
+9:import logging
+10:from multiprocessing import Manager, freeze_support
+11:import os
+12:from pathlib import Path
+13:import pickle
+14:import re
+15:import signal
+16:import sys
+17:import tempfile
+18:import tokenize
+19:from typing import (
+20:    Any,
+21:    Callable,
+22:    Collection,
+23:    Dict,
+24:    Generator,
+25:    Generic,
+26:    Iterable,
+27:    Iterator,
+28:    List,
+29:    Optional,
+30:    Pattern,
+31:    Sequence,
+32:    Set,
+33:    Tuple,
+34:    TypeVar,
+35:    Union,
+36:    cast,
+37:)
+38:
+39:from appdirs import user_cache_dir
+40:from attr import dataclass, evolve, Factory
+41:import click
+42:import toml
+43:
+44:# lib2to3 fork
+45:from blib2to3.pytree import Node, Leaf, type_repr
+46:from blib2to3 import pygram, pytree
+47:from blib2to3.pgen2 import driver, token
+48:from blib2to3.pgen2.grammar import Grammar
+49:from blib2to3.pgen2.parse import ParseError
+50:
+51:
+52:__version__ = "19.3b0"
+53:DEFAULT_LINE_LENGTH = 88
+54:DEFAULT_EXCLUDES = (
+55:    r"/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|_build|buck-out|build|dist)/"
+56:)
+57:DEFAULT_INCLUDES = r"\.pyi?$"
+58:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+59:
+60:
+61:# types
+62:FileContent = str
+63:Encoding = str
+64:NewLine = str
+65:Depth = int
+66:NodeType = int
+67:LeafID = int
+68:Priority = int
+69:Index = int
+70:LN = Union[Leaf, Node]
+
+Calling tool: globTool
+**/blib2to3/**
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pytree.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/tokenize.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/parse.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/literals.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/conv.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/token.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/literals.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/Grammar.txt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/pgen.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__init__.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/token.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/parse.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/pgen.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/tokenize.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__init__.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pytree.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/PatternGrammar.txt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__init__.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__init__.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/LICENSE
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/README
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/pygram.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/pytree.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/__init__.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/parse.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/pgen.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/grammar.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/token.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/tokenize.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/driver.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/__init__.cpython-38.pyc
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:def initialize(cache_dir=None):
+33:    global python_grammar
+34:    global python_grammar_no_print_statement
+35:    global python_grammar_no_print_statement_no_exec_statement
+36:    global python_symbols
+37:    global pattern_grammar
+38:    global pattern_symbols
+39:
+40:    # Python 2
+41:    python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE,
+42:                                                  cache_dir)
+43:
+44:    python_symbols = Symbols(python_grammar)
+45:
+46:    # Python 2 + from __future__ import print_function
+47:    python_grammar_no_print_statement = python_grammar.copy()
+48:    del python_grammar_no_print_statement.keywords["print"]
+49:
+50:    # Python 3
+51:    python_grammar_no_print_statement_no_exec_statement = python_grammar.copy()
+52:    del python_grammar_no_print_statement_no_exec_statement.keywords["print"]
+53:    del python_grammar_no_print_statement_no_exec_statement.keywords["exec"]
+54:
+55:    pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE,
+56:                                                   cache_dir)
+57:    pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:# Modifications:
+5:# Copyright 2006 Google, Inc. All Rights Reserved.
+6:# Licensed to PSF under a Contributor Agreement.
+7:
+8:"""Parser driver.
+9:
+10:This provides a high-level interface to parse a file into a syntax tree.
+11:
+12:"""
+13:
+14:__author__ = "Guido van Rossum <guido@python.org>"
+15:
+16:__all__ = ["Driver", "load_grammar"]
+17:
+18:# Python imports
+19:import codecs
+20:import io
+21:import os
+22:import logging
+23:import pkgutil
+24:import sys
+25:
+26:# Pgen imports
+27:from . import grammar, parse, token, tokenize, pgen
+28:
+29:
+30:class Driver(object):
+31:
+32:    def __init__(self, grammar, convert=None, logger=None):
+33:        self.grammar = grammar
+34:        if logger is None:
+35:            logger = logging.getLogger(__name__)
+36:        self.logger = logger
+37:        self.convert = convert
+38:
+39:    def parse_tokens(self, tokens, debug=False):
+40:        """Parse a series of tokens and return the syntax tree."""
+41:        # XXX Move the prefix computation into a wrapper around tokenize.
+42:        p = parse.Parser(self.grammar, self.convert)
+43:        p.setup()
+44:        lineno = 1
+45:        column = 0
+46:        indent_columns = []
+47:        type = value = start = end = line_text = None
+48:        prefix = ""
+49:        for quintuple in tokens:
+50:            type, value, start, end, line_text = quintuple
+51:            if start != (lineno, column):
+52:                assert (lineno, column) <= start, ((lineno, column), start)
+53:                s_lineno, s_column = start
+54:                if lineno < s_lineno:
+55:                    prefix += "\n" * (s_lineno - lineno)
+56:                    lineno = s_lineno
+57:                    column = 0
+58:                if column < s_column:
+59:                    prefix += line_text[column:s_column]
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+91:                column = 0
+92:        else:
+93:            # We never broke out -- EOF is too soon (how can this happen???)
+94:            raise parse.ParseError("incomplete input",
+95:                                   type, value, (prefix, start))
+96:        return p.rootnode
+97:
+98:    def parse_stream_raw(self, stream, debug=False):
+99:        """Parse a stream and return the syntax tree."""
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char in ' \t':
+135:                current_column += 1
+136:            elif char == '\n':
+137:                # unexpected empty line
+138:                current_column = 0
+139:            else:
+140:                # indent is finished
+141:                wait_for_nl = True
+142:        return ''.join(lines), current_line
+143:
+144:
+145:def _generate_pickle_name(gt, cache_dir=None):
+146:    head, tail = os.path.splitext(gt)
+147:    if tail == ".txt":
+148:        tail = ""
+149:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+150:    if cache_dir:
+151:        return os.path.join(cache_dir, os.path.basename(name))
+152:    else:
+153:        return name
+154:
+155:
+156:def load_grammar(gt="Grammar.txt", gp=None,
+157:                 save=True, force=False, logger=None):
+158:    """Load the grammar (maybe from a pickle)."""
+159:    if logger is None:
+160:        logger = logging.getLogger(__name__)
+161:    gp = _generate_pickle_name(gt) if gp is None else gp
+162:    if force or not _newer(gp, gt):
+163:        logger.info("Generating grammar tables from %s", gt)
+164:        g = pgen.generate_grammar(gt)
+165:        if save:
+166:            logger.info("Writing grammar tables to %s", gp)
+167:            try:
+168:                g.dump(gp)
+169:            except OSError as e:
+170:                logger.info("Writing failed: %s", e)
+171:    else:
+172:        g = grammar.Grammar()
+173:        g.load(gp)
+174:    return g
+175:
+176:
+177:def _newer(a, b):
+178:    """Inquire whether file a was written since file b."""
+179:    if not os.path.exists(a):
+180:        return False
+181:    if not os.path.exists(b):
+182:        return True
+183:    return os.path.getmtime(a) >= os.path.getmtime(b)
+184:
+185:
+186:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+187:    """Normally, loads a pickled grammar by doing
+188:        pkgutil.get_data(package, pickled_grammar)
+189:    where *pickled_grammar* is computed from *grammar_source* by adding the
+190:    Python version and using a ``.pickle`` extension.
+191:
+192:    However, if *grammar_source* is an extant file, load_grammar(grammar_source)
+193:    is called instead. This facilitates using a packaged grammar file when needed
+194:    but preserves load_grammar's automatic regeneration behavior when possible.
+195:
+196:    """
+197:    if os.path.isfile(grammar_source):
+198:        gp = _generate_pickle_name(grammar_source, cache_dir) if cache_dir else None
+199:        return load_grammar(grammar_source, gp=gp)
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+201:    data = pkgutil.get_data(package, pickled_name)
+202:    g = grammar.Grammar()
+203:    g.loads(data)
+204:    return g
+205:
+206:
+207:def main(*args):
+208:    """Main program, when run as a script: produce grammar pickle files.
+209:
+210:    Calls load_grammar for each argument, a path to a grammar text file.
+211:    """
+212:    if not args:
+213:        args = sys.argv[1:]
+214:    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+215:                        format='%(message)s')
+216:    for gt in args:
+217:        load_grammar(gt, save=True, force=True)
+218:    return True
+219:
+220:if __name__ == "__main__":
+221:    sys.exit(int(not main()))
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""This module defines the data structures used to represent a grammar.
+5:
+6:These are a bit arcane because they are derived from the data
+7:structures used by Python's 'pgen' parser generator.
+8:
+9:There's also a table here mapping operators to their names in the
+10:token module; the Python tokenize module reports all operators as the
+11:fallback token code OP, but the parser needs the actual token code.
+12:
+13:"""
+14:
+15:# Python imports
+16:import os
+17:import pickle
+18:import tempfile
+19:
+20:# Local imports
+21:from . import token
+22:
+23:
+24:class Grammar(object):
+25:    """Pgen parsing tables conversion class.
+26:
+27:    Once initialized, this class supplies the grammar tables for the
+28:    parsing engine implemented by parse.py.  The parsing engine
+29:    accesses the instance variables directly.  The class here does not
+30:    provide initialization of the tables; several subclasses exist to
+31:    do this (see the conv and pgen modules).
+32:
+33:    The load() method reads the tables from a pickle file, which is
+34:    much faster than the other ways offered by subclasses.  The pickle
+35:    file is written by calling dump() (after loading the grammar
+36:    tables using a subclass).  The report() method prints a readable
+37:    representation of the tables to stdout, for debugging.
+38:
+39:    The instance variables are as follows:
+40:
+
+Calling tool: grepTool
+def copy\(
+Matched content:
+105:    def copy(self):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+100:
+101:    def loads(self, pkl):
+102:        """Load the grammar tables from a pickle bytes object."""
+103:        self.__dict__.update(pickle.loads(pkl))
+104:
+105:    def copy(self):
+106:        """
+107:        Copy the grammar.
+108:        """
+109:        new = self.__class__()
+110:        for dict_attr in ("symbol2number", "number2symbol", "dfas", "keywords",
+111:                          "tokens", "symbol2label"):
+112:            setattr(new, dict_attr, getattr(self, dict_attr).copy())
+113:        new.labels = self.labels[:]
+114:        new.states = self.states[:]
+115:        new.start = self.start
+116:        return new
+117:
+118:    def report(self):
+119:        """Dump the grammar tables to standard output, for debugging."""
+120:        from pprint import pprint
+121:        print("s2n")
+122:        pprint(self.symbol2number)
+123:        print("n2s")
+124:        pprint(self.number2symbol)
+125:        print("states")
+126:        pprint(self.states)
+127:        print("dfas")
+128:        pprint(self.dfas)
+129:        print("labels")
+130:        pprint(self.labels)
+131:        print("start", self.start)
+132:
+133:
+134:# Map from operator to number (since tokenize doesn't do this)
+135:
+136:opmap_raw = """
+137:( LPAR
+138:) RPAR
+139:[ LSQB
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, get_grammars now returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] for Python 2 targets. In blib2to3/pygram.py, both attributes are defined in initialize() and created from Grammar instances (driver.load_packaged_grammar returns Grammar and Grammar.copy() returns a Grammar). black.py imports Grammar from blib2to3.pgen2.grammar, so the return type List[Grammar] is satisfied.
+
+
+Todo item 4 of 9 is correct
+description: 'Check that pygram.python_grammar_no_print_statement and pygram.python_grammar attributes exist and are of the expected Grammar type (compatible with the get_grammars return type annotation List[Grammar]).'
+Validating todo item 5 of 9
+description: 'Confirm that lib2to3_parse (in the same file) obtains grammars via get_grammars(target_versions) and tries them sequentially in the list order, so that the 'no_print_statement' grammar is attempted before the Python 2 grammar for Python 2 targets.'
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+800:@dataclass
+801:class DebugVisitor(Visitor[T]):
+802:    tree_depth: int = 0
+803:
+804:    def visit_default(self, node: LN) -> Iterator[T]:
+805:        indent = " " * (2 * self.tree_depth)
+806:        if isinstance(node, Node):
+807:            _type = type_repr(node.type)
+808:            out(f"{indent}{_type}", fg="yellow")
+809:            self.tree_depth += 1
+810:            for child in node.children:
+811:                yield from self.visit(child)
+812:
+813:            self.tree_depth -= 1
+814:            out(f"{indent}/{_type}", fg="yellow", bold=False)
+815:        else:
+816:            _type = token.tok_name.get(node.type, str(node.type))
+817:            out(f"{indent}{_type}", fg="blue", nl=False)
+818:            if node.prefix:
+819:                # We don't have to handle prefixes for `Node` objects since
+820:                # that delegates to the first child anyway.
+821:                out(f" {node.prefix!r}", fg="green", bold=False, nl=False)
+822:            out(f" {node.value!r}", fg="blue", bold=False)
+823:
+824:    @classmethod
+825:    def show(cls, code: Union[str, Leaf, Node]) -> None:
+826:        """Pretty-print the lib2to3 AST of a given string of `code`.
+827:
+828:        Convenience method for debugging.
+829:        """
+830:        v: DebugVisitor[None] = DebugVisitor()
+831:        if isinstance(code, str):
+832:            code = lib2to3_parse(code)
+833:        list(v.visit(code))
+834:
+835:
+836:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+837:STATEMENT = {
+838:    syms.if_stmt,
+839:    syms.while_stmt,
+840:    syms.for_stmt,
+841:    syms.try_stmt,
+842:    syms.except_clause,
+843:    syms.with_stmt,
+844:    syms.funcdef,
+845:    syms.classdef,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, lib2to3_parse (lines 738–758) calls get_grammars(set(target_versions)) and iterates them in order: for grammar in get_grammars(...). The updated get_grammars (lines 726–735) returns [python_grammar_no_print_statement, python_grammar] for Python 2 targets, ensuring the no_print_statement grammar is tried before the Python 2 grammar.
+
+
+Todo item 5 of 9 is correct
+description: 'Confirm that lib2to3_parse (in the same file) obtains grammars via get_grammars(target_versions) and tries them sequentially in the list order, so that the 'no_print_statement' grammar is attempted before the Python 2 grammar for Python 2 targets.'
+Validating todo item 6 of 9
+description: 'Ensure the get_grammars branch for empty target_versions remains unchanged and still returns GRAMMARS; no unintended modifications in this PR for that path.'
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+690:        for _ in range(before):
+691:            dst_contents += str(empty_line)
+692:        for line in split_line(
+693:            current_line,
+694:            line_length=mode.line_length,
+695:            supports_trailing_commas=supports_feature(versions, Feature.TRAILING_COMMA),
+696:        ):
+697:            dst_contents += str(line)
+698:    return dst_contents
+699:
+700:
+701:def decode_bytes(src: bytes) -> Tuple[FileContent, Encoding, NewLine]:
+702:    """Return a tuple of (decoded_contents, encoding, newline).
+703:
+704:    `newline` is either CRLF or LF but `decoded_contents` is decoded with
+705:    universal newlines (i.e. only contains LF).
+706:    """
+707:    srcbuf = io.BytesIO(src)
+708:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+709:    if not lines:
+710:        return "", encoding, "\n"
+711:
+712:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+713:    srcbuf.seek(0)
+714:    with io.TextIOWrapper(srcbuf, encoding) as tiow:
+715:        return tiow.read(), encoding, newline
+716:
+717:
+718:GRAMMARS = [
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Inspected black.py get_grammars at lines 725-735. The branch `if not target_versions:` still returns `GRAMMARS` unchanged, and `GRAMMARS` is defined as the same list at lines 718-722. No modifications were made to this path in the PR.
+
+
+Todo item 6 of 9 is correct
+description: 'Ensure the get_grammars branch for empty target_versions remains unchanged and still returns GRAMMARS; no unintended modifications in this PR for that path.'
+Validating todo item 7 of 9
+description: 'Search for all call sites of get_grammars and confirm none assumes a single grammar for Python 2 targets (e.g., direct indexing [0] without iteration), since the else branch now returns two grammars.'
+Calling tool: grepTool
+get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:743:    for grammar in get_grammars(set(target_versions)):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for all call sites of get_grammars. The only call is in lib2to3_parse (black.py:743) which iterates over the returned list, handling multiple grammars. No direct indexing or single-grammar assumptions found.
+
+
+Todo item 7 of 9 is correct
+description: 'Search for all call sites of get_grammars and confirm none assumes a single grammar for Python 2 targets (e.g., direct indexing [0] without iteration), since the else branch now returns two grammars.'
+Validating todo item 8 of 9
+description: 'Validate that TargetVersion exposes an is_python2() method used in get_grammars and that the method is imported/available where get_grammars is defined.'
+Calling tool: grepTool
+class\s+TargetVersion\b
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:115:class TargetVersion(Enum):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+100:
+101:    @classmethod
+102:    def from_configuration(cls, *, check: bool, diff: bool) -> "WriteBack":
+103:        if check and not diff:
+104:            return cls.CHECK
+105:
+106:        return cls.DIFF if diff else cls.YES
+107:
+108:
+109:class Changed(Enum):
+110:    NO = 0
+111:    CACHED = 1
+112:    YES = 2
+113:
+114:
+115:class TargetVersion(Enum):
+116:    PY27 = 2
+117:    PY33 = 3
+118:    PY34 = 4
+119:    PY35 = 5
+120:    PY36 = 6
+121:    PY37 = 7
+122:    PY38 = 8
+123:
+124:    def is_python2(self) -> bool:
+125:        return self is TargetVersion.PY27
+126:
+127:
+128:PY36_VERSIONS = {TargetVersion.PY36, TargetVersion.PY37, TargetVersion.PY38}
+129:
+130:
+131:class Feature(Enum):
+132:    # All string literals are unicode
+133:    UNICODE_LITERALS = 1
+134:    F_STRINGS = 2
+135:    NUMERIC_UNDERSCORES = 3
+136:    TRAILING_COMMA = 4
+137:
+138:
+139:VERSION_TO_FEATURES: Dict[TargetVersion, Set[Feature]] = {
+140:    TargetVersion.PY27: set(),
+141:    TargetVersion.PY33: {Feature.UNICODE_LITERALS},
+142:    TargetVersion.PY34: {Feature.UNICODE_LITERALS},
+143:    TargetVersion.PY35: {Feature.UNICODE_LITERALS, Feature.TRAILING_COMMA},
+144:    TargetVersion.PY36: {
+145:        Feature.UNICODE_LITERALS,
+146:        Feature.F_STRINGS,
+147:        Feature.NUMERIC_UNDERSCORES,
+148:        Feature.TRAILING_COMMA,
+149:    },
+150:    TargetVersion.PY37: {
+151:        Feature.UNICODE_LITERALS,
+152:        Feature.F_STRINGS,
+153:        Feature.NUMERIC_UNDERSCORES,
+154:        Feature.TRAILING_COMMA,
+155:    },
+156:    TargetVersion.PY38: {
+157:        Feature.UNICODE_LITERALS,
+158:        Feature.F_STRINGS,
+159:        Feature.NUMERIC_UNDERSCORES,
+160:        Feature.TRAILING_COMMA,
+161:    },
+162:}
+163:
+164:
+165:@dataclass
+166:class FileMode:
+167:    target_versions: Set[TargetVersion] = Factory(set)
+168:    line_length: int = DEFAULT_LINE_LENGTH
+169:    string_normalization: bool = True
+170:    is_pyi: bool = False
+171:
+172:    def get_cache_key(self) -> str:
+173:        if self.target_versions:
+174:            version_str = ",".join(
+175:                str(version.value)
+176:                for version in sorted(self.target_versions, key=lambda v: v.value)
+177:            )
+178:        else:
+179:            version_str = "-"
+
+Calling tool: grepTool
+def\s+get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: TargetVersion in black.py (line ~115) defines is_python2(), and get_grammars in the same file (line ~725) calls version.is_python2(). Since both are in black.py, the method is available without import and is correctly used.
+
+
+Todo item 8 of 9 is correct
+description: 'Validate that TargetVersion exposes an is_python2() method used in get_grammars and that the method is imported/available where get_grammars is defined.'
+Validating todo item 9 of 9
+description: 'Locate the test case named test_python2_print_function and verify that it configures target_version to py27 and uses input containing 'from __future__ import print_function' and 'print("hello world")', asserting that no space is inserted between 'print' and '(' in the formatted output.'
+Calling tool: grepTool
+test_python2_print_function
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:465:    def test_python2_print_function(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2_print_function
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py
+450:    def test_numeric_literals_py2(self) -> None:
+451:        source, expected = read_data("numeric_literals_py2")
+452:        actual = fs(source)
+453:        self.assertFormatEqual(expected, actual)
+454:        black.assert_stable(source, actual, black.FileMode())
+455:
+456:    @patch("black.dump_to_file", dump_to_stderr)
+457:    def test_python2(self) -> None:
+458:        source, expected = read_data("python2")
+459:        actual = fs(source)
+460:        self.assertFormatEqual(expected, actual)
+461:        # black.assert_equivalent(source, actual)
+462:        black.assert_stable(source, actual, black.FileMode())
+463:
+464:    @patch("black.dump_to_file", dump_to_stderr)
+465:    def test_python2_print_function(self) -> None:
+466:        source, expected = read_data("python2_print_function")
+467:        mode = black.FileMode(target_versions={black.TargetVersion.PY27})
+468:        actual = fs(source, mode=mode)
+469:        self.assertFormatEqual(expected, actual)
+470:        black.assert_stable(source, actual, mode)
+471:
+472:    @patch("black.dump_to_file", dump_to_stderr)
+473:    def test_python2_unicode_literals(self) -> None:
+474:        source, expected = read_data("python2_unicode_literals")
+475:        actual = fs(source)
+476:        self.assertFormatEqual(expected, actual)
+477:        black.assert_stable(source, actual, black.FileMode())
+478:
+479:    @patch("black.dump_to_file", dump_to_stderr)
+480:    def test_stub(self) -> None:
+481:        mode = black.FileMode(is_pyi=True)
+482:        source, expected = read_data("stub.pyi")
+483:        actual = fs(source, mode=mode)
+484:        self.assertFormatEqual(expected, actual)
+485:        black.assert_stable(source, actual, mode)
+486:
+487:    @patch("black.dump_to_file", dump_to_stderr)
+488:    def test_python37(self) -> None:
+489:        source, expected = read_data("python37")
+490:        actual = fs(source)
+491:        self.assertFormatEqual(expected, actual)
+492:        major, minor = sys.version_info[:2]
+493:        if major > 3 or (major == 3 and minor >= 7):
+494:            black.assert_equivalent(source, actual)
+495:        black.assert_stable(source, actual, black.FileMode())
+496:
+497:    @patch("black.dump_to_file", dump_to_stderr)
+498:    def test_fmtonoff(self) -> None:
+499:        source, expected = read_data("fmtonoff")
+500:        actual = fs(source)
+501:        self.assertFormatEqual(expected, actual)
+502:        black.assert_equivalent(source, actual)
+503:        black.assert_stable(source, actual, black.FileMode())
+504:
+505:    @patch("black.dump_to_file", dump_to_stderr)
+506:    def test_fmtonoff2(self) -> None:
+507:        source, expected = read_data("fmtonoff2")
+508:        actual = fs(source)
+509:        self.assertFormatEqual(expected, actual)
+510:        black.assert_equivalent(source, actual)
+511:        black.assert_stable(source, actual, black.FileMode())
+512:
+513:    @patch("black.dump_to_file", dump_to_stderr)
+514:    def test_remove_empty_parentheses_after_class(self) -> None:
+515:        source, expected = read_data("class_blank_parentheses")
+516:        actual = fs(source)
+517:        self.assertFormatEqual(expected, actual)
+518:        black.assert_equivalent(source, actual)
+519:        black.assert_stable(source, actual, black.FileMode())
+520:
+521:    @patch("black.dump_to_file", dump_to_stderr)
+522:    def test_new_line_between_class_and_code(self) -> None:
+523:        source, expected = read_data("class_methods_new_line")
+524:        actual = fs(source)
+525:        self.assertFormatEqual(expected, actual)
+526:        black.assert_equivalent(source, actual)
+527:        black.assert_stable(source, actual, black.FileMode())
+528:
+529:    @patch("black.dump_to_file", dump_to_stderr)
+
+Calling tool: grepTool
+python2_print_function
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_bug.info:4:test_file="tests/data/python2_print_function.py;tests/test_black.py"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2_print_function
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:465:    def test_python2_print_function(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:466:        source, expected = read_data("python2_print_function")
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/data/python2_print_function.py
+1:#!/usr/bin/env python2
+2:from __future__ import print_function
+3:
+4:print('hello')
+5:print(u'hello')
+6:print(a, file=sys.stderr)
+7:
+8:# output
+9:
+10:
+11:#!/usr/bin/env python2
+12:from __future__ import print_function
+13:
+14:print("hello")
+15:print(u"hello")
+16:print(a, file=sys.stderr)
+
+Calling tool: grepTool
+hello world
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1396:            response = await client.post("/", data=b"print('hello world')")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1399:            self.assertEqual(await response.read(), b'print("hello world")\n')
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1406:            response = await client.post("/", data=b'print("hello world")\n')
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:57:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:import logging
+4:from concurrent.futures import ThreadPoolExecutor
+5:from contextlib import contextmanager, redirect_stderr
+6:from functools import partial, wraps
+7:from io import BytesIO, TextIOWrapper
+8:import os
+9:from pathlib import Path
+10:import re
+11:import sys
+12:from tempfile import TemporaryDirectory
+13:from typing import (
+14:    Any,
+15:    BinaryIO,
+16:    Callable,
+17:    Coroutine,
+18:    Generator,
+19:    List,
+20:    Tuple,
+21:    Iterator,
+22:    TypeVar,
+23:)
+24:import unittest
+25:from unittest.mock import patch, MagicMock
+26:
+27:from click import unstyle
+28:from click.testing import CliRunner
+29:
+30:import black
+31:from black import Feature
+32:
+33:try:
+34:    import blackd
+35:    from aiohttp.test_utils import TestClient, TestServer
+36:except ImportError:
+37:    has_blackd_deps = False
+38:else:
+39:    has_blackd_deps = True
+40:
+41:ff = partial(black.format_file_in_place, mode=black.FileMode(), fast=True)
+42:fs = partial(black.format_str, mode=black.FileMode())
+43:THIS_FILE = Path(__file__)
+44:THIS_DIR = THIS_FILE.parent
+45:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+46:PY36_ARGS = [
+47:    f"--target-version={version.name.lower()}" for version in black.PY36_VERSIONS
+48:]
+49:T = TypeVar("T")
+50:R = TypeVar("R")
+51:
+52:
+53:def dump_to_stderr(*output: str) -> str:
+54:    return "\n" + "\n".join(output) + "\n"
+55:
+56:
+57:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+58:    """read_data('test_name') -> 'input', 'output'"""
+59:    if not name.endswith((".py", ".pyi", ".out", ".diff")):
+60:        name += ".py"
+61:    _input: List[str] = []
+62:    _output: List[str] = []
+63:    base_dir = THIS_DIR / "data" if data else THIS_DIR
+64:    with open(base_dir / name, "r", encoding="utf8") as test:
+65:        lines = test.readlines()
+66:    result = _input
+67:    for line in lines:
+68:        line = line.replace(EMPTY_LINE, "")
+69:        if line.rstrip() == "# output":
+70:            result = _output
+71:            continue
+72:
+73:        result.append(line)
+74:    if _input and not _output:
+75:        # If there's no output marker, treat the entire file as already pre-formatted.
+76:        _output = _input[:]
+77:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+78:
+79:
+80:@contextmanager
+81:def cache_dir(exists: bool = True) -> Iterator[Path]:
+82:    with TemporaryDirectory() as workspace:
+83:        cache_dir = Path(workspace)
+84:        if not exists:
+85:            cache_dir = cache_dir / "new"
+86:        with patch("black.CACHE_DIR", cache_dir):
+87:            yield cache_dir
+88:
+89:
+90:@contextmanager
+91:def event_loop(close: bool) -> Iterator[None]:
+92:    policy = asyncio.get_event_loop_policy()
+93:    old_loop = policy.get_event_loop()
+94:    loop = policy.new_event_loop()
+95:    asyncio.set_event_loop(loop)
+96:    try:
+97:        yield
+98:
+99:    finally:
+100:        policy.set_event_loop(old_loop)
+101:        if close:
+102:            loop.close()
+103:
+104:
+105:def async_test(f: Callable[..., Coroutine[Any, None, R]]) -> Callable[..., None]:
+106:    @event_loop(close=True)
+107:    @wraps(f)
+108:    def wrapper(*args: Any, **kwargs: Any) -> None:
+109:        asyncio.get_event_loop().run_until_complete(f(*args, **kwargs))
+110:
+111:    return wrapper
+112:
+113:
+114:class BlackRunner(CliRunner):
+115:    """Modify CliRunner so that stderr is not merged with stdout.
+116:
+117:    This is a hack that can be removed once we depend on Click 7.x"""
+118:
+119:    def __init__(self) -> None:
+120:        self.stderrbuf = BytesIO()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: Found test_python2_print_function in tests/test_black.py. It sets target_versions={black.TargetVersion.PY27} and uses data file tests/data/python2_print_function.py which contains 'from __future__ import print_function' and print calls. However, the input is 'print("hello")' (not 'print("hello world")'). While it asserts no space is inserted, the exact string specified in the todo is not used.
+
+
+Validating todo item 1 of 9
+description: 'In black.py, verify that get_grammars returns only [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement] when target_versions is non-empty and all(not v.is_python2() for v in target_versions) is True (i.e., Python 3-only targets).'
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py lines 726–733, get_grammars checks non-empty target_versions and if all(not v.is_python2()) is True, it returns exactly [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement], satisfying the requirement.
+
+Todo item 1 of 9 is correct
+description: 'In black.py, verify that get_grammars returns only [pygram.python_grammar_no_print_statement_no_exec_statement, pygram.python_grammar_no_print_statement] when target_versions is non-empty and all(not v.is_python2() for v in target_versions) is True (i.e., Python 3-only targets).'
+
+Validating todo item 2 of 9
+description: 'Confirm the updated comment in the Python 3-only branch (“Python 3-compatible code, so don't try Python 2 grammar”) accurately reflects the branch condition and returned grammars.'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: The branch condition checks that no target version is Python 2 (all(not version.is_python2()...)), i.e., Python 3-only. It returns only Python 3 grammars (no_print_statement*), avoiding the Python 2 grammar. The updated comment precisely matches both the condition and the returned grammars.
+
+Todo item 2 of 9 is correct
+description: 'Confirm the updated comment in the Python 3-only branch (“Python 3-compatible code, so don't try Python 2 grammar”) accurately reflects the branch condition and returned grammars.'
+
+Validating todo item 3 of 9
+description: 'Verify that when any Python 2 target is present (i.e., the else branch), get_grammars returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] in that exact order (Python 3 grammar first, then Python 2 grammar).'
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py’s get_grammars, the else branch (triggered when any target version is Python 2) returns [pygram.python_grammar_no_print_statement, pygram.python_grammar]. This order places the Python 3 grammar first, then the Python 2 grammar, matching the todo requirement.
+
+Todo item 3 of 9 is correct
+description: 'Verify that when any Python 2 target is present (i.e., the else branch), get_grammars returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] in that exact order (Python 3 grammar first, then Python 2 grammar).'
+
+Validating todo item 4 of 9
+description: 'Check that pygram.python_grammar_no_print_statement and pygram.python_grammar attributes exist and are of the expected Grammar type (compatible with the get_grammars return type annotation List[Grammar]).'
+
+Calling tool: grepTool
+def get_grammars\(
+Grep command failed with exit code 2: rg: /Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/{{FOLDER_PATH}}: IO error for operation on /Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/{{FOLDER_PATH}}: No such file or directory (os error 2)
+
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: grepTool
+GRAMMARS\s*=
+Matched content:
+718:GRAMMARS = [
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+712:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+713:    srcbuf.seek(0)
+714:    with io.TextIOWrapper(srcbuf, encoding) as tiow:
+715:        return tiow.read(), encoding, newline
+716:
+717:
+718:GRAMMARS = [
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+
+Calling tool: grepTool
+from lib2to3 import pygram
+No files found. Call grepTool again with a more generic pattern.
+
+Calling tool: grepTool
+pygram\.
+Matched content:
+79:pygram.initialize(CACHE_DIR)
+80:syms = pygram.python_symbols
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+60:
+61:# types
+62:FileContent = str
+63:Encoding = str
+64:NewLine = str
+65:Depth = int
+66:NodeType = int
+67:LeafID = int
+68:Priority = int
+69:Index = int
+70:LN = Union[Leaf, Node]
+71:SplitFunc = Callable[["Line", bool], Iterator["Line"]]
+72:Timestamp = float
+73:FileSize = int
+74:CacheInfo = Tuple[Timestamp, FileSize]
+75:Cache = Dict[Path, CacheInfo]
+76:out = partial(click.secho, bold=True, err=True)
+77:err = partial(click.secho, fg="red", err=True)
+78:
+79:pygram.initialize(CACHE_DIR)
+80:syms = pygram.python_symbols
+81:
+82:
+83:class NothingChanged(UserWarning):
+84:    """Raised when reformatted code is the same as source."""
+85:
+86:
+87:class CannotSplit(Exception):
+88:    """A readable split that fits the allotted line length is impossible."""
+89:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+1:import asyncio
+2:from asyncio.base_events import BaseEventLoop
+3:from concurrent.futures import Executor, ProcessPoolExecutor
+4:from datetime import datetime
+5:from enum import Enum
+6:from functools import lru_cache, partial, wraps
+7:import io
+8:import itertools
+9:import logging
+10:from multiprocessing import Manager, freeze_support
+11:import os
+12:from pathlib import Path
+13:import pickle
+14:import re
+15:import signal
+16:import sys
+17:import tempfile
+18:import tokenize
+19:from typing import (
+20:    Any,
+21:    Callable,
+22:    Collection,
+23:    Dict,
+24:    Generator,
+25:    Generic,
+26:    Iterable,
+27:    Iterator,
+28:    List,
+29:    Optional,
+30:    Pattern,
+31:    Sequence,
+32:    Set,
+33:    Tuple,
+34:    TypeVar,
+35:    Union,
+36:    cast,
+37:)
+38:
+39:from appdirs import user_cache_dir
+40:from attr import dataclass, evolve, Factory
+41:import click
+42:import toml
+43:
+44:# lib2to3 fork
+45:from blib2to3.pytree import Node, Leaf, type_repr
+46:from blib2to3 import pygram, pytree
+47:from blib2to3.pgen2 import driver, token
+48:from blib2to3.pgen2.grammar import Grammar
+49:from blib2to3.pgen2.parse import ParseError
+50:
+51:
+52:__version__ = "19.3b0"
+53:DEFAULT_LINE_LENGTH = 88
+54:DEFAULT_EXCLUDES = (
+55:    r"/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|_build|buck-out|build|dist)/"
+56:)
+57:DEFAULT_INCLUDES = r"\.pyi?$"
+58:CACHE_DIR = Path(user_cache_dir("black", version=__version__))
+59:
+60:
+61:# types
+62:FileContent = str
+63:Encoding = str
+64:NewLine = str
+65:Depth = int
+66:NodeType = int
+67:LeafID = int
+68:Priority = int
+69:Index = int
+70:LN = Union[Leaf, Node]
+
+Calling tool: globTool
+**/blib2to3/**
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pytree.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/tokenize.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/parse.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/literals.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/conv.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/token.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/literals.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/Grammar.txt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/pgen.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__init__.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/token.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/parse.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/pgen.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/tokenize.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__init__.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pytree.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/PatternGrammar.txt
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__init__.py
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__init__.pyi
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/LICENSE
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/README
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/pygram.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/pytree.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/__pycache__/__init__.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/parse.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/pgen.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/grammar.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/token.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/tokenize.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/driver.cpython-38.pyc
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/__pycache__/__init__.cpython-38.pyc
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pygram.py
+1:# Copyright 2006 Google, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""Export the Python grammar and symbols."""
+5:
+6:# Python imports
+7:import os
+8:
+9:# Local imports
+10:from .pgen2 import token
+11:from .pgen2 import driver
+12:from . import pytree
+13:
+14:# The grammar file
+15:_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
+16:_PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__),
+17:                                     "PatternGrammar.txt")
+18:
+19:
+20:class Symbols(object):
+21:
+22:    def __init__(self, grammar):
+23:        """Initializer.
+24:
+25:        Creates an attribute for each grammar symbol (nonterminal),
+26:        whose value is the symbol's type (an int >= 256).
+27:        """
+28:        for name, symbol in grammar.symbol2number.items():
+29:            setattr(self, name, symbol)
+30:
+31:
+32:def initialize(cache_dir=None):
+33:    global python_grammar
+34:    global python_grammar_no_print_statement
+35:    global python_grammar_no_print_statement_no_exec_statement
+36:    global python_symbols
+37:    global pattern_grammar
+38:    global pattern_symbols
+39:
+40:    # Python 2
+41:    python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE,
+42:                                                  cache_dir)
+43:
+44:    python_symbols = Symbols(python_grammar)
+45:
+46:    # Python 2 + from __future__ import print_function
+47:    python_grammar_no_print_statement = python_grammar.copy()
+48:    del python_grammar_no_print_statement.keywords["print"]
+49:
+50:    # Python 3
+51:    python_grammar_no_print_statement_no_exec_statement = python_grammar.copy()
+52:    del python_grammar_no_print_statement_no_exec_statement.keywords["print"]
+53:    del python_grammar_no_print_statement_no_exec_statement.keywords["exec"]
+54:
+55:    pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE,
+56:                                                   cache_dir)
+57:    pattern_symbols = Symbols(pattern_grammar)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:# Modifications:
+5:# Copyright 2006 Google, Inc. All Rights Reserved.
+6:# Licensed to PSF under a Contributor Agreement.
+7:
+8:"""Parser driver.
+9:
+10:This provides a high-level interface to parse a file into a syntax tree.
+11:
+12:"""
+13:
+14:__author__ = "Guido van Rossum <guido@python.org>"
+15:
+16:__all__ = ["Driver", "load_grammar"]
+17:
+18:# Python imports
+19:import codecs
+20:import io
+21:import os
+22:import logging
+23:import pkgutil
+24:import sys
+25:
+26:# Pgen imports
+27:from . import grammar, parse, token, tokenize, pgen
+28:
+29:
+30:class Driver(object):
+31:
+32:    def __init__(self, grammar, convert=None, logger=None):
+33:        self.grammar = grammar
+34:        if logger is None:
+35:            logger = logging.getLogger(__name__)
+36:        self.logger = logger
+37:        self.convert = convert
+38:
+39:    def parse_tokens(self, tokens, debug=False):
+40:        """Parse a series of tokens and return the syntax tree."""
+41:        # XXX Move the prefix computation into a wrapper around tokenize.
+42:        p = parse.Parser(self.grammar, self.convert)
+43:        p.setup()
+44:        lineno = 1
+45:        column = 0
+46:        indent_columns = []
+47:        type = value = start = end = line_text = None
+48:        prefix = ""
+49:        for quintuple in tokens:
+50:            type, value, start, end, line_text = quintuple
+51:            if start != (lineno, column):
+52:                assert (lineno, column) <= start, ((lineno, column), start)
+53:                s_lineno, s_column = start
+54:                if lineno < s_lineno:
+55:                    prefix += "\n" * (s_lineno - lineno)
+56:                    lineno = s_lineno
+57:                    column = 0
+58:                if column < s_column:
+59:                    prefix += line_text[column:s_column]
+60:                    column = s_column
+61:            if type in (tokenize.COMMENT, tokenize.NL):
+62:                prefix += value
+63:                lineno, column = end
+64:                if value.endswith("\n"):
+65:                    lineno += 1
+66:                    column = 0
+67:                continue
+68:            if type == token.OP:
+69:                type = grammar.opmap[value]
+70:            if debug:
+71:                self.logger.debug("%s %r (prefix=%r)",
+72:                                  token.tok_name[type], value, prefix)
+73:            if type == token.INDENT:
+74:                indent_columns.append(len(value))
+75:                _prefix = prefix + value
+76:                prefix = ""
+77:                value = ""
+78:            elif type == token.DEDENT:
+79:                _indent_col = indent_columns.pop()
+80:                prefix, _prefix = self._partially_consume_prefix(prefix, _indent_col)
+81:            if p.addtoken(type, value, (prefix, start)):
+82:                if debug:
+83:                    self.logger.debug("Stop.")
+84:                break
+85:            prefix = ""
+86:            if type in {token.INDENT, token.DEDENT}:
+87:                prefix = _prefix
+88:            lineno, column = end
+89:            if value.endswith("\n"):
+90:                lineno += 1
+91:                column = 0
+92:        else:
+93:            # We never broke out -- EOF is too soon (how can this happen???)
+94:            raise parse.ParseError("incomplete input",
+95:                                   type, value, (prefix, start))
+96:        return p.rootnode
+97:
+98:    def parse_stream_raw(self, stream, debug=False):
+99:        """Parse a stream and return the syntax tree."""
+100:        tokens = tokenize.generate_tokens(stream.readline)
+101:        return self.parse_tokens(tokens, debug)
+102:
+103:    def parse_stream(self, stream, debug=False):
+104:        """Parse a stream and return the syntax tree."""
+105:        return self.parse_stream_raw(stream, debug)
+106:
+107:    def parse_file(self, filename, encoding=None, debug=False):
+108:        """Parse a file and return the syntax tree."""
+109:        with io.open(filename, "r", encoding=encoding) as stream:
+110:            return self.parse_stream(stream, debug)
+111:
+112:    def parse_string(self, text, debug=False):
+113:        """Parse a string and return the syntax tree."""
+114:        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+115:        return self.parse_tokens(tokens, debug)
+116:
+117:    def _partially_consume_prefix(self, prefix, column):
+118:        lines = []
+119:        current_line = ""
+120:        current_column = 0
+121:        wait_for_nl = False
+122:        for char in prefix:
+123:            current_line += char
+124:            if wait_for_nl:
+125:                if char == '\n':
+126:                    if current_line.strip() and current_column < column:
+127:                        res = ''.join(lines)
+128:                        return res, prefix[len(res):]
+129:
+130:                    lines.append(current_line)
+131:                    current_line = ""
+132:                    current_column = 0
+133:                    wait_for_nl = False
+134:            elif char in ' \t':
+135:                current_column += 1
+136:            elif char == '\n':
+137:                # unexpected empty line
+138:                current_column = 0
+139:            else:
+140:                # indent is finished
+141:                wait_for_nl = True
+142:        return ''.join(lines), current_line
+143:
+144:
+145:def _generate_pickle_name(gt, cache_dir=None):
+146:    head, tail = os.path.splitext(gt)
+147:    if tail == ".txt":
+148:        tail = ""
+149:    name = head + tail + ".".join(map(str, sys.version_info)) + ".pickle"
+150:    if cache_dir:
+151:        return os.path.join(cache_dir, os.path.basename(name))
+152:    else:
+153:        return name
+154:
+155:
+156:def load_grammar(gt="Grammar.txt", gp=None,
+157:                 save=True, force=False, logger=None):
+158:    """Load the grammar (maybe from a pickle)."""
+159:    if logger is None:
+160:        logger = logging.getLogger(__name__)
+161:    gp = _generate_pickle_name(gt) if gp is None else gp
+162:    if force or not _newer(gp, gt):
+163:        logger.info("Generating grammar tables from %s", gt)
+164:        g = pgen.generate_grammar(gt)
+165:        if save:
+166:            logger.info("Writing grammar tables to %s", gp)
+167:            try:
+168:                g.dump(gp)
+169:            except OSError as e:
+170:                logger.info("Writing failed: %s", e)
+171:    else:
+172:        g = grammar.Grammar()
+173:        g.load(gp)
+174:    return g
+175:
+176:
+177:def _newer(a, b):
+178:    """Inquire whether file a was written since file b."""
+179:    if not os.path.exists(a):
+180:        return False
+181:    if not os.path.exists(b):
+182:        return True
+183:    return os.path.getmtime(a) >= os.path.getmtime(b)
+184:
+185:
+186:def load_packaged_grammar(package, grammar_source, cache_dir=None):
+187:    """Normally, loads a pickled grammar by doing
+188:        pkgutil.get_data(package, pickled_grammar)
+189:    where *pickled_grammar* is computed from *grammar_source* by adding the
+190:    Python version and using a ``.pickle`` extension.
+191:
+192:    However, if *grammar_source* is an extant file, load_grammar(grammar_source)
+193:    is called instead. This facilitates using a packaged grammar file when needed
+194:    but preserves load_grammar's automatic regeneration behavior when possible.
+195:
+196:    """
+197:    if os.path.isfile(grammar_source):
+198:        gp = _generate_pickle_name(grammar_source, cache_dir) if cache_dir else None
+199:        return load_grammar(grammar_source, gp=gp)
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/driver.py
+200:    pickled_name = _generate_pickle_name(os.path.basename(grammar_source), cache_dir)
+201:    data = pkgutil.get_data(package, pickled_name)
+202:    g = grammar.Grammar()
+203:    g.loads(data)
+204:    return g
+205:
+206:
+207:def main(*args):
+208:    """Main program, when run as a script: produce grammar pickle files.
+209:
+210:    Calls load_grammar for each argument, a path to a grammar text file.
+211:    """
+212:    if not args:
+213:        args = sys.argv[1:]
+214:    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+215:                        format='%(message)s')
+216:    for gt in args:
+217:        load_grammar(gt, save=True, force=True)
+218:    return True
+219:
+220:if __name__ == "__main__":
+221:    sys.exit(int(not main()))
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+1:# Copyright 2004-2005 Elemental Security, Inc. All Rights Reserved.
+2:# Licensed to PSF under a Contributor Agreement.
+3:
+4:"""This module defines the data structures used to represent a grammar.
+5:
+6:These are a bit arcane because they are derived from the data
+7:structures used by Python's 'pgen' parser generator.
+8:
+9:There's also a table here mapping operators to their names in the
+10:token module; the Python tokenize module reports all operators as the
+11:fallback token code OP, but the parser needs the actual token code.
+12:
+13:"""
+14:
+15:# Python imports
+16:import os
+17:import pickle
+18:import tempfile
+19:
+20:# Local imports
+21:from . import token
+22:
+23:
+24:class Grammar(object):
+25:    """Pgen parsing tables conversion class.
+26:
+27:    Once initialized, this class supplies the grammar tables for the
+28:    parsing engine implemented by parse.py.  The parsing engine
+29:    accesses the instance variables directly.  The class here does not
+30:    provide initialization of the tables; several subclasses exist to
+31:    do this (see the conv and pgen modules).
+32:
+33:    The load() method reads the tables from a pickle file, which is
+34:    much faster than the other ways offered by subclasses.  The pickle
+35:    file is written by calling dump() (after loading the grammar
+36:    tables using a subclass).  The report() method prints a readable
+37:    representation of the tables to stdout, for debugging.
+38:
+39:    The instance variables are as follows:
+40:
+
+Calling tool: grepTool
+def copy\(
+Matched content:
+105:    def copy(self):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/blib2to3/pgen2/grammar.py
+100:
+101:    def loads(self, pkl):
+102:        """Load the grammar tables from a pickle bytes object."""
+103:        self.__dict__.update(pickle.loads(pkl))
+104:
+105:    def copy(self):
+106:        """
+107:        Copy the grammar.
+108:        """
+109:        new = self.__class__()
+110:        for dict_attr in ("symbol2number", "number2symbol", "dfas", "keywords",
+111:                          "tokens", "symbol2label"):
+112:            setattr(new, dict_attr, getattr(self, dict_attr).copy())
+113:        new.labels = self.labels[:]
+114:        new.states = self.states[:]
+115:        new.start = self.start
+116:        return new
+117:
+118:    def report(self):
+119:        """Dump the grammar tables to standard output, for debugging."""
+120:        from pprint import pprint
+121:        print("s2n")
+122:        pprint(self.symbol2number)
+123:        print("n2s")
+124:        pprint(self.number2symbol)
+125:        print("states")
+126:        pprint(self.states)
+127:        print("dfas")
+128:        pprint(self.dfas)
+129:        print("labels")
+130:        pprint(self.labels)
+131:        print("start", self.start)
+132:
+133:
+134:# Map from operator to number (since tokenize doesn't do this)
+135:
+136:opmap_raw = """
+137:( LPAR
+138:) RPAR
+139:[ LSQB
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, get_grammars now returns [pygram.python_grammar_no_print_statement, pygram.python_grammar] for Python 2 targets. In blib2to3/pygram.py, both attributes are defined in initialize() and created from Grammar instances (driver.load_packaged_grammar returns Grammar and Grammar.copy() returns a Grammar). black.py imports Grammar from blib2to3.pgen2.grammar, so the return type List[Grammar] is satisfied.
+
+Todo item 4 of 9 is correct
+description: 'Check that pygram.python_grammar_no_print_statement and pygram.python_grammar attributes exist and are of the expected Grammar type (compatible with the get_grammars return type annotation List[Grammar]).'
+
+Validating todo item 5 of 9
+description: 'Confirm that lib2to3_parse (in the same file) obtains grammars via get_grammars(target_versions) and tries them sequentially in the list order, so that the 'no_print_statement' grammar is attempted before the Python 2 grammar for Python 2 targets.'
+
+Calling tool: grepTool
+def lib2to3_parse\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+800:@dataclass
+801:class DebugVisitor(Visitor[T]):
+802:    tree_depth: int = 0
+803:
+804:    def visit_default(self, node: LN) -> Iterator[T]:
+805:        indent = " " * (2 * self.tree_depth)
+806:        if isinstance(node, Node):
+807:            _type = type_repr(node.type)
+808:            out(f"{indent}{_type}", fg="yellow")
+809:            self.tree_depth += 1
+810:            for child in node.children:
+811:                yield from self.visit(child)
+812:
+813:            self.tree_depth -= 1
+814:            out(f"{indent}/{_type}", fg="yellow", bold=False)
+815:        else:
+816:            _type = token.tok_name.get(node.type, str(node.type))
+817:            out(f"{indent}{_type}", fg="blue", nl=False)
+818:            if node.prefix:
+819:                # We don't have to handle prefixes for `Node` objects since
+820:                # that delegates to the first child anyway.
+821:                out(f" {node.prefix!r}", fg="green", bold=False, nl=False)
+822:            out(f" {node.value!r}", fg="blue", bold=False)
+823:
+824:    @classmethod
+825:    def show(cls, code: Union[str, Leaf, Node]) -> None:
+826:        """Pretty-print the lib2to3 AST of a given string of `code`.
+827:
+828:        Convenience method for debugging.
+829:        """
+830:        v: DebugVisitor[None] = DebugVisitor()
+831:        if isinstance(code, str):
+832:            code = lib2to3_parse(code)
+833:        list(v.visit(code))
+834:
+835:
+836:WHITESPACE = {token.DEDENT, token.INDENT, token.NEWLINE}
+837:STATEMENT = {
+838:    syms.if_stmt,
+839:    syms.while_stmt,
+840:    syms.for_stmt,
+841:    syms.try_stmt,
+842:    syms.except_clause,
+843:    syms.with_stmt,
+844:    syms.funcdef,
+845:    syms.classdef,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py, lib2to3_parse (lines 738–758) calls get_grammars(set(target_versions)) and iterates them in order: for grammar in get_grammars(...). The updated get_grammars (lines 726–735) returns [python_grammar_no_print_statement, python_grammar] for Python 2 targets, ensuring the no_print_statement grammar is tried before the Python 2 grammar.
+
+Todo item 5 of 9 is correct
+description: 'Confirm that lib2to3_parse (in the same file) obtains grammars via get_grammars(target_versions) and tries them sequentially in the list order, so that the 'no_print_statement' grammar is attempted before the Python 2 grammar for Python 2 targets.'
+
+Validating todo item 6 of 9
+description: 'Ensure the get_grammars branch for empty target_versions remains unchanged and still returns GRAMMARS; no unintended modifications in this PR for that path.'
+
+Calling tool: grepTool
+def get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+770:
+771:T = TypeVar("T")
+772:
+773:
+774:class Visitor(Generic[T]):
+775:    """Basic lib2to3 visitor that yields things of type `T` on `visit()`."""
+776:
+777:    def visit(self, node: LN) -> Iterator[T]:
+778:        """Main method to visit `node` and its children.
+779:
+780:        It tries to find a `visit_*()` method for the given `node.type`, like
+781:        `visit_simple_stmt` for Node objects or `visit_INDENT` for Leaf objects.
+782:        If no dedicated `visit_*()` method is found, chooses `visit_default()`
+783:        instead.
+784:
+785:        Then yields objects of type `T` from the selected visitor.
+786:        """
+787:        if node.type < 256:
+788:            name = token.tok_name[node.type]
+789:        else:
+790:            name = type_repr(node.type)
+791:        yield from getattr(self, f"visit_{name}", self.visit_default)(node)
+792:
+793:    def visit_default(self, node: LN) -> Iterator[T]:
+794:        """Default `visit_*()` implementation. Recurses to children of `node`."""
+795:        if isinstance(node, Node):
+796:            for child in node.children:
+797:                yield from self.visit(child)
+798:
+799:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+690:        for _ in range(before):
+691:            dst_contents += str(empty_line)
+692:        for line in split_line(
+693:            current_line,
+694:            line_length=mode.line_length,
+695:            supports_trailing_commas=supports_feature(versions, Feature.TRAILING_COMMA),
+696:        ):
+697:            dst_contents += str(line)
+698:    return dst_contents
+699:
+700:
+701:def decode_bytes(src: bytes) -> Tuple[FileContent, Encoding, NewLine]:
+702:    """Return a tuple of (decoded_contents, encoding, newline).
+703:
+704:    `newline` is either CRLF or LF but `decoded_contents` is decoded with
+705:    universal newlines (i.e. only contains LF).
+706:    """
+707:    srcbuf = io.BytesIO(src)
+708:    encoding, lines = tokenize.detect_encoding(srcbuf.readline)
+709:    if not lines:
+710:        return "", encoding, "\n"
+711:
+712:    newline = "\r\n" if b"\r\n" == lines[0][-2:] else "\n"
+713:    srcbuf.seek(0)
+714:    with io.TextIOWrapper(srcbuf, encoding) as tiow:
+715:        return tiow.read(), encoding, newline
+716:
+717:
+718:GRAMMARS = [
+719:    pygram.python_grammar_no_print_statement_no_exec_statement,
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Inspected black.py get_grammars at lines 725-735. The branch `if not target_versions:` still returns `GRAMMARS` unchanged, and `GRAMMARS` is defined as the same list at lines 718-722. No modifications were made to this path in the PR.
+
+Todo item 6 of 9 is correct
+description: 'Ensure the get_grammars branch for empty target_versions remains unchanged and still returns GRAMMARS; no unintended modifications in this PR for that path.'
+
+Validating todo item 7 of 9
+description: 'Search for all call sites of get_grammars and confirm none assumes a single grammar for Python 2 targets (e.g., direct indexing [0] without iteration), since the else branch now returns two grammars.'
+
+Calling tool: grepTool
+get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:743:    for grammar in get_grammars(set(target_versions)):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+760:    if isinstance(result, Leaf):
+761:        result = Node(syms.file_input, [result])
+762:    return result
+763:
+764:
+765:def lib2to3_unparse(node: Node) -> str:
+766:    """Given a lib2to3 node, return its string representation."""
+767:    code = str(node)
+768:    return code
+769:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: Searched for all call sites of get_grammars. The only call is in lib2to3_parse (black.py:743) which iterates over the returned list, handling multiple grammars. No direct indexing or single-grammar assumptions found.
+
+Todo item 7 of 9 is correct
+description: 'Search for all call sites of get_grammars and confirm none assumes a single grammar for Python 2 targets (e.g., direct indexing [0] without iteration), since the else branch now returns two grammars.'
+
+Validating todo item 8 of 9
+description: 'Validate that TargetVersion exposes an is_python2() method used in get_grammars and that the method is imported/available where get_grammars is defined.'
+
+Calling tool: grepTool
+class\s+TargetVersion\b
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:115:class TargetVersion(Enum):
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+100:
+101:    @classmethod
+102:    def from_configuration(cls, *, check: bool, diff: bool) -> "WriteBack":
+103:        if check and not diff:
+104:            return cls.CHECK
+105:
+106:        return cls.DIFF if diff else cls.YES
+107:
+108:
+109:class Changed(Enum):
+110:    NO = 0
+111:    CACHED = 1
+112:    YES = 2
+113:
+114:
+115:class TargetVersion(Enum):
+116:    PY27 = 2
+117:    PY33 = 3
+118:    PY34 = 4
+119:    PY35 = 5
+120:    PY36 = 6
+121:    PY37 = 7
+122:    PY38 = 8
+123:
+124:    def is_python2(self) -> bool:
+125:        return self is TargetVersion.PY27
+126:
+127:
+128:PY36_VERSIONS = {TargetVersion.PY36, TargetVersion.PY37, TargetVersion.PY38}
+129:
+130:
+131:class Feature(Enum):
+132:    # All string literals are unicode
+133:    UNICODE_LITERALS = 1
+134:    F_STRINGS = 2
+135:    NUMERIC_UNDERSCORES = 3
+136:    TRAILING_COMMA = 4
+137:
+138:
+139:VERSION_TO_FEATURES: Dict[TargetVersion, Set[Feature]] = {
+140:    TargetVersion.PY27: set(),
+141:    TargetVersion.PY33: {Feature.UNICODE_LITERALS},
+142:    TargetVersion.PY34: {Feature.UNICODE_LITERALS},
+143:    TargetVersion.PY35: {Feature.UNICODE_LITERALS, Feature.TRAILING_COMMA},
+144:    TargetVersion.PY36: {
+145:        Feature.UNICODE_LITERALS,
+146:        Feature.F_STRINGS,
+147:        Feature.NUMERIC_UNDERSCORES,
+148:        Feature.TRAILING_COMMA,
+149:    },
+150:    TargetVersion.PY37: {
+151:        Feature.UNICODE_LITERALS,
+152:        Feature.F_STRINGS,
+153:        Feature.NUMERIC_UNDERSCORES,
+154:        Feature.TRAILING_COMMA,
+155:    },
+156:    TargetVersion.PY38: {
+157:        Feature.UNICODE_LITERALS,
+158:        Feature.F_STRINGS,
+159:        Feature.NUMERIC_UNDERSCORES,
+160:        Feature.TRAILING_COMMA,
+161:    },
+162:}
+163:
+164:
+165:@dataclass
+166:class FileMode:
+167:    target_versions: Set[TargetVersion] = Factory(set)
+168:    line_length: int = DEFAULT_LINE_LENGTH
+169:    string_normalization: bool = True
+170:    is_pyi: bool = False
+171:
+172:    def get_cache_key(self) -> str:
+173:        if self.target_versions:
+174:            version_str = ",".join(
+175:                str(version.value)
+176:                for version in sorted(self.target_versions, key=lambda v: v.value)
+177:            )
+178:        else:
+179:            version_str = "-"
+
+Calling tool: grepTool
+def\s+get_grammars\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py:725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/black.py
+720:    pygram.python_grammar_no_print_statement,
+721:    pygram.python_grammar,
+722:]
+723:
+724:
+725:def get_grammars(target_versions: Set[TargetVersion]) -> List[Grammar]:
+726:    if not target_versions:
+727:        return GRAMMARS
+728:    elif all(not version.is_python2() for version in target_versions):
+729:        # Python 3-compatible code, so don't try Python 2 grammar
+730:        return [
+731:            pygram.python_grammar_no_print_statement_no_exec_statement,
+732:            pygram.python_grammar_no_print_statement,
+733:        ]
+734:    else:
+735:        return [pygram.python_grammar_no_print_statement, pygram.python_grammar]
+736:
+737:
+738:def lib2to3_parse(src_txt: str, target_versions: Iterable[TargetVersion] = ()) -> Node:
+739:    """Given a string with source, return the lib2to3 Node."""
+740:    if src_txt[-1:] != "\n":
+741:        src_txt += "\n"
+742:
+743:    for grammar in get_grammars(set(target_versions)):
+744:        drv = driver.Driver(grammar, pytree.convert)
+745:        try:
+746:            result = drv.parse_string(src_txt, True)
+747:            break
+748:
+749:        except ParseError as pe:
+750:            lineno, column = pe.context[1]
+751:            lines = src_txt.splitlines()
+752:            try:
+753:                faulty_line = lines[lineno - 1]
+754:            except IndexError:
+755:                faulty_line = "<line number missing in source>"
+756:            exc = InvalidInput(f"Cannot parse: {lineno}:{column}: {faulty_line}")
+757:    else:
+758:        raise exc from None
+759:
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: TargetVersion in black.py (line ~115) defines is_python2(), and get_grammars in the same file (line ~725) calls version.is_python2(). Since both are in black.py, the method is available without import and is correctly used.
+
+Todo item 8 of 9 is correct
+description: 'Validate that TargetVersion exposes an is_python2() method used in get_grammars and that the method is imported/available where get_grammars is defined.'
+
+Validating todo item 9 of 9
+description: 'Locate the test case named test_python2_print_function and verify that it configures target_version to py27 and uses input containing 'from __future__ import print_function' and 'print("hello world")', asserting that no space is inserted between 'print' and '(' in the formatted output.'
+
+Calling tool: grepTool
+test_python2_print_function
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:465:    def test_python2_print_function(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2_print_function
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py
+450:    def test_numeric_literals_py2(self) -> None:
+451:        source, expected = read_data("numeric_literals_py2")
+452:        actual = fs(source)
+453:        self.assertFormatEqual(expected, actual)
+454:        black.assert_stable(source, actual, black.FileMode())
+455:
+456:    @patch("black.dump_to_file", dump_to_stderr)
+457:    def test_python2(self) -> None:
+458:        source, expected = read_data("python2")
+459:        actual = fs(source)
+460:        self.assertFormatEqual(expected, actual)
+461:        # black.assert_equivalent(source, actual)
+462:        black.assert_stable(source, actual, black.FileMode())
+463:
+464:    @patch("black.dump_to_file", dump_to_stderr)
+465:    def test_python2_print_function(self) -> None:
+466:        source, expected = read_data("python2_print_function")
+467:        mode = black.FileMode(target_versions={black.TargetVersion.PY27})
+468:        actual = fs(source, mode=mode)
+469:        self.assertFormatEqual(expected, actual)
+470:        black.assert_stable(source, actual, mode)
+471:
+472:    @patch("black.dump_to_file", dump_to_stderr)
+473:    def test_python2_unicode_literals(self) -> None:
+474:        source, expected = read_data("python2_unicode_literals")
+475:        actual = fs(source)
+476:        self.assertFormatEqual(expected, actual)
+477:        black.assert_stable(source, actual, black.FileMode())
+478:
+479:    @patch("black.dump_to_file", dump_to_stderr)
+480:    def test_stub(self) -> None:
+481:        mode = black.FileMode(is_pyi=True)
+482:        source, expected = read_data("stub.pyi")
+483:        actual = fs(source, mode=mode)
+484:        self.assertFormatEqual(expected, actual)
+485:        black.assert_stable(source, actual, mode)
+486:
+487:    @patch("black.dump_to_file", dump_to_stderr)
+488:    def test_python37(self) -> None:
+489:        source, expected = read_data("python37")
+490:        actual = fs(source)
+491:        self.assertFormatEqual(expected, actual)
+492:        major, minor = sys.version_info[:2]
+493:        if major > 3 or (major == 3 and minor >= 7):
+494:            black.assert_equivalent(source, actual)
+495:        black.assert_stable(source, actual, black.FileMode())
+496:
+497:    @patch("black.dump_to_file", dump_to_stderr)
+498:    def test_fmtonoff(self) -> None:
+499:        source, expected = read_data("fmtonoff")
+500:        actual = fs(source)
+501:        self.assertFormatEqual(expected, actual)
+502:        black.assert_equivalent(source, actual)
+503:        black.assert_stable(source, actual, black.FileMode())
+504:
+505:    @patch("black.dump_to_file", dump_to_stderr)
+506:    def test_fmtonoff2(self) -> None:
+507:        source, expected = read_data("fmtonoff2")
+508:        actual = fs(source)
+509:        self.assertFormatEqual(expected, actual)
+510:        black.assert_equivalent(source, actual)
+511:        black.assert_stable(source, actual, black.FileMode())
+512:
+513:    @patch("black.dump_to_file", dump_to_stderr)
+514:    def test_remove_empty_parentheses_after_class(self) -> None:
+515:        source, expected = read_data("class_blank_parentheses")
+516:        actual = fs(source)
+517:        self.assertFormatEqual(expected, actual)
+518:        black.assert_equivalent(source, actual)
+519:        black.assert_stable(source, actual, black.FileMode())
+520:
+521:    @patch("black.dump_to_file", dump_to_stderr)
+522:    def test_new_line_between_class_and_code(self) -> None:
+523:        source, expected = read_data("class_methods_new_line")
+524:        actual = fs(source)
+525:        self.assertFormatEqual(expected, actual)
+526:        black.assert_equivalent(source, actual)
+527:        black.assert_stable(source, actual, black.FileMode())
+528:
+529:    @patch("black.dump_to_file", dump_to_stderr)
+
+Calling tool: grepTool
+python2_print_function
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_bug.info:4:test_file="tests/data/python2_print_function.py;tests/test_black.py"
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/bugsinpy_run_test.sh:1:python -m unittest -q tests.test_black.BlackTestCase.test_python2_print_function
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:465:    def test_python2_print_function(self) -> None:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:466:        source, expected = read_data("python2_print_function")
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/data/python2_print_function.py
+1:#!/usr/bin/env python2
+2:from __future__ import print_function
+3:
+4:print('hello')
+5:print(u'hello')
+6:print(a, file=sys.stderr)
+7:
+8:# output
+9:
+10:
+11:#!/usr/bin/env python2
+12:from __future__ import print_function
+13:
+14:print("hello")
+15:print(u"hello")
+16:print(a, file=sys.stderr)
+
+Calling tool: grepTool
+hello world
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1396:            response = await client.post("/", data=b"print('hello world')")
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1399:            self.assertEqual(await response.read(), b'print("hello world")\n')
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:1406:            response = await client.post("/", data=b'print("hello world")\n')
+
+Calling tool: grepTool
+def read_data\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py:57:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-9/good/black/tests/test_black.py
+1:#!/usr/bin/env python3
+2:import asyncio
+3:import logging
+4:from concurrent.futures import ThreadPoolExecutor
+5:from contextlib import contextmanager, redirect_stderr
+6:from functools import partial, wraps
+7:from io import BytesIO, TextIOWrapper
+8:import os
+9:from pathlib import Path
+10:import re
+11:import sys
+12:from tempfile import TemporaryDirectory
+13:from typing import (
+14:    Any,
+15:    BinaryIO,
+16:    Callable,
+17:    Coroutine,
+18:    Generator,
+19:    List,
+20:    Tuple,
+21:    Iterator,
+22:    TypeVar,
+23:)
+24:import unittest
+25:from unittest.mock import patch, MagicMock
+26:
+27:from click import unstyle
+28:from click.testing import CliRunner
+29:
+30:import black
+31:from black import Feature
+32:
+33:try:
+34:    import blackd
+35:    from aiohttp.test_utils import TestClient, TestServer
+36:except ImportError:
+37:    has_blackd_deps = False
+38:else:
+39:    has_blackd_deps = True
+40:
+41:ff = partial(black.format_file_in_place, mode=black.FileMode(), fast=True)
+42:fs = partial(black.format_str, mode=black.FileMode())
+43:THIS_FILE = Path(__file__)
+44:THIS_DIR = THIS_FILE.parent
+45:EMPTY_LINE = "# EMPTY LINE WITH WHITESPACE" + " (this comment will be removed)"
+46:PY36_ARGS = [
+47:    f"--target-version={version.name.lower()}" for version in black.PY36_VERSIONS
+48:]
+49:T = TypeVar("T")
+50:R = TypeVar("R")
+51:
+52:
+53:def dump_to_stderr(*output: str) -> str:
+54:    return "\n" + "\n".join(output) + "\n"
+55:
+56:
+57:def read_data(name: str, data: bool = True) -> Tuple[str, str]:
+58:    """read_data('test_name') -> 'input', 'output'"""
+59:    if not name.endswith((".py", ".pyi", ".out", ".diff")):
+60:        name += ".py"
+61:    _input: List[str] = []
+62:    _output: List[str] = []
+63:    base_dir = THIS_DIR / "data" if data else THIS_DIR
+64:    with open(base_dir / name, "r", encoding="utf8") as test:
+65:        lines = test.readlines()
+66:    result = _input
+67:    for line in lines:
+68:        line = line.replace(EMPTY_LINE, "")
+69:        if line.rstrip() == "# output":
+70:            result = _output
+71:            continue
+72:
+73:        result.append(line)
+74:    if _input and not _output:
+75:        # If there's no output marker, treat the entire file as already pre-formatted.
+76:        _output = _input[:]
+77:    return "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
+78:
+79:
+80:@contextmanager
+81:def cache_dir(exists: bool = True) -> Iterator[Path]:
+82:    with TemporaryDirectory() as workspace:
+83:        cache_dir = Path(workspace)
+84:        if not exists:
+85:            cache_dir = cache_dir / "new"
+86:        with patch("black.CACHE_DIR", cache_dir):
+87:            yield cache_dir
+88:
+89:
+90:@contextmanager
+91:def event_loop(close: bool) -> Iterator[None]:
+92:    policy = asyncio.get_event_loop_policy()
+93:    old_loop = policy.get_event_loop()
+94:    loop = policy.new_event_loop()
+95:    asyncio.set_event_loop(loop)
+96:    try:
+97:        yield
+98:
+99:    finally:
+100:        policy.set_event_loop(old_loop)
+101:        if close:
+102:            loop.close()
+103:
+104:
+105:def async_test(f: Callable[..., Coroutine[Any, None, R]]) -> Callable[..., None]:
+106:    @event_loop(close=True)
+107:    @wraps(f)
+108:    def wrapper(*args: Any, **kwargs: Any) -> None:
+109:        asyncio.get_event_loop().run_until_complete(f(*args, **kwargs))
+110:
+111:    return wrapper
+112:
+113:
+114:class BlackRunner(CliRunner):
+115:    """Modify CliRunner so that stderr is not merged with stdout.
+116:
+117:    This is a hack that can be removed once we depend on Click 7.x"""
+118:
+119:    def __init__(self) -> None:
+120:        self.stderrbuf = BytesIO()
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: Found test_python2_print_function in tests/test_black.py. It sets target_versions={black.TargetVersion.PY27} and uses data file tests/data/python2_print_function.py which contains 'from __future__ import print_function' and print calls. However, the input is 'print("hello")' (not 'print("hello world")'). While it asserts no space is inserted, the exact string specified in the todo is not used.
+
+
+=== PHASE 2 COMPLETE ===
+

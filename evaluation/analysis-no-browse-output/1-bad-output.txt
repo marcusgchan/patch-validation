@@ -1,0 +1,588 @@
+=== PHASE 1: ANALYSIS ===
+
+Calling tool: createTodo
+Todo List Created
+Todo List (15 items):
+- [ ] In `black.py` -> `reformat_many`, verify that `ProcessPoolExecutor(max_workers=worker_count)` is wrapped in a `try` and only `OSError` is caught as specified by the PR. (ID: todo-1)
+- [ ] Check the fallback path in the `except OSError:` block: confirm whether it sets `executor = None` (as comments and PR intent state) to avoid multiprocessing. Flag that the current code sets `executor = ProcessPoolExecutor()` which still uses multiprocessing and contradicts the PR requirement and the comment. (ID: todo-2)
+- [ ] Validate comment/code consistency in the `except` block: the comment says "mono-process Executor by using None" but the implementation instantiates `ProcessPoolExecutor()`; note this inconsistency explicitly. (ID: todo-3)
+- [ ] Inspect `schedule_formatting` implementation to ensure it handles `executor: Optional[Executor]` correctly: when `executor is None`, it should run formatting serially (no multiprocessing). If no conditional handling exists, this violates the PR intent. (ID: todo-4)
+- [ ] Confirm that all call sites to `schedule_formatting` pass the possibly `None` executor and are compatible with the updated type (`Optional[Executor]`). Search for any other invocations that still assume a non-optional `Executor`. (ID: todo-5)
+- [ ] Ensure `Optional` is imported from `typing` in `black.py` to support the new `Optional[Executor]` type annotation. If not imported, this is a static error. (ID: todo-6)
+- [ ] Verify that `Executor` (from `concurrent.futures`) is imported and remains the correct type for the annotation after changes. (ID: todo-7)
+- [ ] Check resource cleanup: previously there was `executor.shutdown()` in the `finally` block; now it was replaced by `if executor is not None: pass`. Confirm that this results in missing shutdown and thus a resource leak. The validation should flag that an explicit shutdown or equivalent cleanup is now absent. (ID: todo-8)
+- [ ] Verify that there are no code paths where `executor` is left uninitialized before use in `schedule_formatting` call (i.e., ensure it is always assigned in both try and except paths). (ID: todo-9)
+- [ ] Confirm that the Windows-specific cap `worker_count = min(worker_count, 61)` remains in effect before executor creation, preserving existing behavior as per the diff context. (ID: todo-10)
+- [ ] Review `schedule_formatting` docstring: it states running in parallel using the provided executor. If `None` enables serial execution, ensure the docstring is updated or otherwise not misleading. (ID: todo-11)
+- [ ] Ensure the exception handling is narrowly scoped: only `OSError` triggers fallback; no broader exception classes are caught that could hide unrelated errors. (ID: todo-12)
+- [ ] Identify and flag dead/no-op code: `if executor is not None: pass` in the `finally` block is a no-op and should be either removed or replaced with proper shutdown logic. (ID: todo-13)
+- [ ] Cross-check that the test `test_works_in_mono_process_only_environment` (as named in the PR) is targeting the OSError fallback path: statically confirm it induces an `OSError` on `ProcessPoolExecutor` creation (e.g., via mocking) and asserts that formatting proceeds without multiprocessing. (ID: todo-14)
+- [ ] Verify that the changes fulfill the acceptance criteria from issues #1138 and #776: that Black can run without multiprocessing on systems lacking `/dev/shm` and that serial execution is possible; confirm the implementation actually disables multiprocessing in that scenario (not just retries with a different `ProcessPoolExecutor`). (ID: todo-15)
+
+
+=== PHASE 1 COMPLETE ===
+
+=== PHASE 2: VALIDATION ===
+
+Validating todo item 1 of 15
+description: 'In `black.py` -> `reformat_many`, verify that `ProcessPoolExecutor(max_workers=worker_count)` is wrapped in a `try` and only `OSError` is caught as specified by the PR.'
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+720:    fast: bool,
+721:    mode: Mode,
+722:    write_back: WriteBack = WriteBack.NO,
+723:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+724:) -> bool:
+725:    """Format file under `src` path. Return True if changed.
+726:
+727:    If `write_back` is DIFF, write a diff to stdout. If it is YES, write reformatted
+728:    code to the file.
+729:    `mode` and `fast` options are passed to :func:`format_file_contents`.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py reformat_many, the creation of ProcessPoolExecutor(max_workers=worker_count) is wrapped in a try block and only OSError is caught (lines 621-627), matching the PR requirement.
+
+
+Todo item 1 of 15 is correct
+description: 'In `black.py` -> `reformat_many`, verify that `ProcessPoolExecutor(max_workers=worker_count)` is wrapped in a `try` and only `OSError` is caught as specified by the PR.'
+Validating todo item 2 of 15
+description: 'Check the fallback path in the `except OSError:` block: confirm whether it sets `executor = None` (as comments and PR intent state) to avoid multiprocessing. Flag that the current code sets `executor = ProcessPoolExecutor()` which still uses multiprocessing and contradicts the PR requirement and the comment.'
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py:612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+600:                src, fast=fast, write_back=write_back, mode=mode
+601:            ):
+602:                changed = Changed.YES
+603:            if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
+604:                write_back is WriteBack.CHECK and changed is Changed.NO
+605:            ):
+606:                write_cache(cache, [src], mode)
+607:        report.done(src, changed)
+608:    except Exception as exc:
+609:        report.failed(src, str(exc))
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In the OSError fallback, the code sets `executor = ProcessPoolExecutor()` (line 627) despite the comment and PR intent stating it should use None to avoid multiprocessing. This contradicts the requirement to disable multiprocessing in unsupported environments.
+
+
+Validating todo item 1 of 15
+description: 'In `black.py` -> `reformat_many`, verify that `ProcessPoolExecutor(max_workers=worker_count)` is wrapped in a `try` and only `OSError` is caught as specified by the PR.'
+
+Calling tool: globTool
+**/black.py
+Matched files:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+720:    fast: bool,
+721:    mode: Mode,
+722:    write_back: WriteBack = WriteBack.NO,
+723:    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+724:) -> bool:
+725:    """Format file under `src` path. Return True if changed.
+726:
+727:    If `write_back` is DIFF, write a diff to stdout. If it is YES, write reformatted
+728:    code to the file.
+729:    `mode` and `fast` options are passed to :func:`format_file_contents`.
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as CORRECT
+Reason: In black.py reformat_many, the creation of ProcessPoolExecutor(max_workers=worker_count) is wrapped in a try block and only OSError is caught (lines 621-627), matching the PR requirement.
+
+Todo item 1 of 15 is correct
+description: 'In `black.py` -> `reformat_many`, verify that `ProcessPoolExecutor(max_workers=worker_count)` is wrapped in a `try` and only `OSError` is caught as specified by the PR.'
+
+Validating todo item 2 of 15
+description: 'Check the fallback path in the `except OSError:` block: confirm whether it sets `executor = None` (as comments and PR intent state) to avoid multiprocessing. Flag that the current code sets `executor = ProcessPoolExecutor()` which still uses multiprocessing and contradicts the PR requirement and the comment.'
+
+Calling tool: grepTool
+def reformat_many\(
+Matched content:
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py:612:def reformat_many(
+
+Calling tool: readTool
+/Users/marcus/repos/BugsInPy/framework/bin/temp/black-1/bad/black/black.py
+600:                src, fast=fast, write_back=write_back, mode=mode
+601:            ):
+602:                changed = Changed.YES
+603:            if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
+604:                write_back is WriteBack.CHECK and changed is Changed.NO
+605:            ):
+606:                write_cache(cache, [src], mode)
+607:        report.done(src, changed)
+608:    except Exception as exc:
+609:        report.failed(src, str(exc))
+610:
+611:
+612:def reformat_many(
+613:    sources: Set[Path], fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+614:) -> None:
+615:    """Reformat multiple files using a ProcessPoolExecutor."""
+616:    loop = asyncio.get_event_loop()
+617:    worker_count = os.cpu_count()
+618:    if sys.platform == "win32":
+619:        # Work around https://bugs.python.org/issue26903
+620:        worker_count = min(worker_count, 61)
+621:    try:
+622:        executor = ProcessPoolExecutor(max_workers=worker_count)
+623:    except OSError:
+624:        # we arrive here if the underlying system does not support multi-processing
+625:        # like in AWS Lambda, in which case we gracefully fallback to the default
+626:        # mono-process Executor by using None
+627:        executor = ProcessPoolExecutor()
+628:
+629:    try:
+630:        loop.run_until_complete(
+631:            schedule_formatting(
+632:                sources=sources,
+633:                fast=fast,
+634:                write_back=write_back,
+635:                mode=mode,
+636:                report=report,
+637:                loop=loop,
+638:                executor=executor,
+639:            )
+640:        )
+641:    finally:
+642:        shutdown(loop)
+643:        if executor is not None:
+644:            pass
+645:
+646:
+647:async def schedule_formatting(
+648:    sources: Set[Path],
+649:    fast: bool,
+650:    write_back: WriteBack,
+651:    mode: Mode,
+652:    report: "Report",
+653:    loop: asyncio.AbstractEventLoop,
+654:    executor: Optional[Executor],
+655:) -> None:
+656:    """Run formatting of `sources` in parallel using the provided `executor`.
+657:
+658:    (Use ProcessPoolExecutors for actual parallelism.)
+659:
+660:    `write_back`, `fast`, and `mode` options are passed to
+661:    :func:`format_file_in_place`.
+662:    """
+663:    cache: Cache = {}
+664:    if write_back != WriteBack.DIFF:
+665:        cache = read_cache(mode)
+666:        sources, cached = filter_cached(cache, sources)
+667:        for src in sorted(cached):
+668:            report.done(src, Changed.CACHED)
+669:    if not sources:
+670:        return
+671:
+672:    cancelled = []
+673:    sources_to_cache = []
+674:    lock = None
+675:    if write_back == WriteBack.DIFF:
+676:        # For diff output, we need locks to ensure we don't interleave output
+677:        # from different processes.
+678:        manager = Manager()
+679:        lock = manager.Lock()
+680:    tasks = {
+681:        asyncio.ensure_future(
+682:            loop.run_in_executor(
+683:                executor, format_file_in_place, src, fast, mode, write_back, lock
+684:            )
+685:        ): src
+686:        for src in sorted(sources)
+687:    }
+688:    pending: Iterable["asyncio.Future[bool]"] = tasks.keys()
+689:    try:
+690:        loop.add_signal_handler(signal.SIGINT, cancel, pending)
+691:        loop.add_signal_handler(signal.SIGTERM, cancel, pending)
+692:    except NotImplementedError:
+693:        # There are no good alternatives for these on Windows.
+694:        pass
+695:    while pending:
+696:        done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+697:        for task in done:
+698:            src = tasks.pop(task)
+699:            if task.cancelled():
+700:                cancelled.append(task)
+701:            elif task.exception():
+702:                report.failed(src, str(task.exception()))
+703:            else:
+704:                changed = Changed.YES if task.result() else Changed.NO
+705:                # If the file was written back or was successfully checked as
+706:                # well-formatted, store this information in the cache.
+707:                if write_back is WriteBack.YES or (
+708:                    write_back is WriteBack.CHECK and changed is Changed.NO
+709:                ):
+710:                    sources_to_cache.append(src)
+711:                report.done(src, changed)
+712:    if cancelled:
+713:        await asyncio.gather(*cancelled, loop=loop, return_exceptions=True)
+714:    if sources_to_cache:
+715:        write_cache(cache, sources_to_cache, mode)
+716:
+717:
+718:def format_file_in_place(
+719:    src: Path,
+
+Calling tool: updateTodo
+Todo Item Completed
+Todo item was marked as INCORRECT
+Reason: In the OSError fallback, the code sets `executor = ProcessPoolExecutor()` (line 627) despite the comment and PR intent stating it should use None to avoid multiprocessing. This contradicts the requirement to disable multiprocessing in unsupported environments.
+
+
+=== PHASE 2 COMPLETE ===
+
